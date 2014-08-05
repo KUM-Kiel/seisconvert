@@ -11,11 +11,14 @@ kum_segy.o: kum_segy.c kum_segy.h Makefile
 wav.o: wav.c wav.h Makefile
 	$(COMPILE) wav.c
 
-test.o: test.c kum_segy.h wav.h Makefile
+fm.o: fm.c fm.h Makefile
+	$(COMPILE) fm.c
+
+test.o: test.c kum_segy.h wav.h fm.h Makefile
 	$(COMPILE) test.c
 
-test: test.o kum_segy.o wav.o Makefile
-	$(LINK) test test.o kum_segy.o wav.o
+test: test.o kum_segy.o wav.o fm.o Makefile
+	$(LINK) test test.o kum_segy.o wav.o fm.o -lm
 
 wav_test.o: wav_test.c wav.h Makefile
 	$(COMPILE) wav_test.c

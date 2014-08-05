@@ -5,6 +5,7 @@
 #include <string.h>
 #include "kum_segy.h"
 #include "wav.h"
+#include "fm.h"
 
 #define FOR(i, n) for (i = 0; i < n; ++i)
 
@@ -41,7 +42,7 @@ static void print_kum_segy_bin(kum_segy_binary_header_t *header)
 int main(int argc, char **argv)
 {
   uint8_t text_header[3200], binary_header[400], buffer[64];
-  int32_t frame[CHANNELS];
+  double frame[CHANNELS];
   kum_segy_text_header_t kum_header_txt;
   kum_segy_binary_header_t kum_header_bin;
   kum_segy_frame_config_t kfc;
@@ -50,6 +51,7 @@ int main(int argc, char **argv)
   FILE *f, *wav;
   int i, j, messed = 0;
   ssize_t l;
+  fm_t fm[CHANNELS];
 
   if (argc < 3) return -1;
   f = fopen(argv[1], "r");
@@ -82,7 +84,14 @@ int main(int argc, char **argv)
   whdr.num_channels = CHANNELS;
   whdr.sample_rate = 1000000 / kum_header_bin.sample_interval;
   whdr.bit_depth = 16;
-  whdr.num_frames = kum_header_bin.num_samples;
+  whdr.num_frames = 4000000;//kum_header_bin.num_samples;
+
+  FOR(i, CHANNELS) {
+    fm[i].f = 880;
+    fm[i].hub = 200000;
+    fm[i].phase = 0;
+    fm[i].sample_interval = 1.0 / whdr.sample_rate;
+  }
 
   wfc = wav_get_frame_config(&whdr);
   kfc = kum_segy_get_frame_config(&kum_header_bin);
@@ -94,9 +103,10 @@ int main(int argc, char **argv)
     FOR(j, CHANNELS) {
       l = fread(buffer, kum_segy_get_frame_size(kfc), 1, f);
       if (l <= 0) return -1;
-      kum_segy_read_int_frame(kfc, frame + j, buffer);
+      kum_segy_read_double_frame(kfc, frame + j, buffer);
+      frame[j] = fm_modulate(&fm[j], frame[j]);
     }
-    wav_write_int_frame(wfc, buffer, frame);
+    wav_write_double_frame(wfc, buffer, frame);
     fwrite(buffer, wav_get_frame_size(wfc), 1, wav);
   }
 
