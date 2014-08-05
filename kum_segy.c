@@ -134,3 +134,25 @@ int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_
     st32(buffer, (uint32_t)samples[0]);
   return 0;
 }
+
+int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint8_t *buffer)
+{
+  int i;
+  double s = 1.0 / 0x7fffffff;
+  FOR(i, NUM_CHANNELS(fc)) {
+    samples[i] = (int32_t)ld32(buffer) * s;
+    buffer += 4;
+  }
+  return 0;
+}
+
+int kum_segy_write_double_frame(kum_segy_frame_config_t fc, uint8_t *buffer, double *samples)
+{
+  int i;
+  double s = 0x7fffffff;
+  FOR(i, NUM_CHANNELS(fc)) {
+    st32(buffer, (int32_t)(samples[i] * s));
+    buffer += 4;
+  }
+  return 0;
+}

@@ -57,4 +57,7 @@ extern int kum_segy_get_frame_size(kum_segy_frame_config_t fc);
 extern int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_t *buffer);
 extern int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_t *samples);
 
+extern int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint8_t *buffer);
+extern int kum_segy_write_double_frame(kum_segy_frame_config_t fc, uint8_t *buffer, double *samples);
+
 #endif

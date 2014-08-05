@@ -1,9 +1,10 @@
 #define _FILE_OFFSET_BITS 64
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include "kum_segy.h"
 #include "wav.h"
-#include <errno.h>
 
 #define FOR(i, n) for (i = 0; i < n; ++i)
 
@@ -46,22 +47,26 @@ int main(int argc, char **argv)
   kum_segy_frame_config_t kfc;
   wav_frame_config_t wfc;
   wav_header_t whdr;
+  FILE *f, *wav;
   int i, j, messed = 0;
+  ssize_t l;
 
   if (argc < 3) return -1;
-  FILE *f = fopen(argv[1], "r");
+  f = fopen(argv[1], "r");
   if (!f) {
     fprintf(stderr, "Could not open file '%s': %s.\n", argv[1], strerror(errno));
     return -1;
   }
-  FILE *wav = fopen(argv[2], "w");
+  wav = fopen(argv[2], "w");
   if (!wav) {
     fprintf(stderr, "Could not open file '%s': %s.\n", argv[2], strerror(errno));
     return -1;
   }
   FOR(i, CHANNELS) {
-    fread(text_header, 3200, 1, f);
-    fread(binary_header, 400, 1, f);
+    l = fread(text_header, 3200, 1, f);
+    if (l <= 0) return -1;
+    l = fread(binary_header, 400, 1, f);
+    if (l <= 0) return -1;
     kum_segy_text_header_read(&kum_header_txt, text_header);
     if (kum_segy_binary_header_read(&kum_header_bin, binary_header) == -1) {
       fprintf(stderr, "Someone has messed something up!\n");
@@ -87,7 +92,8 @@ int main(int argc, char **argv)
 
   FOR(i, whdr.num_frames) {
     FOR(j, CHANNELS) {
-      fread(buffer, kum_segy_get_frame_size(kfc), 1, f);
+      l = fread(buffer, kum_segy_get_frame_size(kfc), 1, f);
+      if (l <= 0) return -1;
       kum_segy_read_int_frame(kfc, frame + j, buffer);
     }
     wav_write_int_frame(wfc, buffer, frame);

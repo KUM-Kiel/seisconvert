@@ -185,7 +185,7 @@ int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples
 int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffer)
 {
   int i, b = BIT_DEPTH(fc);
-  double s;
+  double s = 0;
   switch (b) {
     case 8:  s = 1.0 / 0x7f; break;
     case 12: s = 1.0 / 0x7ff0; break;
@@ -216,7 +216,7 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffe
 int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, double *samples)
 {
   int i, b = BIT_DEPTH(fc);
-  double s;
+  double s = 0;
   switch (b) {
     case 8:  s = 0x7f; break;
     case 12: s = 0x7ff0; break;
