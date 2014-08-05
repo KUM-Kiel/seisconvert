@@ -79,7 +79,7 @@ int kum_segy_binary_header_write(u8 *buffer, kum_segy_binary_header_t *header)
   return 0;
 }
 
-extern int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *buffer)
+int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *buffer)
 {
   byte_copy(header->content, 3200, buffer);
   byte_copy_0(header->client, 22, buffer + 11);
@@ -96,10 +96,41 @@ extern int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *bu
   return 0;
 }
 
-extern int kum_segy_text_header_write(uint8_t *buffer, kum_segy_text_header_t *header)
+int kum_segy_text_header_write(uint8_t *buffer, kum_segy_text_header_t *header)
 {
   int i;
   FOR (i, 3200) buffer[i] = 0;
   byte_copy(buffer, 3200, header->content);
+  return 0;
+}
+
+kum_segy_frame_config_t kum_segy_get_frame_config(kum_segy_binary_header_t *header)
+{
+  return (4 << 24) | (2 << 16) | (32 << 8) | 1;
+}
+
+#define NUM_CHANNELS(fc) ((fc) & 255)
+#define BIT_DEPTH(fc) (((fc) >> 8) & 255)
+#define FORMAT(fc) (((fc) >> 16) & 255)
+#define FRAME_SIZE(fc) (((fc) >> 24) & 255)
+
+int kum_segy_get_frame_size(kum_segy_frame_config_t fc)
+{
+  return FRAME_SIZE(fc);
+}
+
+int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_t *buffer)
+{
+  int i;
+  FOR(i, NUM_CHANNELS(fc))
+    samples[0] = (int32_t)ld32(buffer);
+  return 0;
+}
+
+int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_t *samples)
+{
+  int i;
+  FOR(i, NUM_CHANNELS(fc))
+    st32(buffer, (uint32_t)samples[0]);
   return 0;
 }

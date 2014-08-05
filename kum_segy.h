@@ -48,4 +48,13 @@ extern int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *bu
 /* Writes a kum_segy_text_header_t to a 3200 byte uint8_t buffer. */
 extern int kum_segy_text_header_write(uint8_t *buffer, kum_segy_text_header_t *header);
 
+typedef uint32_t kum_segy_frame_config_t;
+
+extern kum_segy_frame_config_t kum_segy_get_frame_config(kum_segy_binary_header_t *header);
+
+extern int kum_segy_get_frame_size(kum_segy_frame_config_t fc);
+
+extern int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_t *buffer);
+extern int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_t *samples);
+
 #endif
