@@ -1,6 +1,9 @@
+#define _FILE_OFFSET_BITS 64
+
 #include <stdio.h>
 #include "kum_segy.h"
 #include "wav.h"
+#include <errno.h>
 
 #define FOR(i, n) for (i = 0; i < n; ++i)
 
@@ -47,9 +50,13 @@ int main(int argc, char **argv)
 
   if (argc < 3) return -1;
   FILE *f = fopen(argv[1], "r");
+  if (!f) {
+    fprintf(stderr, "Could not open file '%s': %s.\n", argv[1], strerror(errno));
+    return -1;
+  }
   FILE *wav = fopen(argv[2], "w");
-  if (!f || !wav) {
-    fprintf(stderr, "Could not open file %s.\n", argv[1]);
+  if (!wav) {
+    fprintf(stderr, "Could not open file '%s': %s.\n", argv[2], strerror(errno));
     return -1;
   }
   FOR(i, CHANNELS) {

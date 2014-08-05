@@ -21,7 +21,7 @@ wav_test.o: wav_test.c wav.h Makefile
 	$(COMPILE) wav_test.c
 
 wav_test: wav_test.o wav.o Makefile
-	$(LINK) wav_test wav_test.o wav.o
+	$(LINK) wav_test wav_test.o wav.o -lm
 
 clean:
 	rm -rf $(TARGETS)
