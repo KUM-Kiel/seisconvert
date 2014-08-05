@@ -27,6 +27,7 @@ typedef uint32_t wav_frame_config_t;
 
 extern wav_frame_config_t wav_get_frame_config(wav_header_t *header);
 
+/* Returns the frame size for the given frame config. */
 extern int wav_get_frame_size(wav_frame_config_t fc);
 
 extern int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, uint8_t *buffer);

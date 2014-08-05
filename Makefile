@@ -1,7 +1,7 @@
 COMPILE = $(CC) -c -Wall -pedantic -O2
 LINK = $(CC) -o
 
-TARGETS = kum_segy.o wav.o test.o test
+TARGETS = kum_segy.o wav.o fm.o test.o test wav_test.o wav_test
 
 all: test wav_test
 

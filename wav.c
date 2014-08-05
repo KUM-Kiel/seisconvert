@@ -78,12 +78,16 @@ int wav_header_read(wav_header_t *header, uint8_t *buffer)
   u32 file_size = ld32(buffer + 4);
   u32 data_size = ld32(buffer + 40);
   if (
+    /* Constant fields */
     !byte_equal(buffer,      4, (u8*)"RIFF") ||
     !byte_equal(buffer +  8, 4, (u8*)"WAVE") ||
     !byte_equal(buffer + 12, 4, (u8*)"fmt ") ||
     !byte_equal(buffer + 36, 4, (u8*)"data") ||
+    /* Frame size is standardised. */
     frame_size != num_channels * ((bit_depth + 7) / 8) ||
-    data_size + 36 != file_size ||
+    /* File must be large enough to contain all the data. */
+    data_size + 36 > file_size ||
+    /* Byterate is redundant. */
     ld32(buffer + 28) != frame_size * sample_rate
   ) return -1;
   header->format = ld16(buffer + 20);
@@ -155,7 +159,7 @@ int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, uint8_t *buffer)
         return -1;
     }
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples)
@@ -179,7 +183,7 @@ int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples
         return -1;
     }
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffer)
@@ -210,7 +214,7 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffe
         return -1;
     }
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, double *samples)
@@ -241,5 +245,5 @@ int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, double *sampl
         return -1;
     }
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }

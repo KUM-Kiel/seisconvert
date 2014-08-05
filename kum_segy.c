@@ -46,7 +46,7 @@ static void byte_copy_0(u8 *to, u64 l, u8 *from)
 
 int kum_segy_binary_header_read(kum_segy_binary_header_t *header, u8 *buffer)
 {
-  int r = 0;
+  int r = 0; /* Return code. Don't stop when there are inconsistencies, but tell when there were. */
   u32 j = ld32(buffer);
   header->job_id = j;
   header->year = (j >> 20) & 0xfff;       /* First 12 bit of job_id */
@@ -124,7 +124,7 @@ int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_
   int i;
   FOR(i, NUM_CHANNELS(fc))
     samples[0] = (int32_t)ld32(buffer);
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_t *samples)
@@ -132,7 +132,7 @@ int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_
   int i;
   FOR(i, NUM_CHANNELS(fc))
     st32(buffer, (uint32_t)samples[0]);
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint8_t *buffer)
@@ -143,7 +143,7 @@ int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint
     samples[i] = (int32_t)ld32(buffer) * s;
     buffer += 4;
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }
 
 int kum_segy_write_double_frame(kum_segy_frame_config_t fc, uint8_t *buffer, double *samples)
@@ -154,5 +154,5 @@ int kum_segy_write_double_frame(kum_segy_frame_config_t fc, uint8_t *buffer, dou
     st32(buffer, (int32_t)(samples[i] * s));
     buffer += 4;
   }
-  return 0;
+  return FRAME_SIZE(fc);
 }
