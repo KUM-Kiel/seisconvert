@@ -87,7 +87,7 @@ int main(int argc, char **argv)
   whdr.num_frames = 4000000;//kum_header_bin.num_samples;
 
   FOR(i, CHANNELS) {
-    fm[i].f = 880;
+    fm[i].f = 1000;
     fm[i].hub = 200000;
     fm[i].phase = 0;
     fm[i].sample_interval = 1.0 / whdr.sample_rate;
