@@ -138,7 +138,7 @@ int wav_get_frame_size(wav_frame_config_t fc)
   return FRAME_SIZE(fc);
 }
 
-int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, uint8_t *buffer)
+int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, const uint8_t *buffer)
 {
   int i, b = BIT_DEPTH(fc);
   FOR(i, NUM_CHANNELS(fc)) {
@@ -162,7 +162,7 @@ int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, uint8_t *buffer)
   return FRAME_SIZE(fc);
 }
 
-int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples)
+int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, const int32_t *samples)
 {
   int i, b = BIT_DEPTH(fc);
   FOR(i, NUM_CHANNELS(fc)) {
@@ -186,7 +186,7 @@ int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples
   return FRAME_SIZE(fc);
 }
 
-int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffer)
+int wav_read_double_frame(wav_frame_config_t fc, double *samples, const uint8_t *buffer)
 {
   int i, b = BIT_DEPTH(fc);
   double s = 0;
@@ -199,11 +199,11 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffe
   FOR(i, NUM_CHANNELS(fc)) {
     switch (b) {
       case 8:
-        samples[i] = (int32_t)buffer[i] * s;
+        samples[i] = (int8_t)buffer[i] * s;
         break;
       case 12:
       case 16:
-        samples[i] = (int32_t)ld16(buffer) * s;
+        samples[i] = (int16_t)ld16(buffer) * s;
         buffer += 2;
         break;
       case 32:
@@ -217,7 +217,7 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffe
   return FRAME_SIZE(fc);
 }
 
-int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, double *samples)
+int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, const double *samples)
 {
   int i, b = BIT_DEPTH(fc);
   double s = 0;

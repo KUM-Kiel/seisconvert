@@ -30,10 +30,10 @@ extern wav_frame_config_t wav_get_frame_config(wav_header_t *header);
 /* Returns the frame size for the given frame config. */
 extern int wav_get_frame_size(wav_frame_config_t fc);
 
-extern int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, uint8_t *buffer);
-extern int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, int32_t *samples);
+extern int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, const uint8_t *buffer);
+extern int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, const int32_t *samples);
 
-extern int wav_read_double_frame(wav_frame_config_t fc, double *samples, uint8_t *buffer);
-extern int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, double *samples);
+extern int wav_read_double_frame(wav_frame_config_t fc, double *samples, const uint8_t *buffer);
+extern int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, const double *samples);
 
 #endif

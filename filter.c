@@ -41,10 +41,9 @@ int biquad_filter_highpass(biquad_filter_t *f, double cutoff, double sample_rate
 
 double biquad_filter(biquad_filter_t *f, double x)
 {
-  double w, y;
-  w = f->a[0] * x + f->a[1] * f->w[0] + f->a[2] * f->w[1];
-  y = f->b[0] * w - f->b[1] * f->w[0] - f->b[2] * f->w[1];
-  /* Update state */
-  f->w[1] = f->w[0]; f->w[0] = w;
+  double y;
+  y = x * f->a[0] + f->w[0];
+  f->w[0] = x * f->a[1] + f->w[1] - y * f->b[1];
+  f->w[1] = x * f->a[2] - y * f->b[2];
   return y;
 }
