@@ -20,8 +20,8 @@ int main(int argc, char **argv)
   int i, j, cutoff;
 
   if (argc < 2) return -1;
-  cutoff = atoi(argv[2]);
-  if (cutoff >= 0) return -1;
+  cutoff = atoi(argv[1]);
+  if (cutoff <= 0) return -1;
 
   R(buffer, WAV_HEADER_BYTES);
   if (wav_header_read(&wh, buffer) < 0) return -1;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     R(buffer, wav_get_frame_size(fc));
     wav_read_double_frame(fc, frame, buffer);
     FOR(j, wh.num_channels) {
-      frame[i] = biquad_filter(filter + i, frame[i]);
+      frame[j] = biquad_filter(filter + j, frame[j]);
     }
     wav_write_double_frame(fc, buffer, frame);
     W(buffer, wav_get_frame_size(fc));
