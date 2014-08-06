@@ -1,0 +1,39 @@
+.TH biquad_filter 3 "August 2014" "KUM Kiel" "Seisconvert"
+
+.SH NAME
+biquad_filter \- filter a signal with a biquad filter.
+
+.SH SYNTAX
+#include "filter.h"
+
+double \fBbiquad_filter\fP(biquad_filter_t *\fIfilter\fR, double \fIx\fR);
+
+.SH DESCRIPTION
+biquad_filter filters a double value with the given biquad_filter_t structure.
+
+The filter follows the following difference equations:
+
+.RS
+   y[n] = x[n] * a0 + w0[n - 1];
+  w0[n] = x[n] * a1 + w1[n - 1] - y * b1;
+  w1[n] = x[n] * a2 - y * b2;
+.RE
+
+.SH EXAMPLE
+  #include "filter.h"
+
+  biquad_filter_t \fIfilter\fR;
+  double \fIx\fR, \fIy\fR;
+
+  biquad_filter_lowpass(&\fIfilter\fR, 1000, \fIsample_rate\fR);
+
+  for (int \fIi\fR = 0; \fIi\fR < \fInum_samples\fR; ++\fIi\fR) {
+.RS
+  /* read x */
+  \fIy\fR = biquad_filter(&\fIfilter\fR, \fIx\fR);
+  /* write y */
+.RE
+  }
+
+.SH SEE ALSO
+biquad_filter_init(3), biquad_filter_lowpass(3)

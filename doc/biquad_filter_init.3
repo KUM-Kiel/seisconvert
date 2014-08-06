@@ -1,0 +1,24 @@
+.TH biquad_filter_init 3 "August 2014" "KUM Kiel" "Seisconvert"
+
+.SH NAME
+biquad_filter_init \- initialise a biquad filter with the given coefficients.
+
+.SH SYNTAX
+#include "filter.h"
+
+double \fBbiquad_filter_init\fP(biquad_filter_t *\fIfilter\fR, double \fIa0\fR, double \fIa1\fR, double \fIa2\fR, double \fIb1\fR, double \fIb2\fR);
+
+.SH DESCRIPTION
+biquad_filter_init initialises the given biquad_filter_t structure.
+Needs the parameters a0, a1, a2, b1 and b2.
+b0 is set to 1.
+
+.SH EXAMPLE
+  #include "filter.h"
+
+  biquad_filter_t \fIfilter\fR;
+
+  biquad_filter_init(&\fIfilter\fR, 0.5, 0, 0, 0, 0);
+
+.SH SEE ALSO
+biquad_filter(3), biquad_filter_lowpass(3), biquad_filter_highpass(3)
