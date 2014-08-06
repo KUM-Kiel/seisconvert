@@ -95,7 +95,7 @@ int wav_header_read(wav_header_t *header, uint8_t *buffer)
   header->sample_rate = sample_rate;
   header->bit_depth = bit_depth;
   header->num_frames = data_size / frame_size;
-  return 0;
+  return 44;
 }
 
 int wav_header_write(uint8_t *buffer, wav_header_t *header)
@@ -115,7 +115,7 @@ int wav_header_write(uint8_t *buffer, wav_header_t *header)
   st16(buffer + 34, header->bit_depth);
   byte_copy(buffer + 36, 4, (u8*)"data");
   st32(buffer + 40, data_size);
-  return 0;
+  return 44;
 }
 
 wav_frame_config_t wav_get_frame_config(wav_header_t *header)

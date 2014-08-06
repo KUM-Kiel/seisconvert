@@ -84,7 +84,7 @@ int main(int argc, char **argv)
   whdr.num_channels = CHANNELS;
   whdr.sample_rate = 1000000 / kum_header_bin.sample_interval;
   whdr.bit_depth = 16;
-  whdr.num_frames = 4000000;//kum_header_bin.num_samples;
+  whdr.num_frames = 4000000;/*kum_header_bin.num_samples;*/
 
   FOR(i, CHANNELS) {
     fm[i].f = 1000;

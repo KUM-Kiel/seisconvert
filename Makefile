@@ -1,9 +1,9 @@
 COMPILE = $(CC) -c -Wall -pedantic -O2
 LINK = $(CC) -o
 
-TARGETS = kum_segy.o wav.o fm.o test.o test wav_test.o wav_test
+TARGETS = kum_segy.o wav.o fm.o filter.o test.o test wav_test.o wav_test lowpass.o lowpass
 
-all: test wav_test
+all: test wav_test lowpass
 
 kum_segy.o: kum_segy.c kum_segy.h Makefile
 	$(COMPILE) kum_segy.c
@@ -13,6 +13,9 @@ wav.o: wav.c wav.h Makefile
 
 fm.o: fm.c fm.h Makefile
 	$(COMPILE) fm.c
+
+filter.o: filter.c filter.h Makefile
+	$(COMPILE) filter.c
 
 test.o: test.c kum_segy.h wav.h fm.h Makefile
 	$(COMPILE) test.c
@@ -25,6 +28,12 @@ wav_test.o: wav_test.c wav.h Makefile
 
 wav_test: wav_test.o wav.o Makefile
 	$(LINK) wav_test wav_test.o wav.o -lm
+
+lowpass.o: lowpass.c wav.h filter.h Makefile
+	$(COMPILE) lowpass.c
+
+lowpass: lowpass.o wav.o filter.o Makefile
+	$(LINK) lowpass lowpass.o wav.o filter.o -lm
 
 clean:
 	rm -rf $(TARGETS)
