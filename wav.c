@@ -71,12 +71,14 @@ typedef struct {
 
 int wav_header_read(wav_header_t *header, uint8_t *buffer)
 {
-  u32 num_channels = ld16(buffer + 22);
-  u32 frame_size = ld16(buffer + 32);
-  u32 bit_depth = ld16(buffer + 34);
-  u32 sample_rate = ld32(buffer + 24);
-  u32 file_size = ld32(buffer + 4);
-  u32 data_size = ld32(buffer + 40);
+  u32 num_channels, frame_size, bit_depth, sample_rate, file_size, data_size;
+  if (!header || !buffer) return -1;
+  num_channels = ld16(buffer + 22);
+  frame_size = ld16(buffer + 32);
+  bit_depth = ld16(buffer + 34);
+  sample_rate = ld32(buffer + 24);
+  file_size = ld32(buffer + 4);
+  data_size = ld32(buffer + 40);
   if (
     /* Constant fields */
     !byte_equal(buffer,      4, (u8*)"RIFF") ||
@@ -100,8 +102,10 @@ int wav_header_read(wav_header_t *header, uint8_t *buffer)
 
 int wav_header_write(uint8_t *buffer, wav_header_t *header)
 {
-  u32 frame_size = header->num_channels * ((header->bit_depth + 7) / 8);
-  u32 data_size = header->num_frames * frame_size;
+  u32 frame_size, data_size;
+  if (!header || !buffer) return -1;
+  frame_size = header->num_channels * ((header->bit_depth + 7) / 8);
+  data_size = header->num_frames * frame_size;
   byte_copy(buffer,      4, (u8*)"RIFF");
   st32(buffer +  4, data_size + 36);
   byte_copy(buffer +  8, 4, (u8*)"WAVE");
@@ -140,7 +144,9 @@ int wav_get_frame_size(wav_frame_config_t fc)
 
 int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, const uint8_t *buffer)
 {
-  int i, b = BIT_DEPTH(fc);
+  int i, b;
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
   FOR(i, NUM_CHANNELS(fc)) {
     switch (b) {
       case 8:
@@ -164,7 +170,9 @@ int wav_read_int_frame(wav_frame_config_t fc, int32_t *samples, const uint8_t *b
 
 int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, const int32_t *samples)
 {
-  int i, b = BIT_DEPTH(fc);
+  int i, b;
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
   FOR(i, NUM_CHANNELS(fc)) {
     switch (b) {
       case 8:
@@ -188,8 +196,10 @@ int wav_write_int_frame(wav_frame_config_t fc, uint8_t *buffer, const int32_t *s
 
 int wav_read_double_frame(wav_frame_config_t fc, double *samples, const uint8_t *buffer)
 {
-  int i, b = BIT_DEPTH(fc);
+  int i, b;
   double s = 0;
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
   switch (b) {
     case 8:  s = 1.0 / 0x7f; break;
     case 12: s = 1.0 / 0x7ff0; break;
@@ -219,8 +229,10 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, const uint8_t 
 
 int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, const double *samples)
 {
-  int i, b = BIT_DEPTH(fc);
+  int i, b;
   double s = 0;
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
   switch (b) {
     case 8:  s = 0x7f; break;
     case 12: s = 0x7ff0; break;
