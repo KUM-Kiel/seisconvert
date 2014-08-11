@@ -85,7 +85,7 @@ int wav_header_read(wav_header_t *header, uint8_t *buffer)
     !byte_equal(buffer +  8, 4, (u8*)"WAVE") ||
     !byte_equal(buffer + 12, 4, (u8*)"fmt ") ||
     !byte_equal(buffer + 36, 4, (u8*)"data") ||
-    ld_u32_le(buffer + 16) == 16 ||
+    ld_u32_le(buffer + 16) != 16 ||
     /* Frame size is redundant. It can be calculated from bit_depth and num_channels. */
     frame_size != num_channels * ((bit_depth + 7) / 8) ||
     /* File must be large enough to contain all the data. */
