@@ -99,11 +99,12 @@ return function()
 
   local function gen(m, name)
     local f = io.open(name, "w")
+    f:write("# This file was automatically generated. Do not edit!\n")
     f:write("COMPILE = $(CC) -c -Wall -pedantic -O2" .. _includes .. "\n")
     f:write("LINK = $(CC) -Lbuild -o\n")
     f:write("MAKELIB = $(AR) rcs\n\n")
     f:write("TARGETS = " .. table.concat(_targets, " ") .. "\n\n")
-    f:write("all:" .. _all .. "\n\n")
+    f:write("all:" .. _all .. "\n")
     for i, p in ipairs(_programs) do
       local l = ""
       local d = ""

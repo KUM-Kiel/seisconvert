@@ -1,11 +1,11 @@
+# This file was automatically generated. Do not edit!
 COMPILE = $(CC) -c -Wall -pedantic -O2 -Isrc/kumy -Isrc/segy -Isrc/wav
 LINK = $(CC) -Lbuild -o
 MAKELIB = $(AR) rcs
 
-TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/libwav.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o
+TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/libwav.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy.o build/objects/cos.o
 
-all: build/libkumy.a build/libsegy.a build/libwav.a build/test build/wav_test build/lowpass build/highpass
-
+all: build/libkumy.a build/libsegy.a build/libwav.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy build/cos
 build/test: build/objects/test.o build/libkumy.a build/libwav.a Makefile
 	@mkdir -p build/
 	$(LINK) build/test build/objects/test.o -lkumy -lwav -lm
@@ -18,6 +18,15 @@ build/lowpass: build/objects/lowpass.o build/libwav.a Makefile
 build/highpass: build/objects/highpass.o build/libwav.a Makefile
 	@mkdir -p build/
 	$(LINK) build/highpass build/objects/highpass.o -lwav -lm
+build/fm: build/objects/fm.o build/libwav.a Makefile
+	@mkdir -p build/
+	$(LINK) build/fm build/objects/fm.o -lwav -lm
+build/kumy: build/objects/kumy.o build/libwav.a build/libkumy.a Makefile
+	@mkdir -p build/
+	$(LINK) build/kumy build/objects/kumy.o -lwav -lkumy
+build/cos: build/objects/cos.o build/libwav.a Makefile
+	@mkdir -p build/
+	$(LINK) build/cos build/objects/cos.o -lwav -lm
 build/libkumy.a: build/objects/kumy/kumy.o Makefile
 	@mkdir -p build/
 	$(MAKELIB) build/libkumy.a build/objects/kumy/kumy.o
@@ -54,5 +63,14 @@ build/objects/lowpass.o: src/lowpass.c src/wav/wav.h src/wav/filter.h Makefile
 build/objects/highpass.o: src/highpass.c src/wav/wav.h src/wav/filter.h Makefile
 	@mkdir -p build/objects/
 	$(COMPILE) -o build/objects/highpass.o src/highpass.c
+build/objects/fm.o: src/fm.c src/wav/wav.h src/wav/fm.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/fm.o src/fm.c
+build/objects/kumy.o: src/kumy.c src/wav/wav.h src/kumy/kumy.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/kumy.o src/kumy.c
+build/objects/cos.o: src/cos.c src/wav/wav.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/cos.o src/cos.c
 clean:
 	rm -rf build

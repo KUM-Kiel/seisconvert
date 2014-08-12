@@ -32,4 +32,16 @@ m:program("highpass", {
   m:c("highpass", {"wav/wav.h", "wav/filter.h"})
 }, {"wav", "m"})
 
+m:program("fm", {
+  m:c("fm", {"wav/wav.h", "wav/fm.h"})
+}, {"wav", "m"})
+
+m:program("kumy", {
+  m:c("kumy", {"wav/wav.h", "kumy/kumy.h"})
+}, {"wav", "kumy"})
+
+m:program("cos", {
+  m:c("cos", {"wav/wav.h"})
+}, {"wav", "m"})
+
 m:gen("Makefile")

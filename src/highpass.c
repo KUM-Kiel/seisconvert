@@ -29,6 +29,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "Invalid WAV header.\n");
     return -1;
   }
+  fprintf(stderr, "WAV %uBit/%gkHz. Duration: %.2fs.\n", wh.bit_depth, wh.sample_rate / 1000.0, (double)wh.num_frames / wh.sample_rate);
   W(buffer, WAV_HEADER_BYTES);
 
   FOR(k, STAGES) {
