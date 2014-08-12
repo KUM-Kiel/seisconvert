@@ -1,48 +1,52 @@
-COMPILE = $(CC) -c -Wall -pedantic -O2
-LINK = $(CC) -o
+COMPILE = $(CC) -c -Wall -pedantic -O2 -Isrc/seisconvert
+LINK = $(CC) -Lbuild -o
+MAKELIB = $(AR) rcs
 
-TARGETS = kum_segy.o wav.o segy.o fm.o filter.o test.o test wav_test.o wav_test lowpass.o highpass.o highpass
+TARGETS = build/objects/seisconvert/kum_segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/fm.o build/objects/seisconvert/filter.o build/objects/seisconvert/segy.o build/libseisconvert.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o
 
-all: test wav_test lowpass highpass segy.o
+all: build/libseisconvert.a build/test build/wav_test build/lowpass build/highpass
 
-kum_segy.o: kum_segy.c kum_segy.h Makefile
-	$(COMPILE) kum_segy.c
-
-wav.o: wav.c wav.h Makefile
-	$(COMPILE) wav.c
-
-segy.o: segy.c segy.h Makefile
-	$(COMPILE) segy.c
-
-fm.o: fm.c fm.h Makefile
-	$(COMPILE) fm.c
-
-filter.o: filter.c filter.h Makefile
-	$(COMPILE) filter.c
-
-test.o: test.c kum_segy.h wav.h fm.h Makefile
-	$(COMPILE) test.c
-
-test: test.o kum_segy.o wav.o fm.o Makefile
-	$(LINK) test test.o kum_segy.o wav.o fm.o -lm
-
-wav_test.o: wav_test.c wav.h Makefile
-	$(COMPILE) wav_test.c
-
-wav_test: wav_test.o wav.o Makefile
-	$(LINK) wav_test wav_test.o wav.o -lm
-
-lowpass.o: lowpass.c wav.h filter.h Makefile
-	$(COMPILE) lowpass.c
-
-lowpass: lowpass.o wav.o filter.o Makefile
-	$(LINK) lowpass lowpass.o wav.o filter.o -lm
-
-highpass.o: highpass.c wav.h filter.h Makefile
-	$(COMPILE) highpass.c
-
-highpass: highpass.o wav.o filter.o Makefile
-	$(LINK) highpass highpass.o wav.o filter.o -lm
-
+build/test: build/objects/test.o build/libseisconvert.a Makefile
+	@mkdir -p build/
+	$(LINK) build/test build/objects/test.o -lseisconvert -lm
+build/wav_test: build/objects/wav_test.o build/libseisconvert.a Makefile
+	@mkdir -p build/
+	$(LINK) build/wav_test build/objects/wav_test.o -lseisconvert -lm
+build/lowpass: build/objects/lowpass.o build/libseisconvert.a Makefile
+	@mkdir -p build/
+	$(LINK) build/lowpass build/objects/lowpass.o -lseisconvert -lm
+build/highpass: build/objects/highpass.o build/libseisconvert.a Makefile
+	@mkdir -p build/
+	$(LINK) build/highpass build/objects/highpass.o -lseisconvert -lm
+build/libseisconvert.a: build/objects/seisconvert/kum_segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/fm.o build/objects/seisconvert/filter.o build/objects/seisconvert/segy.o Makefile
+	@mkdir -p build/
+	$(MAKELIB) build/libseisconvert.a build/objects/seisconvert/kum_segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/fm.o build/objects/seisconvert/filter.o build/objects/seisconvert/segy.o
+build/objects/seisconvert/kum_segy.o: src/seisconvert/kum_segy.c src/seisconvert/kum_segy.h Makefile
+	@mkdir -p build/objects/seisconvert/
+	$(COMPILE) -o build/objects/seisconvert/kum_segy.o src/seisconvert/kum_segy.c
+build/objects/seisconvert/wav.o: src/seisconvert/wav.c src/seisconvert/wav.h Makefile
+	@mkdir -p build/objects/seisconvert/
+	$(COMPILE) -o build/objects/seisconvert/wav.o src/seisconvert/wav.c
+build/objects/seisconvert/fm.o: src/seisconvert/fm.c src/seisconvert/fm.h Makefile
+	@mkdir -p build/objects/seisconvert/
+	$(COMPILE) -o build/objects/seisconvert/fm.o src/seisconvert/fm.c
+build/objects/seisconvert/filter.o: src/seisconvert/filter.c src/seisconvert/filter.h Makefile
+	@mkdir -p build/objects/seisconvert/
+	$(COMPILE) -o build/objects/seisconvert/filter.o src/seisconvert/filter.c
+build/objects/seisconvert/segy.o: src/seisconvert/segy.c src/seisconvert/segy.h Makefile
+	@mkdir -p build/objects/seisconvert/
+	$(COMPILE) -o build/objects/seisconvert/segy.o src/seisconvert/segy.c
+build/objects/test.o: src/test.c src/seisconvert/kum_segy.h src/seisconvert/wav.h src/seisconvert/fm.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/test.o src/test.c
+build/objects/wav_test.o: src/wav_test.c src/seisconvert/wav.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/wav_test.o src/wav_test.c
+build/objects/lowpass.o: src/lowpass.c src/seisconvert/wav.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/lowpass.o src/lowpass.c
+build/objects/highpass.o: src/highpass.c src/seisconvert/wav.h Makefile
+	@mkdir -p build/objects/
+	$(COMPILE) -o build/objects/highpass.o src/highpass.c
 clean:
-	rm -rf $(TARGETS)
+	rm -rf build
