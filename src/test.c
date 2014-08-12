@@ -3,15 +3,15 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include "kum_segy.h"
+#include "kumy.h"
 #include "wav.h"
 #include "fm.h"
 
 #define FOR(i, n) for (i = 0; i < n; ++i)
 
-static void print_kum_segy_txt(kum_segy_text_header_t *header)
+static void print_kumy_txt(kumy_text_header_t *header)
 {
-  printf("SEG-Y Text Header\n");
+  printf("KUM-Y Text Header\n");
   printf("  client:          %s\n", header->client);
   printf("  company:         %s\n", header->company);
   printf("  crew_no:         %s\n", header->crew_no);
@@ -25,9 +25,9 @@ static void print_kum_segy_txt(kum_segy_text_header_t *header)
   printf("  serial_no:       %s\n", header->serial_no);
 }
 
-static void print_kum_segy_bin(kum_segy_binary_header_t *header)
+static void print_kumy_bin(kumy_binary_header_t *header)
 {
-  printf("SEG-Y Binary Header\n");
+  printf("KUM-Y Binary Header\n");
   printf("  job_id:          %x\n", header->job_id);
   printf("  year:            %u\n", header->year);
   printf("  julian_day:      %u\n", header->julian_day);
@@ -43,9 +43,9 @@ int main(int argc, char **argv)
 {
   uint8_t text_header[3200], binary_header[400], buffer[64];
   double frame[CHANNELS];
-  kum_segy_text_header_t kum_header_txt;
-  kum_segy_binary_header_t kum_header_bin;
-  kum_segy_frame_config_t kfc;
+  kumy_text_header_t kum_header_txt;
+  kumy_binary_header_t kum_header_bin;
+  kumy_frame_config_t kfc;
   wav_frame_config_t wfc;
   wav_header_t whdr;
   FILE *f, *wav;
@@ -69,13 +69,13 @@ int main(int argc, char **argv)
     if (l <= 0) return -1;
     l = fread(binary_header, 400, 1, f);
     if (l <= 0) return -1;
-    kum_segy_text_header_read(&kum_header_txt, text_header);
-    if (kum_segy_binary_header_read(&kum_header_bin, binary_header) == -1) {
+    kumy_text_header_read(&kum_header_txt, text_header);
+    if (kumy_binary_header_read(&kum_header_bin, binary_header) == -1) {
       fprintf(stderr, "Someone has messed something up!\n");
       messed = 1;
     }
-    print_kum_segy_txt(&kum_header_txt);
-    print_kum_segy_bin(&kum_header_bin);
+    print_kumy_txt(&kum_header_txt);
+    print_kumy_bin(&kum_header_bin);
   }
 
   if (messed) return -1;
@@ -94,16 +94,16 @@ int main(int argc, char **argv)
   }
 
   wfc = wav_get_frame_config(&whdr);
-  kfc = kum_segy_get_frame_config(&kum_header_bin);
+  kfc = kumy_get_frame_config(&kum_header_bin);
 
   wav_header_write(buffer, &whdr);
   fwrite(buffer, WAV_HEADER_BYTES, 1, wav);
 
   FOR(i, whdr.num_frames) {
     FOR(j, CHANNELS) {
-      l = fread(buffer, kum_segy_get_frame_size(kfc), 1, f);
+      l = fread(buffer, kumy_get_frame_size(kfc), 1, f);
       if (l <= 0) return -1;
-      kum_segy_read_double_frame(kfc, frame + j, buffer);
+      kumy_read_double_frame(kfc, frame + j, buffer);
       frame[j] = fm_modulate(&fm[j], frame[j]);
     }
     wav_write_double_frame(wfc, buffer, frame);

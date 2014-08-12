@@ -1,4 +1,4 @@
-#include "kum_segy.h"
+#include "kumy.h"
 
 #define FOR(i, n) for (i = 0; i < n; ++i)
 
@@ -44,7 +44,7 @@ static void byte_copy_0(u8 *to, u64 l, u8 *from)
   to[i] = 0;
 }
 
-int kum_segy_binary_header_read(kum_segy_binary_header_t *header, u8 *buffer)
+int kumy_binary_header_read(kumy_binary_header_t *header, u8 *buffer)
 {
   int r = 0; /* Return code. Don't stop when there are inconsistencies, but tell when there were. */
   u32 j = ld32(buffer);
@@ -60,7 +60,7 @@ int kum_segy_binary_header_read(kum_segy_binary_header_t *header, u8 *buffer)
   return r;
 }
 
-int kum_segy_binary_header_write(u8 *buffer, kum_segy_binary_header_t *header)
+int kumy_binary_header_write(u8 *buffer, kumy_binary_header_t *header)
 {
   int i;
   FOR (i, 400) buffer[i] = 0;
@@ -79,7 +79,7 @@ int kum_segy_binary_header_write(u8 *buffer, kum_segy_binary_header_t *header)
   return 0;
 }
 
-int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *buffer)
+int kumy_text_header_read(kumy_text_header_t *header, uint8_t *buffer)
 {
   byte_copy(header->content, 3200, buffer);
   byte_copy_0(header->client, 22, buffer + 11);
@@ -96,7 +96,7 @@ int kum_segy_text_header_read(kum_segy_text_header_t *header, uint8_t *buffer)
   return 0;
 }
 
-int kum_segy_text_header_write(uint8_t *buffer, kum_segy_text_header_t *header)
+int kumy_text_header_write(uint8_t *buffer, kumy_text_header_t *header)
 {
   int i;
   FOR (i, 3200) buffer[i] = 0;
@@ -104,7 +104,7 @@ int kum_segy_text_header_write(uint8_t *buffer, kum_segy_text_header_t *header)
   return 0;
 }
 
-kum_segy_frame_config_t kum_segy_get_frame_config(kum_segy_binary_header_t *header)
+kumy_frame_config_t kumy_get_frame_config(kumy_binary_header_t *header)
 {
   return (4 << 24) | (2 << 16) | (32 << 8) | 1;
 }
@@ -114,12 +114,12 @@ kum_segy_frame_config_t kum_segy_get_frame_config(kum_segy_binary_header_t *head
 #define FORMAT(fc) (((fc) >> 16) & 255)
 #define FRAME_SIZE(fc) (((fc) >> 24) & 255)
 
-int kum_segy_get_frame_size(kum_segy_frame_config_t fc)
+int kumy_get_frame_size(kumy_frame_config_t fc)
 {
   return FRAME_SIZE(fc);
 }
 
-int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_t *buffer)
+int kumy_read_int_frame(kumy_frame_config_t fc, int32_t *samples, uint8_t *buffer)
 {
   int i;
   FOR(i, NUM_CHANNELS(fc))
@@ -127,7 +127,7 @@ int kum_segy_read_int_frame(kum_segy_frame_config_t fc, int32_t *samples, uint8_
   return FRAME_SIZE(fc);
 }
 
-int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_t *samples)
+int kumy_write_int_frame(kumy_frame_config_t fc, uint8_t *buffer, int32_t *samples)
 {
   int i;
   FOR(i, NUM_CHANNELS(fc))
@@ -135,7 +135,7 @@ int kum_segy_write_int_frame(kum_segy_frame_config_t fc, uint8_t *buffer, int32_
   return FRAME_SIZE(fc);
 }
 
-int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint8_t *buffer)
+int kumy_read_double_frame(kumy_frame_config_t fc, double *samples, uint8_t *buffer)
 {
   int i;
   double s = 1.0 / 0x7fffffff;
@@ -146,7 +146,7 @@ int kum_segy_read_double_frame(kum_segy_frame_config_t fc, double *samples, uint
   return FRAME_SIZE(fc);
 }
 
-int kum_segy_write_double_frame(kum_segy_frame_config_t fc, uint8_t *buffer, double *samples)
+int kumy_write_double_frame(kumy_frame_config_t fc, uint8_t *buffer, double *samples)
 {
   int i;
   double s = 0x7fffffff;

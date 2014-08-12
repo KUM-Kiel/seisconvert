@@ -2,28 +2,34 @@ local make = require("make")
 
 local m = make()
 
-m:lib("seisconvert", {
-  m:c("kum_segy", {"kum_segy.h"}),
-  m:c("wav", {"wav.h"}),
-  m:c("fm", {"fm.h"}),
-  m:c("filter", {"filter.h"}),
+m:lib("kumy", {
+  m:c("kumy", {"kumy.h"})
+})
+
+m:lib("segy", {
   m:c("segy", {"segy.h"})
 })
 
+m:lib("wav", {
+  m:c("wav", {"wav.h"}),
+  m:c("filter", {"filter.h"}),
+  m:c("fm", {"fm.h"})
+})
+
 m:program("test", {
-  m:c("test", {"seisconvert/kum_segy.h", "seisconvert/wav.h", "seisconvert/fm.h"})
-}, {"seisconvert", "m"})
+  m:c("test", {"kumy/kumy.h", "wav/wav.h", "wav/fm.h"})
+}, {"kumy", "wav", "m"})
 
 m:program("wav_test", {
-  m:c("wav_test", {"seisconvert/wav.h"})
-}, {"seisconvert", "m"})
+  m:c("wav_test", {"wav/wav.h"})
+}, {"wav", "m"})
 
 m:program("lowpass", {
-  m:c("lowpass", {"seisconvert/wav.h"})
-}, {"seisconvert", "m"})
+  m:c("lowpass", {"wav/wav.h", "wav/filter.h"})
+}, {"wav", "m"})
 
 m:program("highpass", {
-  m:c("highpass", {"seisconvert/wav.h"})
-}, {"seisconvert", "m"})
+  m:c("highpass", {"wav/wav.h", "wav/filter.h"})
+}, {"wav", "m"})
 
 m:gen("Makefile")
