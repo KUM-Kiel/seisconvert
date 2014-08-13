@@ -114,19 +114,22 @@ return function()
         end
         l = l .. " -l" .. v
       end
-      f:write(p.target .. ": " .. table.concat(p.objects, " ") .. d .. " " .. name .. "\n" ..
-        "\t@mkdir -p " .. folder(p.target) .. "\n" ..
-        "\t$(LINK) " .. p.target .. " " .. table.concat(p.objects, " ") .. l .. "\n")
+      f:write(p.target .. ": " .. table.concat(p.objects, " ") .. d .. " " .. name .. "\n")
+      f:write("\t@echo [LD] " .. p.target .. "\n")
+      f:write("\t@mkdir -p " .. folder(p.target) .. "\n")
+      f:write("\t@$(LINK) " .. p.target .. " " .. table.concat(p.objects, " ") .. l .. "\n")
     end
     for i, l in ipairs(_libs) do
-      f:write(l.target .. ": " .. table.concat(l.objects, " ") .. " " .. name .. "\n" ..
-        "\t@mkdir -p " .. folder(l.target) .. "\n" ..
-        "\t$(MAKELIB) " .. l.target .. " " .. table.concat(l.objects, " ") .. "\n")
+      f:write(l.target .. ": " .. table.concat(l.objects, " ") .. " " .. name .. "\n")
+      f:write("\t@echo [AR] " .. l.target .. "\n")
+      f:write("\t@mkdir -p " .. folder(l.target) .. "\n")
+      f:write("\t@$(MAKELIB) " .. l.target .. " " .. table.concat(l.objects, " ") .. "\n")
     end
     for i, o in ipairs(_objects) do
-      f:write(o.target .. ": " .. table.concat(o.deps, " ") .. " " .. name .. "\n" ..
-        "\t@mkdir -p " .. folder(o.target) .. "\n" ..
-        "\t$(COMPILE) -o " .. o.target .. " " .. o.source .. "\n")
+      f:write(o.target .. ": " .. table.concat(o.deps, " ") .. " " .. name .. "\n")
+      f:write("\t@echo [CC] " .. o.target .. "\n")
+      f:write("\t@mkdir -p " .. folder(o.target) .. "\n")
+      f:write("\t@$(COMPILE) -o " .. o.target .. " " .. o.source .. "\n")
     end
     f:write("clean:\n\trm -rf build\n")
   end

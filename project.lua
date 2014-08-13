@@ -6,6 +6,10 @@ m:lib("kumy", {
   m:c("kumy", {"kumy.h"})
 })
 
+m:lib("seed", {
+  m:c("seed", {"seed.h"})
+})
+
 m:lib("segy", {
   m:c("segy", {"segy.h"})
 })
