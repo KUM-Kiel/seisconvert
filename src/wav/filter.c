@@ -1,5 +1,6 @@
 #include "filter.h"
 
+#define M_PI 3.141592653589793238462643383
 #include <math.h>
 
 int biquad_filter_init(biquad_filter_t *f, double a0, double a1, double a2, double b1, double b2)

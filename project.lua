@@ -16,9 +16,42 @@ m:lib("wav", {
   m:c("fm", {"fm.h"})
 })
 
+m:lib("tai", {
+  m:c("caldate_fmjd", {"caldate.h"}),
+  m:c("caldate_fmt", {"caldate.h"}),
+  m:c("caldate_mjd", {"caldate.h"}),
+  m:c("caldate_norm", {"caldate.h"}),
+  m:c("caldate_scan", {"caldate.h"}),
+  m:c("caldate_ster", {"caldate.h"}),
+  m:c("caltime_fmt", {"caldate.h", "caltime.h"}),
+  m:c("caltime_scan", {"caldate.h", "caltime.h"}),
+  m:c("caltime_tai", {"caldate.h", "caltime.h", "tai.h", "uint64.h", "leapsecs.h"}),
+  m:c("caltime_utc", {"caldate.h", "caltime.h", "tai.h", "uint64.h", "leapsecs.h"}),
+  m:c("leapsecs_add", {"leapsecs.h", "tai.h", "uint64.h"}),
+  m:c("leapsecs_init", {"leapsecs.h", "tai.h", "uint64.h"}),
+  m:c("leapsecs_read", {"leapsecs.h", "tai.h", "uint64.h"}),
+  m:c("leapsecs_sub", {"leapsecs.h", "tai.h", "uint64.h"}),
+  m:c("tai_add", {"tai.h", "uint64.h"}),
+  m:c("tai_now", {"tai.h", "uint64.h"}),
+  m:c("tai_pack", {"tai.h", "uint64.h"}),
+  m:c("tai_sub", {"tai.h", "uint64.h"}),
+  m:c("tai_unpack", {"tai.h", "uint64.h"}),
+  m:c("taia_add", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_approx", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_fmtfrac", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_frac", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_half", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_less", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_now", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_pack", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_sub", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_tai", {"taia.h", "tai.h", "uint64.h"}),
+  m:c("taia_unpack", {"taia.h", "tai.h", "uint64.h"})
+})
+
 m:program("test", {
   m:c("test", {"kumy/kumy.h", "wav/wav.h", "wav/fm.h"})
-}, {"kumy", "wav", "m"})
+}, {"kumy", "wav", "tai", "m"})
 
 m:program("wav_test", {
   m:c("wav_test", {"wav/wav.h"})
