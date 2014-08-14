@@ -1,5 +1,5 @@
 # This file was automatically generated. Do not edit!
-COMPILE = $(CC) -c -Wall -pedantic -O2 -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/tai
+COMPILE = $(CC) -c -Wall -pedantic -Ofast -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/tai
 LINK = $(CC) -Lbuild -o
 MAKELIB = $(AR) rcs
 
