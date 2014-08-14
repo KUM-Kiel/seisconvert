@@ -20,6 +20,10 @@ m:lib("wav", {
   m:c("fm", {"fm.h"})
 })
 
+m:lib("buffer", {
+  m:c("buffer", {"buffer.h"})
+})
+
 m:lib("tai", {
   m:c("caldate_fmjd", {"caldate.h"}),
   m:c("caldate_fmt", {"caldate.h"}),
@@ -73,8 +77,8 @@ m:program("fm", {
   m:c("fm", {"wav/wav.h", "wav/fm.h"})
 }, {"wav", "m"})
 
-m:program("kumy", {
-  m:c("kumy", {"wav/wav.h", "kumy/kumy.h"})
+m:program("kumy2wav", {
+  m:c("kumy2wav", {"wav/wav.h", "kumy/kumy.h"})
 }, {"wav", "kumy"})
 
 m:program("cos", {

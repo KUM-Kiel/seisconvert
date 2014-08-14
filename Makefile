@@ -1,11 +1,11 @@
 # This file was automatically generated. Do not edit!
-COMPILE = $(CC) -c -Wall -pedantic -Ofast -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/tai
+COMPILE = $(CC) -c -Wall -pedantic -Ofast -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/buffer -Isrc/tai
 LINK = $(CC) -Lbuild -o
 MAKELIB = $(AR) rcs
 
-TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/seed/seed.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/libwav.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy.o build/objects/cos.o
+TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/seed/seed.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/libwav.a build/objects/buffer/buffer.o build/libbuffer.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy2wav.o build/objects/cos.o
 
-all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy build/cos
+all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos
 build/test: build/objects/test.o build/libkumy.a build/libwav.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
@@ -26,10 +26,10 @@ build/fm: build/objects/fm.o build/libwav.a Makefile
 	@echo [LD] build/fm
 	@mkdir -p build/
 	@$(LINK) build/fm build/objects/fm.o -lwav -lm
-build/kumy: build/objects/kumy.o build/libwav.a build/libkumy.a Makefile
-	@echo [LD] build/kumy
+build/kumy2wav: build/objects/kumy2wav.o build/libwav.a build/libkumy.a Makefile
+	@echo [LD] build/kumy2wav
 	@mkdir -p build/
-	@$(LINK) build/kumy build/objects/kumy.o -lwav -lkumy
+	@$(LINK) build/kumy2wav build/objects/kumy2wav.o -lwav -lkumy
 build/cos: build/objects/cos.o build/libwav.a Makefile
 	@echo [LD] build/cos
 	@mkdir -p build/
@@ -50,6 +50,10 @@ build/libwav.a: build/objects/wav/wav.o build/objects/wav/filter.o build/objects
 	@echo [AR] build/libwav.a
 	@mkdir -p build/
 	@$(MAKELIB) build/libwav.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o
+build/libbuffer.a: build/objects/buffer/buffer.o Makefile
+	@echo [AR] build/libbuffer.a
+	@mkdir -p build/
+	@$(MAKELIB) build/libbuffer.a build/objects/buffer/buffer.o
 build/libtai.a: build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o Makefile
 	@echo [AR] build/libtai.a
 	@mkdir -p build/
@@ -78,6 +82,10 @@ build/objects/wav/fm.o: src/wav/fm.c src/wav/fm.h Makefile
 	@echo [CC] build/objects/wav/fm.o
 	@mkdir -p build/objects/wav/
 	@$(COMPILE) -o build/objects/wav/fm.o src/wav/fm.c
+build/objects/buffer/buffer.o: src/buffer/buffer.c src/buffer/buffer.h Makefile
+	@echo [CC] build/objects/buffer/buffer.o
+	@mkdir -p build/objects/buffer/
+	@$(COMPILE) -o build/objects/buffer/buffer.o src/buffer/buffer.c
 build/objects/tai/caldate_fmjd.o: src/tai/caldate_fmjd.c src/tai/caldate.h Makefile
 	@echo [CC] build/objects/tai/caldate_fmjd.o
 	@mkdir -p build/objects/tai/
@@ -218,10 +226,10 @@ build/objects/fm.o: src/fm.c src/wav/wav.h src/wav/fm.h Makefile
 	@echo [CC] build/objects/fm.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/fm.o src/fm.c
-build/objects/kumy.o: src/kumy.c src/wav/wav.h src/kumy/kumy.h Makefile
-	@echo [CC] build/objects/kumy.o
+build/objects/kumy2wav.o: src/kumy2wav.c src/wav/wav.h src/kumy/kumy.h Makefile
+	@echo [CC] build/objects/kumy2wav.o
 	@mkdir -p build/objects/
-	@$(COMPILE) -o build/objects/kumy.o src/kumy.c
+	@$(COMPILE) -o build/objects/kumy2wav.o src/kumy2wav.c
 build/objects/cos.o: src/cos.c src/wav/wav.h Makefile
 	@echo [CC] build/objects/cos.o
 	@mkdir -p build/objects/
