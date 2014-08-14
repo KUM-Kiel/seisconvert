@@ -2,7 +2,7 @@
 #define SEED_H
 
 /* Opaque structure for SEED files.
- * Use the methods below to workwith these. */
+ * Use the methods below to work with these. */
 typedef struct seedfile_s seedfile_t;
 
 /* Open a SEED file for reading.

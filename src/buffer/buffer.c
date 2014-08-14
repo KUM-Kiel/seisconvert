@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 
-typedef unsigned char u8;
-typedef unsigned long long u64;
+typedef uint8_t u8;
+typedef uint64_t u64;
 
 buffer_t *buffer_new(u64 size)
 {
@@ -31,6 +31,12 @@ u64 buffer_position(buffer_t *buffer)
 {
   /* Returns 0 if the buffer is invalid. */
   return buffer ? buffer->streampos : 0;
+}
+
+u64 buffer_data(buffer_t *buffer)
+{
+  /* Returns 0 if the buffer is invalid. */
+  return buffer ? buffer->data : 0;
 }
 
 u64 buffer_read(buffer_t *buffer, u8 *x, u64 xlen)
@@ -71,7 +77,7 @@ u64 buffer_advance(buffer_t *buffer, u64 n)
   /* Only advance up to data bytes. */
   if (n > buffer->data)
     n = buffer->data;
-  /* advance positions. */
+  /* Advance positions. */
   buffer->pos += n;
   buffer->streampos += n;
   buffer->data -= n;

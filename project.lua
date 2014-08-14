@@ -7,7 +7,7 @@ m:lib("kumy", {
 })
 
 m:lib("seed", {
-  m:c("seed", {"seed.h"})
+  m:c("seed", {"seed.h", "../buffer/buffer.h", "../buffer/number.h"})
 })
 
 m:lib("segy", {
@@ -21,7 +21,8 @@ m:lib("wav", {
 })
 
 m:lib("buffer", {
-  m:c("buffer", {"buffer.h"})
+  m:c("buffer", {"buffer.h"}),
+  m:c("number", {"number.h"})
 })
 
 m:lib("tai", {
