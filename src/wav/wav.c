@@ -369,6 +369,14 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, const u8 *buff
   return FRAME_SIZE(fc);
 }
 
+/* Limits a to between -1 and 1.
+ * We use this function to improve the overdriving behavior to clipping instead
+ * of wrapping around. */
+static double limit(double a)
+{
+  return a < -1 ? -1 : (a > 1 ? 1 : a);
+}
+
 int wav_write_double_frame(wav_frame_config_t fc, u8 *buffer, const double *samples)
 {
   int i, b;
@@ -390,26 +398,26 @@ int wav_write_double_frame(wav_frame_config_t fc, u8 *buffer, const double *samp
     switch (b) {
       case 8:
         /* Store a scaled byte. */
-        buffer[i] = (i8)(samples[i] * s);
+        buffer[i] = (i8)(limit(samples[i]) * s);
         break;
       case 12:
         /* Store two bytes with the least significant 4 bits cleared. */
-        st_u16_le(buffer, (i32)(samples[i] * s) & 0xfff0);
+        st_u16_le(buffer, (i32)(limit(samples[i]) * s) & 0xfff0);
         buffer += 2;
         break;
       case 16:
         /* Store two bytes. */
-        st_u16_le(buffer, (i32)(samples[i] * s));
+        st_u16_le(buffer, (i32)(limit(samples[i]) * s));
         buffer += 2;
         break;
       case 24:
         /* Store three bytes with the helper function. */
-        write_sample_24(buffer, samples[i] * s);
+        write_sample_24(buffer, limit(samples[i]) * s);
         buffer += 3;
         break;
       case 32:
         /* Store four bytes. */
-        st_u32_le(buffer, (i32)(samples[i] * s));
+        st_u32_le(buffer, (i32)(limit(samples[i]) * s));
         buffer += 4;
         break;
       default:
