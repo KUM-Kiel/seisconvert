@@ -1,6 +1,8 @@
 #ifndef SEED_H
 #define SEED_H
 
+#include <stdint.h>
+
 /* Opaque structure for SEED files.
  * Use the methods below to work with these. */
 typedef struct seedfile_s seedfile_t;
@@ -17,5 +19,18 @@ extern seedfile_t *seed_create(const char *path);
 
 /* Closes an open SEED file and frees the associated handle. */
 extern void seed_close(seedfile_t *file);
+
+typedef struct seed_buffer_s seed_buffer_t;
+struct seed_buffer_s {
+  uint8_t *data;
+  uint64_t size;
+};
+
+typedef void (*seed_data_cb)(seedfile_t *f, int64_t size, seed_buffer_t *buf);
+typedef void (*seed_samples_cb)(seedfile_t *f, double *data, uint64_t n);
+typedef void (*seed_alloc_cb)(seedfile_t *f, uint64_t required_size, seed_buffer_t *buf);
+
+extern int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_cb);
+extern int seed_stop_read(seedfile_t *file);
 
 #endif

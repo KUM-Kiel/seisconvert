@@ -7,7 +7,7 @@ typedef uint64_t u64;
 
 buffer_t *buffer_new(u64 size)
 {
-  /* Allocate space for the buffer.  sizeof(buffer_t) already includes one byte
+  /* Allocate space for the buffer. sizeof(buffer_t) already includes one byte
    * of the internal ringbuffer, so we need another size - 1 bytes. */
   buffer_t *buffer = malloc(sizeof(buffer_t) + size - 1);
   /* Check for success. */
@@ -37,6 +37,12 @@ u64 buffer_data(buffer_t *buffer)
 {
   /* Returns 0 if the buffer is invalid. */
   return buffer ? buffer->data : 0;
+}
+
+u64 buffer_space(buffer_t *buffer)
+{
+  /* Returns 0 if the buffer is invalid. */
+  return buffer ? buffer->size - buffer->data : 0;
 }
 
 u64 buffer_read(buffer_t *buffer, u8 *x, u64 xlen)

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* Read signed or unsigned 16, 32 or 64 bit integers
- * from a buffer in big endian (aka Motorola). */
+ * from a buffer in big endian (aka Motorola format). */
 extern  int16_t ld_i16_be(const uint8_t *x);
 extern  int32_t ld_i32_be(const uint8_t *x);
 extern  int64_t ld_i64_be(const uint8_t *x);
@@ -13,7 +13,7 @@ extern uint32_t ld_u32_be(const uint8_t *x);
 extern uint64_t ld_u64_be(const uint8_t *x);
 
 /* Read signed or unsigned 16, 32 or 64 bit integers
- * from a buffer in little endian (aka Intel). */
+ * from a buffer in little endian (aka Intel format). */
 extern  int16_t ld_i16_le(const uint8_t *x);
 extern  int32_t ld_i32_le(const uint8_t *x);
 extern  int64_t ld_i64_le(const uint8_t *x);
@@ -50,7 +50,7 @@ extern int write_int(uint8_t *x, uint64_t xlen, int64_t i, int pad);
 /* Reads a number from a string. The number should be exactly xlen digits long,
  * though leading spaces or zeros are allowed.
  * If the number is well formed, it will be stored to i and 0 is returned.
- * Else -1 will be returned and i left untouched. */
+ * Else -1 will be returned and i is left untouched. */
 extern int parse_int(int64_t *i, const uint8_t *x, uint64_t xlen);
 
 #endif
