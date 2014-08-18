@@ -23,13 +23,20 @@ local function resolve(path, from)
   return table.concat(p, "/")
 end
 
-return function()
+return function(options)
   local _libs = {}
   local _objects = {}
   local _targets = {}
   local _programs = {}
   local _includes = ""
   local _all = ""
+  local _cflags = ""
+  local _extra = ""
+
+  if options then
+    _cflags = options.cflags and " " .. options.cflags or ""
+    _extra = options.extra or ""
+  end
 
   local function lib(m, name, objects)
     local thelib = "build/lib" .. name .. ".a"
@@ -104,6 +111,9 @@ return function()
     f:write("LINK = $(CC) -Lbuild -o\n")
     f:write("MAKELIB = $(AR) rcs\n\n")
     f:write("TARGETS = " .. table.concat(_targets, " ") .. "\n\n")
+    if _extra ~= "" then
+      f:write(_extra .. "\n")
+    end
     f:write("all:" .. _all .. "\n")
     for i, p in ipairs(_programs) do
       local l = ""
@@ -129,7 +139,7 @@ return function()
       f:write(o.target .. ": " .. table.concat(o.deps, " ") .. " " .. name .. "\n")
       f:write("\t@echo [CC] " .. o.target .. "\n")
       f:write("\t@mkdir -p " .. folder(o.target) .. "\n")
-      f:write("\t@$(COMPILE) -o " .. o.target .. " " .. o.source .. "\n")
+      f:write("\t@$(COMPILE)" .. _cflags .. " -o " .. o.target .. " " .. o.source .. "\n")
     end
     f:write("clean:\n\trm -rf build\n")
   end
