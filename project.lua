@@ -17,7 +17,8 @@ m:lib("segy", {
 m:lib("wav", {
   m:c("wav", {"wav.h", "../number/number.h"}),
   m:c("filter", {"filter.h"}),
-  m:c("fm", {"fm.h"})
+  m:c("fm", {"fm.h"}),
+  m:c("wav_file", {"wav_file.h", "wav.h"})
 })
 
 m:lib("buffer", {
@@ -86,7 +87,7 @@ m:program("kumy2wav", {
 }, {"wav", "number", "kumy"})
 
 m:program("cos", {
-  m:c("cos", {"wav/wav.h"})
+  m:c("cos", {"wav/wav_file.h", "wav/wav.h"})
 }, {"wav", "number", "m"})
 
 m:program("seedtest", {

@@ -10,7 +10,10 @@ void alloc_cb(seedfile_t *f, uint64_t size, seed_buffer_t *buf)
 
 void data_cb(seedfile_t *f, int64_t size, seed_buffer_t *buf)
 {
-  fprintf(stderr, "Event: %s.\n", buf->data);
+  data_record_header h;
+  blockette_1000 _1000;
+  read_data_record_header(&h, buf->data);
+  read_blockette_1000(&_1000, buf->data + h.blockette_offset);
   free(buf->data);
 }
 

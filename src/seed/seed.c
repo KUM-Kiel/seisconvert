@@ -1,14 +1,8 @@
 #include "seed.h"
 
-/* Needed for files larger than 4GiB. */
-#define _FILE_OFFSET_BITS 64
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
-#include "buffer.h"
 #include "number.h"
-#include "taia.h"
 #include "caltime.h"
 
 /* Shortcut for for loops in standard form. */
@@ -24,27 +18,15 @@ typedef  int32_t i32;
 typedef uint64_t u64;
 typedef  int64_t i64;
 
-/* The structure for storing handles to SEED-Files. */
-struct seedfile_s {
-  /* stdio file handle corresponding to the physicial file. */
-  FILE *file_handle;
-  /* File mode. 0 for reading, 1 for writing. */
-  int mode;
-  /* Buffer for caching data. */
-  buffer_t *buffer;
-  /* Indicates end of file. */
-  int eof;
-};
-
 /* Copy l bytes from `from` to `to`. */
-static void byte_copy(u8 *to, u64 l, u8 *from)
+static void byte_copy(u8 *to, u64 l, const u8 *from)
 {
   u64 i;
   FOR(i, l) to[i] = from[i];
 }
 
 /* Copy l bytes from `from` to `to`. Appends 0 byte to `to`. */
-static void byte_copy_0(u8 *to, u64 l, u8 *from)
+static void byte_copy_0(u8 *to, u64 l, const u8 *from)
 {
   u64 i;
   FOR(i, l) to[i] = from[i];
@@ -57,11 +39,9 @@ static void byte_copy_0(u8 *to, u64 l, u8 *from)
  * a volume header, 'A' for a dictionary header, 'S' for a station header and
  * 'T' for a time span header. Returns a lowercase letter if the record
  * continues the last one. */
-static int next_record(seedfile_t *f)
+static int next_record(const u8 *x)
 {
-  u8 x[8];
   i64 no;
-  if (buffer_read(f->buffer, x, 8) < 8) return -1;
   if (parse_int(&no, x, 6) < 0) return -3;
   if (no < 0) return -3;
   if (x[7] == ' ') {
@@ -104,30 +84,9 @@ static int read_btime(struct taia *t, const u8 *x)
   return 0;
 }
 
-typedef struct {
-  i64 sequence_number;
-  u8 station_identifier[6];
-  u8 location_identifier[3];
-  u8 channel_identifier[4];
-  u8 network_code[3];
-  struct taia start_time;
-  u16 num_samples;
-  i16 sample_rate_factor;
-  i16 sample_rate_multiplier;
-  u8 activity_flags;
-  u8 io_flags;
-  u8 data_quality_flags;
-  u8 blockette_count;
-  i32 time_correction;
-  u16 data_offset;
-  u16 blockette_offset;
-} data_record_header;
-
-/* Reads a data record header and advances the files buffer accordingly. */
-static int read_data_record_header(seedfile_t *f, data_record_header *h)
+/* Reads a data record header. */
+int read_data_record_header(data_record_header *h, const u8 *x)
 {
-  u8 x[48];
-  buffer_read(f->buffer, x, 48);
   /* Read sequence number. */
   parse_int(&h->sequence_number, x, 6);
   /* Read fixed fields. */
@@ -151,19 +110,17 @@ static int read_data_record_header(seedfile_t *f, data_record_header *h)
   return 0;
 }
 
-#define BUFFER_SIZE 4096
-
-static void fill_buffer(seedfile_t *f)
+int read_blockette_1000(blockette_1000 *b, const u8 *x)
 {
-  u8 data[BUFFER_SIZE];
-  u64 s = buffer_space(f->buffer);
-  i64 l = fread(data, 1, s, f->file_handle);
-  if (l > 0) {
-    buffer_write(f->buffer, data, l);
-  } else if (l == 0) {
-    f->eof = 1;
-  }
+  if (ld_u16_be(x) != 1000) return -3;
+  b->next_blockette = ld_u16_be(x + 2);
+  b->encoding = x[4];
+  b->word_order = x[5];
+  b->data_record_length = x[6];
+  return 0;
 }
+
+#define BUFFER_SIZE 4096
 
 seedfile_t *seed_open(const char *path)
 {
@@ -173,13 +130,9 @@ seedfile_t *seed_open(const char *path)
   /* Try to open the file. */
   if (!(file->file_handle = fopen(path, "r"))) goto err1;
   file->mode = 0;
-  /* Create buffer. */
-  if (!(file->buffer = buffer_new(BUFFER_SIZE))) goto err2;
   /* Return handle. */
   return file;
   /* Undo everything in case of an error. */
-err2:
-  fclose(file->file_handle);
 err1:
   free(file);
   return 0;
@@ -193,13 +146,9 @@ seedfile_t *seed_create(const char *path)
   /* Try to open the file. */
   if (!(file->file_handle = fopen(path, "w"))) goto err1;
   file->mode = 1;
-  /* Create buffer. */
-  if (!(file->buffer = buffer_new(BUFFER_SIZE))) goto err2;
   /* Return handle. */
   return file;
   /* Undo everything in case of an error. */
-err2:
-  fclose(file->file_handle);
 err1:
   free(file);
   return 0;
@@ -208,26 +157,42 @@ err1:
 void seed_close(seedfile_t *file)
 {
   if (!file) return;
-  buffer_delete(file->buffer);
   fclose(file->file_handle);
   free(file);
 }
 
-static const u8 dr[] = "Data record";
-
 int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_cb)
 {
   data_record_header h;
+  blockette_1000 _1000;
   seed_buffer_t buf;
-  int n;
+  int n, eof = 0;
+  i64 l;
+  u64 s;
+  u8 b[128];
   if (!file || file->mode != 0) return -1;
-  fill_buffer(file);
-  n = next_record(file);
-  if (n == 'D') {
-    read_data_record_header(file, &h);
-    alloc_cb(file, sizeof(dr), &buf);
-    byte_copy(buf.data, sizeof(dr), dr);
-    data_cb(file, sizeof(dr), &buf);
+  while (!eof) {
+    l = fread(b, 1, 128, file->file_handle);
+    if (l > 0) {
+      n = next_record(b);
+      if (n == 'D') {
+        if (read_data_record_header(&h, b) < 0) return -1;
+        if (read_blockette_1000(&_1000, b + h.blockette_offset) < 0) return -1;
+        s = 1 << _1000.data_record_length;
+        alloc_cb(file, s, &buf);
+        if (s > 128) {
+          byte_copy(buf.data, 128, b);
+          l = fread(b, 1, s - 128, file->file_handle);
+        } else {
+          byte_copy(buf.data, s, b);
+        }
+        data_cb(file, s, &buf);
+      } else {
+        return -1;
+      }
+    } else {
+      eof = 1;
+    }
   }
   return 0;
 }
