@@ -1,53 +1,16 @@
 #ifndef SEED_H
 #define SEED_H
 
-/* Needed for files larger than 4GiB. */
-#define _FILE_OFFSET_BITS 64
-#include <stdio.h>
 #include <stdint.h>
-
 #include "taia.h"
 
-/* The structure for storing handles to SEED-Files. */
-typedef struct seedfile_s seedfile_t;
-struct seedfile_s {
-  /* Userdata. */
-  void *data;
-  /* stdio file handle corresponding to the physicial file. */
-  FILE *file_handle;
-  /* File mode. 0 for reading, 1 for writing. */
-  int mode;
-  /* Indicates end of file. */
-  int eof;
-};
+/* Tells type of record stored in buffer. */
+extern int seed_record_type(const uint8_t *buffer);
 
-/* Open a SEED file for reading.
- * Returns a SEED file handle.
- * Returns NULL in case of an error. */
-extern seedfile_t *seed_open(const char *path);
-
-/* Creates a SEED file and opens it for writing.
- * Returns the file handle if everything went right.
- * Returns NULL in case of an error. */
-extern seedfile_t *seed_create(const char *path);
-
-/* Closes an open SEED file and frees the associated handle. */
-extern void seed_close(seedfile_t *file);
-
-typedef struct seed_buffer_s seed_buffer_t;
-struct seed_buffer_s {
-  uint8_t *data;
-  uint64_t size;
-};
-
-typedef void (*seed_data_cb)(seedfile_t *f, int64_t size, seed_buffer_t *buf);
-typedef void (*seed_samples_cb)(seedfile_t *f, double *data, uint64_t n);
-typedef void (*seed_alloc_cb)(seedfile_t *f, uint64_t required_size, seed_buffer_t *buf);
-
-extern int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_cb);
-extern int seed_stop_read(seedfile_t *file);
-
-typedef struct {
+/* Struct for data record headers. */
+#define SEED_DATA_RECORD_HEADER_BYTES 48
+typedef struct seed_data_record_header_s seed_data_record_header_t;
+struct seed_data_record_header_s {
   int64_t sequence_number;
   uint8_t station_identifier[6];
   uint8_t location_identifier[3];
@@ -64,18 +27,44 @@ typedef struct {
   int32_t time_correction;
   uint16_t data_offset;
   uint16_t blockette_offset;
-} data_record_header;
+};
 
 /* Reads a data record header. */
-extern int read_data_record_header(data_record_header *h, const uint8_t *x);
+extern int seed_read_data_record_header(seed_data_record_header_t *header, const uint8_t *buffer);
+extern int seed_write_data_record_header(uint8_t *buffer, const seed_data_record_header_t *header);
 
-typedef struct {
+/* Struct for blockette 1000 (data only seed). */
+#define SEED_BLOCKETTE_1000_BYTES 8
+typedef struct seed_blockette_1000_s seed_blockette_1000_t;
+struct seed_blockette_1000_s {
   uint16_t next_blockette;
   uint8_t encoding;
   uint8_t word_order;
   uint8_t data_record_length;
-} blockette_1000;
+};
 
-extern int read_blockette_1000(blockette_1000 *b, const uint8_t *x);
+/* Reads a blockette 1000 from buffer. */
+extern int seed_read_blockette_1000(seed_blockette_1000_t *blockette, const uint8_t *buffer);
+extern int seed_write_blockette_1000(uint8_t *buffer, const seed_blockette_1000_t *blockette);
+
+/* Struct for BTIMEs. */
+#define SEED_BTIME_BYTES 10
+typedef struct seed_btime_s seed_btime_t;
+struct seed_btime_s {
+  uint16_t year;
+  uint16_t julian_day;
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+  uint16_t tenth_ms;
+};
+
+/* Read and write btime. */
+extern int seed_read_btime(seed_btime_t *btime, const uint8_t *buffer);
+extern int seed_write_btime(uint8_t *buffer, const seed_btime_t *btime);
+
+/* Converts between btime and taia. */
+extern int seed_btime2taia(struct taia *t, const seed_btime_t *btime);
+extern int seed_taia2btime(seed_btime_t *btime, const struct taia *t);
 
 #endif

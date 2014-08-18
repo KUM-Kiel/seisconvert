@@ -1,7 +1,6 @@
 #include "seed.h"
 
 #include <stdlib.h>
-
 #include "number.h"
 #include "caltime.h"
 
@@ -39,7 +38,7 @@ static void byte_copy_0(u8 *to, u64 l, const u8 *from)
  * a volume header, 'A' for a dictionary header, 'S' for a station header and
  * 'T' for a time span header. Returns a lowercase letter if the record
  * continues the last one. */
-static int next_record(const u8 *x)
+int seed_record_type(const u8 *x)
 {
   i64 no;
   if (parse_int(&no, x, 6) < 0) return -3;
@@ -47,6 +46,9 @@ static int next_record(const u8 *x)
   if (x[7] == ' ') {
     switch (x[6]) {
       case 'D': return 'D';
+      case 'R': return 'R';
+      case 'Q': return 'Q';
+      case 'M': return 'M';
       case 'V': return 'V';
       case 'A': return 'A';
       case 'S': return 'S';
@@ -65,28 +67,10 @@ static int next_record(const u8 *x)
   return -3;
 }
 
-/* Reads the time in x coded as BTIME and stores it in t as struct taia. */
-static int read_btime(struct taia *t, const u8 *x)
-{
-  long h_us;
-  struct caltime ct;
-  ct.date.year = ld_u16_be(x);
-  ct.date.month = 1;
-  ct.date.day = ld_u16_be(x + 2);
-  ct.hour = x[4];
-  ct.minute = x[5];
-  ct.second = x[6];
-  ct.offset = 0;
-  if ((h_us = ld_u16_be(x + 8)) > 9999) return -1;
-  caltime_tai(&ct, &t->sec);
-  t->nano = 100000 * h_us;
-  t->atto = 0;
-  return 0;
-}
-
 /* Reads a data record header. */
-int read_data_record_header(data_record_header *h, const u8 *x)
+int seed_read_data_record_header(seed_data_record_header_t *h, const u8 *x)
 {
+  seed_btime_t btime;
   /* Read sequence number. */
   parse_int(&h->sequence_number, x, 6);
   /* Read fixed fields. */
@@ -95,8 +79,9 @@ int read_data_record_header(data_record_header *h, const u8 *x)
   byte_copy_0(h->channel_identifier,  3, x + 15);
   byte_copy_0(h->network_code,        2, x + 18);
   /* Read start time. */
-  read_btime(&h->start_time, x + 20);
-  /* Read samle rate and number. */
+  seed_read_btime(&btime, x + 20);
+  seed_btime2taia(&h->start_time, &btime);
+  /* Read stuff. */
   h->num_samples            = ld_u16_be(x + 30);
   h->sample_rate_factor     = ld_i16_be(x + 32);
   h->sample_rate_multiplier = ld_i16_be(x + 34);
@@ -110,7 +95,35 @@ int read_data_record_header(data_record_header *h, const u8 *x)
   return 0;
 }
 
-int read_blockette_1000(blockette_1000 *b, const u8 *x)
+int seed_write_data_record_header(u8 *x, const seed_data_record_header_t *h)
+{
+  seed_btime_t btime;
+  /* Write sequence number. */
+  write_int(x, 6, h->sequence_number, 1);
+  byte_copy(x + 6, 2, (u8*)"D "); /* XXX: Support for other letters. */
+  /* Write fixed fields. */
+  byte_copy(x +  8, 5, h->station_identifier);
+  byte_copy(x + 13, 2, h->location_identifier);
+  byte_copy(x + 15, 3, h->channel_identifier);
+  byte_copy(x + 18, 2, h->network_code);
+  /* Write start time. */
+  seed_taia2btime(&btime, &h->start_time);
+  seed_write_btime(x + 20, &btime);
+  /* Write stuff. */
+  st_u16_be(x + 30, h->num_samples);
+  st_i16_be(x + 32, h->sample_rate_factor);
+  st_i16_be(x + 34, h->sample_rate_multiplier);
+  x[36] = h->activity_flags;
+  x[37] = h->io_flags;
+  x[38] = h->data_quality_flags;
+  x[39] = h->blockette_count;
+  st_i32_be(x + 40, h->time_correction);
+  st_u16_be(x + 44, h->data_offset);
+  st_u16_be(x + 46, h->blockette_offset);
+  return 0;
+}
+
+int seed_read_blockette_1000(seed_blockette_1000_t *b, const u8 *x)
 {
   if (ld_u16_be(x) != 1000) return -3;
   b->next_blockette = ld_u16_be(x + 2);
@@ -120,79 +133,73 @@ int read_blockette_1000(blockette_1000 *b, const u8 *x)
   return 0;
 }
 
-#define BUFFER_SIZE 4096
-
-seedfile_t *seed_open(const char *path)
+int seed_write_blockette_1000(u8 *x, const seed_blockette_1000_t *b)
 {
-  /* Allocate memory for the handle. */
-  seedfile_t *file = malloc(sizeof(seedfile_t));
-  if (!file) return 0;
-  /* Try to open the file. */
-  if (!(file->file_handle = fopen(path, "r"))) goto err1;
-  file->mode = 0;
-  /* Return handle. */
-  return file;
-  /* Undo everything in case of an error. */
-err1:
-  free(file);
+  st_u16_be(x, 1000);
+  st_u16_be(x + 2, b->next_blockette);
+  x[4] = b->encoding;
+  x[5] = b->word_order;
+  x[6] = b->data_record_length;
+  x[7] = 0;
   return 0;
 }
 
-seedfile_t *seed_create(const char *path)
+int seed_read_btime(seed_btime_t *btime, const uint8_t *buffer)
 {
-  /* Allocate memory for the handle. */
-  seedfile_t *file = malloc(sizeof(seedfile_t));
-  if (!file) return 0;
-  /* Try to open the file. */
-  if (!(file->file_handle = fopen(path, "w"))) goto err1;
-  file->mode = 1;
-  /* Return handle. */
-  return file;
-  /* Undo everything in case of an error. */
-err1:
-  free(file);
+  btime->year       = ld_u16_be(buffer);
+  btime->julian_day = ld_u16_be(buffer + 2);
+  btime->hour       = buffer[4];
+  btime->minute     = buffer[5];
+  btime->second     = buffer[6];
+  btime->tenth_ms   = ld_u16_be(buffer + 8);
   return 0;
 }
 
-void seed_close(seedfile_t *file)
+int seed_write_btime(uint8_t *buffer, const seed_btime_t *btime)
 {
-  if (!file) return;
-  fclose(file->file_handle);
-  free(file);
+  st_u16_be(buffer,     btime->year);
+  st_u16_be(buffer + 2, btime->julian_day);
+  buffer[4] = btime->hour;
+  buffer[5] = btime->minute;
+  buffer[6] = btime->second;
+  buffer[7] = 0;
+  st_u16_be(buffer + 8, btime->tenth_ms);
+  return 0;
 }
 
-int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_cb)
+int seed_btime2taia(struct taia *t, const seed_btime_t *btime)
 {
-  data_record_header h;
-  blockette_1000 _1000;
-  seed_buffer_t buf;
-  int n, eof = 0;
-  i64 l;
-  u64 s;
-  u8 b[128];
-  if (!file || file->mode != 0) return -1;
-  while (!eof) {
-    l = fread(b, 1, 128, file->file_handle);
-    if (l > 0) {
-      n = next_record(b);
-      if (n == 'D') {
-        if (read_data_record_header(&h, b) < 0) return -1;
-        if (read_blockette_1000(&_1000, b + h.blockette_offset) < 0) return -1;
-        s = 1 << _1000.data_record_length;
-        alloc_cb(file, s, &buf);
-        if (s > 128) {
-          byte_copy(buf.data, 128, b);
-          l = fread(b, 1, s - 128, file->file_handle);
-        } else {
-          byte_copy(buf.data, s, b);
-        }
-        data_cb(file, s, &buf);
-      } else {
-        return -1;
-      }
-    } else {
-      eof = 1;
-    }
+  struct caltime ct;
+  ct.date.year = btime->year;
+  ct.date.month = 1;
+  ct.date.day = btime->julian_day;
+  ct.hour = btime->hour;
+  ct.minute = btime->minute;
+  ct.second = btime->second;
+  ct.offset = 0;
+  caltime_tai(&ct, &t->sec);
+  t->nano = 100000 * btime->tenth_ms;
+  t->atto = 0;
+  return 0;
+}
+
+static const int month_begin[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+static const int month_begin_leap[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
+
+int seed_taia2btime(seed_btime_t *btime, const struct taia *t)
+{
+  struct caltime ct;
+  caltime_utc(&ct, &t->sec);
+
+  btime->year = ct.date.year;
+  if (btime->year % 400 == 0 || (btime->year % 4 == 0 && btime->year % 100 != 0)) {
+    btime->julian_day = month_begin_leap[ct.date.month - 1] + ct.date.day;
+  } else {
+    btime->julian_day = month_begin[ct.date.month - 1] + ct.date.day;
   }
+  btime->hour = ct.hour;
+  btime->minute = ct.minute;
+  btime->second = ct.second;
+  btime->tenth_ms = t->nano / 100000;
   return 0;
 }

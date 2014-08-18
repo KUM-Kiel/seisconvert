@@ -7,7 +7,7 @@ m:lib("kumy", {
 })
 
 m:lib("seed", {
-  m:c("seed", {"seed.h", "../buffer/buffer.h", "../number/number.h", "../tai/taia.h"})
+  m:c("seed", {"seed.h", "../number/number.h", "../tai/taia.h", "../tai/tai.h"})
 })
 
 m:lib("segy", {
@@ -88,6 +88,10 @@ m:program("kumy2wav", {
 
 m:program("cos", {
   m:c("cos", {"wav/wav_file.h", "wav/wav.h"})
+}, {"wav", "number", "m"})
+
+m:program("wav_header", {
+  m:c("wav_header", {"wav/wav_file.h", "wav/wav.h"})
 }, {"wav", "number", "m"})
 
 m:program("seedtest", {
