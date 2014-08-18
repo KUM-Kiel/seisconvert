@@ -7,7 +7,7 @@ m:lib("kumy", {
 })
 
 m:lib("seed", {
-  m:c("seed", {"seed.h", "../buffer/buffer.h", "../buffer/number.h", "../tai/taia.h"})
+  m:c("seed", {"seed.h", "../buffer/buffer.h", "../number/number.h", "../tai/taia.h"})
 })
 
 m:lib("segy", {
@@ -15,13 +15,16 @@ m:lib("segy", {
 })
 
 m:lib("wav", {
-  m:c("wav", {"wav.h"}),
+  m:c("wav", {"wav.h", "../number/number.h"}),
   m:c("filter", {"filter.h"}),
   m:c("fm", {"fm.h"})
 })
 
 m:lib("buffer", {
-  m:c("buffer", {"buffer.h"}),
+  m:c("buffer", {"buffer.h"})
+})
+
+m:lib("number", {
   m:c("number", {"number.h"})
 })
 
@@ -60,34 +63,34 @@ m:lib("tai", {
 
 m:program("test", {
   m:c("test", {"kumy/kumy.h", "wav/wav.h", "wav/fm.h"})
-}, {"kumy", "wav", "tai", "m"})
+}, {"kumy", "wav", "number", "tai", "m"})
 
 m:program("wav_test", {
   m:c("wav_test", {"wav/wav.h"})
-}, {"wav", "m"})
+}, {"wav", "number", "m"})
 
 m:program("lowpass", {
   m:c("lowpass", {"wav/wav.h", "wav/filter.h"})
-}, {"wav", "m"})
+}, {"wav", "number", "m"})
 
 m:program("highpass", {
   m:c("highpass", {"wav/wav.h", "wav/filter.h"})
-}, {"wav", "m"})
+}, {"wav", "number", "m"})
 
 m:program("fm", {
   m:c("fm", {"wav/wav.h", "wav/fm.h"})
-}, {"wav", "m"})
+}, {"wav", "number", "m"})
 
 m:program("kumy2wav", {
   m:c("kumy2wav", {"wav/wav.h", "kumy/kumy.h"})
-}, {"wav", "kumy"})
+}, {"wav", "number", "kumy"})
 
 m:program("cos", {
   m:c("cos", {"wav/wav.h"})
-}, {"wav", "m"})
+}, {"wav", "number", "m"})
 
 m:program("seedtest", {
   m:c("seedtest", {"seed/seed.h"})
-}, {"seed", "buffer", "tai"})
+}, {"seed", "buffer", "number", "tai"})
 
 m:gen("Makefile")

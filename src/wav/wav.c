@@ -1,4 +1,5 @@
 #include "wav.h"
+#include "number.h"
 
 /* Shortcut for for loops in standard form. */
 #define FOR(i, n) for (i = 0; i < n; ++i)
@@ -11,36 +12,6 @@ typedef  int16_t i16;
 typedef uint32_t u32;
 typedef  int32_t i32;
 typedef uint64_t u64;
-
-/* Read 32-bit int from x in little endian. */
-static u32 ld_u32_le(const u8 *x)
-{
-  u32 u = x[3];
-  u = (u<<8)|x[2];
-  u = (u<<8)|x[1];
-  return (u<<8)|x[0];
-}
-
-/* Read 16-bit int from x in little endian. */
-static u32 ld_u16_le(const u8 *x)
-{
-  u32 u = x[1];
-  return (u<<8)|x[0];
-}
-
-/* Store 32-bit int to x in little endian. */
-static void st_u32_le(u8 *x, u32 u)
-{
-  int i;
-  FOR(i, 4) { x[i] = u; u >>= 8; }
-}
-
-/* Store 16-bit int to x in little endian. */
-static void st_u16_le(u8 *x, u32 u)
-{
-  int i;
-  FOR(i, 2) { x[i] = u; u >>= 8; }
-}
 
 /* Copies l bytes from from to to. */
 static void byte_copy(u8 *to, u64 l, const u8 *from)
@@ -252,7 +223,7 @@ int wav_read_int_frame(wav_frame_config_t fc, i32 *samples, const u8 *buffer)
          * are not.
          * Again, the bytes read are the most significant ones, so we have to
          * shift up. */
-        samples[i] = ld_u16_le(buffer) << 16;
+        samples[i] = (i32)ld_i16_le(buffer) << 16;
         buffer += 2;
         break;
       case 24:
@@ -263,7 +234,7 @@ int wav_read_int_frame(wav_frame_config_t fc, i32 *samples, const u8 *buffer)
         break;
       case 32:
         /* For 32 bit the value is stored unchanged. */
-        samples[i] = ld_u32_le(buffer);
+        samples[i] = ld_i32_le(buffer);
         buffer += 4;
         break;
       default:
@@ -291,12 +262,12 @@ int wav_write_int_frame(wav_frame_config_t fc, u8 *buffer, const i32 *samples)
       case 12:
         /* For 12 bit we only take the most significant 12 bits.
          * So after the shift the least significant 4 bits should be zero. */
-        st_u16_le(buffer, (u32)(samples[i] >> 16) & 0xfff0);
+        st_i16_le(buffer, (samples[i] >> 16) & 0xfff0);
         buffer += 2;
         break;
       case 16:
         /* For 16 bit we keep the most significant two bytes. */
-        st_u16_le(buffer, (u32)(samples[i] >> 16));
+        st_i16_le(buffer, (samples[i] >> 16));
         buffer += 2;
         break;
       case 24:
@@ -306,7 +277,7 @@ int wav_write_int_frame(wav_frame_config_t fc, u8 *buffer, const i32 *samples)
         break;
       case 32:
         /* For 32 bit the value is again stored unchanged. */
-        st_u32_le(buffer, (u32)samples[i]);
+        st_i32_le(buffer, samples[i]);
         buffer += 4;
         break;
       default:
@@ -346,7 +317,7 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, const u8 *buff
       case 12:
       case 16:
         /* Read two bytes. Again the cast is important. */
-        samples[i] = (i16)ld_u16_le(buffer) * s;
+        samples[i] = ld_i16_le(buffer) * s;
         buffer += 2;
         break;
       case 24:
@@ -357,7 +328,7 @@ int wav_read_double_frame(wav_frame_config_t fc, double *samples, const u8 *buff
         break;
       case 32:
         /* Read four bytes. Again the cast is important. */
-        samples[i] = (i32)ld_u32_le(buffer) * s;
+        samples[i] = ld_i32_le(buffer) * s;
         buffer += 4;
         break;
       default:
@@ -402,12 +373,12 @@ int wav_write_double_frame(wav_frame_config_t fc, u8 *buffer, const double *samp
         break;
       case 12:
         /* Store two bytes with the least significant 4 bits cleared. */
-        st_u16_le(buffer, (i32)(limit(samples[i]) * s) & 0xfff0);
+        st_i16_le(buffer, (i16)(limit(samples[i]) * s) & 0xfff0);
         buffer += 2;
         break;
       case 16:
         /* Store two bytes. */
-        st_u16_le(buffer, (i32)(limit(samples[i]) * s));
+        st_i16_le(buffer, (limit(samples[i]) * s));
         buffer += 2;
         break;
       case 24:
@@ -417,7 +388,7 @@ int wav_write_double_frame(wav_frame_config_t fc, u8 *buffer, const double *samp
         break;
       case 32:
         /* Store four bytes. */
-        st_u32_le(buffer, (i32)(limit(samples[i]) * s));
+        st_i32_le(buffer, (limit(samples[i]) * s));
         buffer += 4;
         break;
       default:

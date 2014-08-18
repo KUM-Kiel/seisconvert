@@ -213,6 +213,8 @@ void seed_close(seedfile_t *file)
   free(file);
 }
 
+static const u8 dr[] = "Data record";
+
 int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_cb)
 {
   data_record_header h;
@@ -223,6 +225,9 @@ int seed_begin_read(seedfile_t *file, seed_data_cb data_cb, seed_alloc_cb alloc_
   n = next_record(file);
   if (n == 'D') {
     read_data_record_header(file, &h);
+    alloc_cb(file, sizeof(dr), &buf);
+    byte_copy(buf.data, sizeof(dr), dr);
+    data_cb(file, sizeof(dr), &buf);
   }
   return 0;
 }
