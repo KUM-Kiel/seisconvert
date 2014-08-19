@@ -16,10 +16,19 @@ struct miniseed_file_s {
   FILE *file_handle;
   /* File mode. 0 for reading, 1 for writing. */
   int mode;
-  /* Indicates end of file. */
-  int eof;
-  /* Frame buffer. */
-  uint8_t *buffer;
+  /* State machine. */
+  uint64_t record_start;
+  uint64_t record_size;
+  uint64_t frames_in_record;
+  uint64_t frame;
+  int32_t row[16];
+  uint64_t next_row;
+  uint64_t row_word;
+  uint64_t word_sample;
+  int32_t last_sample;
+  /* Header and MiniSEED blockette for current record. */
+  seed_data_record_header_t record_header;
+  seed_blockette_1000_t blockette_1000;
 };
 
 extern miniseed_file_t *miniseed_file_open(const char *path);

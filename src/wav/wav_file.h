@@ -17,8 +17,6 @@ struct wav_file_s {
   FILE *file_handle;
   /* File mode. 0 for reading, 1 for writing. */
   int mode;
-  /* Indicates end of file. */
-  int eof;
   /* WAV header. */
   wav_header_t header;
   /* WAV frame config. */

@@ -7,7 +7,8 @@ m:lib("kumy", {
 })
 
 m:lib("seed", {
-  m:c("seed", {"seed.h", "../number/number.h", "../tai/taia.h", "../tai/tai.h"})
+  m:c("seed", {"seed.h", "../number/number.h", "../tai/taia.h", "../tai/tai.h"}),
+  m:c("miniseed_file", {"miniseed_file.h", "seed.h", "../number/number.h"})
 })
 
 m:lib("segy", {
@@ -96,6 +97,6 @@ m:program("wav_header", {
 
 m:program("seedtest", {
   m:c("seedtest", {"seed/seed.h"})
-}, {"seed", "buffer", "number", "tai"})
+}, {"seed", "wav", "number", "tai"})
 
 m:gen("Makefile")
