@@ -67,4 +67,7 @@ extern int seed_write_btime(uint8_t *buffer, const seed_btime_t *btime);
 extern int seed_btime2taia(struct taia *t, const seed_btime_t *btime);
 extern int seed_taia2btime(seed_btime_t *btime, const struct taia *t);
 
+/* Converts between seed samplerate and double sample rate. */
+extern double seed_sample_rate(int16_t factor, int16_t multiplier);
+
 #endif

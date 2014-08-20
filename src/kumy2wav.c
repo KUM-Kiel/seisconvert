@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   wh.format = WAV_PCM;
   wh.num_channels = CHANNELS;
   wh.sample_rate = 1000000 / kum_header_bin.sample_interval;
-  wh.bit_depth = 16;
+  wh.bit_depth = 32;
   wh.num_frames = kum_header_bin.num_samples;
 
   fprintf(stderr, "WAV %uBit/%gkHz. Duration: %.2fs.\n", wh.bit_depth, wh.sample_rate / 1000.0, (double)wh.num_frames / wh.sample_rate);

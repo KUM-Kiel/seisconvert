@@ -32,12 +32,11 @@ static void byte_copy_0(u8 *to, u64 l, const u8 *from)
   to[i] = 0;
 }
 
-/* Return the next record type. The buffer in f must be positioned at the
- * beginning of a record. Returns -1 if there is not enough data. Returns -3 if
- * the buffer is not at a record border. Returns 'D' for a data record, 'V' for
- * a volume header, 'A' for a dictionary header, 'S' for a station header and
- * 'T' for a time span header. Returns a lowercase letter if the record
- * continues the last one. */
+/* Return the next record type. The buffer x must be positioned at the
+ * beginning of a record. Returns -3 if the buffer is not at a record border.
+ * Returns 'D', 'R', 'Q' or 'M' for a data record, 'V' for a volume header,
+ * 'A' for a dictionary header, 'S' for a station header and 'T' for a time span
+ * header. Returns a lowercase letter if the record continues the last one. */
 int seed_record_type(const u8 *x)
 {
   i64 no;
@@ -202,4 +201,17 @@ int seed_taia2btime(seed_btime_t *btime, const struct taia *t)
   btime->second = ct.second;
   btime->tenth_ms = t->nano / 100000;
   return 0;
+}
+
+double seed_sample_rate(int16_t factor, int16_t multiplier)
+{
+  if (factor >= 0 && multiplier >= 0) {
+    return (double)factor * multiplier;
+  } else if (factor >= 0 && multiplier < 0) {
+    return -1.0 * factor / multiplier;
+  } else if (factor < 0 && multiplier >= 0) {
+    return -1.0 / factor * multiplier;
+  } else {
+    return 1.0 / factor / multiplier;
+  }
 }

@@ -3,19 +3,6 @@
 #include "miniseed_file.h"
 #include "wav_file.h"
 
-static double seed_sample_rate(int factor, int multi)
-{
-  if (factor >= 0 && multi >= 0) {
-    return (double)factor * multi;
-  } else if (factor >= 0 && multi < 0) {
-    return -1.0 * factor / multi;
-  } else if (factor < 0 && multi >= 0) {
-    return -1.0 / factor * multi;
-  } else {
-    return 1.0 / factor / multi;
-  }
-}
-
 int main(int argc, char **argv)
 {
   miniseed_file_t *mseed;
