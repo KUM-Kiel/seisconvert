@@ -188,7 +188,7 @@ static const int month_begin_leap[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 2
 int seed_taia2btime(seed_btime_t *btime, const struct taia *t)
 {
   struct caltime ct;
-  caltime_utc(&ct, &t->sec);
+  caltime_utc(&ct, &t->sec, 0, 0);
 
   btime->year = ct.date.year;
   if (btime->year % 400 == 0 || (btime->year % 4 == 0 && btime->year % 100 != 0)) {
@@ -214,4 +214,22 @@ double seed_sample_rate(int16_t factor, int16_t multiplier)
   } else {
     return 1.0 / factor / multiplier;
   }
+}
+
+int seed_sample_rate_from_int(uint32_t sample_rate, int16_t *factor, int16_t *multiplier)
+{
+  /* XXX: If samplerate is slightly below 1GHz, the result might be wrong. */
+  uint32_t m = 1;
+  if (sample_rate < 1073676289) { /* (2^15-1)^2 */
+    while (sample_rate >= 32768) { /* 2^15 */
+      sample_rate /= 10;
+      m *= 10;
+    }
+    *factor = sample_rate;
+    *multiplier = m;
+  } else {
+    *factor = 32767;
+    *multiplier = 32767;
+  }
+  return 0;
 }

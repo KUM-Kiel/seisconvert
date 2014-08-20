@@ -99,4 +99,8 @@ m:program("seedtest", {
   m:c("seedtest", {"seed/seed.h"})
 }, {"seed", "wav", "number", "tai"})
 
+m:program("wav2seed", {
+  m:c("wav2seed", {"seed/seed.h"})
+}, {"seed", "wav", "number", "tai"})
+
 m:gen("Makefile")

@@ -229,7 +229,7 @@ void st_u64_le(u8 *x, u64 u)
 int write_int(uint8_t *x, uint64_t xlen, int64_t i, int pad)
 {
   int p = 1, z = 1;
-  if (i >= 0) {
+  if (i < 0) {
     p = 0;
     i = -i;
   }

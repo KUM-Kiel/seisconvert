@@ -20,8 +20,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "Invalid file: %s.\n", argv[1]);
   }
 
-  fprintf(stderr, "%d frames.\n", mseed->record_header.num_samples);
-
   sample_rate = seed_sample_rate(
     mseed->record_header.sample_rate_factor,
     mseed->record_header.sample_rate_multiplier);
@@ -35,8 +33,6 @@ int main(int argc, char **argv)
     wav_file_write_int_frame(wav, frame);
     ++frames;
   }
-
-  fprintf(stderr, "%d frames.\n", mseed->record_header.num_samples);
 
   miniseed_file_close(mseed);
   wav_file_close(wav);

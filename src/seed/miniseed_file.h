@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "seed.h"
+#include "taia.h"
 
 /* The structure for storing handles to miniseed-Files. */
 typedef struct miniseed_file_s miniseed_file_t;
@@ -16,7 +17,7 @@ struct miniseed_file_s {
   FILE *file_handle;
   /* File mode. 0 for reading, 1 for writing. */
   int mode;
-  /* State machine. */
+  /* State machine for reading. */
   uint64_t record_start;
   uint64_t record_size;
   uint64_t frames_in_record;
@@ -29,11 +30,18 @@ struct miniseed_file_s {
   /* Header and MiniSEED blockette for current record. */
   seed_data_record_header_t record_header;
   seed_blockette_1000_t blockette_1000;
+  /* Write buffer for next record. */
+  uint8_t *write_buffer;
+  struct taia sample_interval;
+  uint64_t write_pos;
 };
 
 extern miniseed_file_t *miniseed_file_open(const char *path);
 extern miniseed_file_t *miniseed_file_create(const char *path);
 extern void miniseed_file_close(miniseed_file_t *file);
+
+extern int miniseed_file_set_start_time(miniseed_file_t *file, struct taia *t);
+extern int miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_rate);
 
 extern int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame);
 extern int miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame);

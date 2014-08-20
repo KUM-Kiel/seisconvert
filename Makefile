@@ -3,9 +3,9 @@ COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy
 LINK = $(CC) -Lbuild -o
 MAKELIB = $(AR) rcs
 
-TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libwav.a build/objects/buffer/buffer.o build/libbuffer.a build/objects/number/number.o build/libnumber.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy2wav.o build/objects/cos.o build/objects/wav_header.o build/objects/seedtest.o
+TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libwav.a build/objects/buffer/buffer.o build/libbuffer.a build/objects/number/number.o build/libnumber.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy2wav.o build/objects/cos.o build/objects/wav_header.o build/objects/seedtest.o build/objects/wav2seed.o
 
-all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libnumber.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest
+all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libnumber.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed
 build/test: build/objects/test.o build/libkumy.a build/libwav.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
@@ -42,6 +42,10 @@ build/seedtest: build/objects/seedtest.o build/libseed.a build/libwav.a build/li
 	@echo [LD] build/seedtest
 	@mkdir -p build/
 	@$(LINK) build/seedtest build/objects/seedtest.o -lseed -lwav -lnumber -ltai
+build/wav2seed: build/objects/wav2seed.o build/libseed.a build/libwav.a build/libnumber.a build/libtai.a Makefile
+	@echo [LD] build/wav2seed
+	@mkdir -p build/
+	@$(LINK) build/wav2seed build/objects/wav2seed.o -lseed -lwav -lnumber -ltai
 build/libkumy.a: build/objects/kumy/kumy.o Makefile
 	@echo [AR] build/libkumy.a
 	@mkdir -p build/
@@ -266,5 +270,9 @@ build/objects/seedtest.o: src/seedtest.c src/seed/seed.h Makefile
 	@echo [CC] build/objects/seedtest.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/seedtest.o src/seedtest.c
+build/objects/wav2seed.o: src/wav2seed.c src/seed/seed.h Makefile
+	@echo [CC] build/objects/wav2seed.o
+	@mkdir -p build/objects/
+	@$(COMPILE) -o build/objects/wav2seed.o src/wav2seed.c
 clean:
 	rm -rf build

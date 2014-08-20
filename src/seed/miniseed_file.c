@@ -2,6 +2,21 @@
 #include <stdlib.h>
 #include "number.h"
 
+/* Copy l bytes from `from` to `to`. Appends 0 byte to `to`. */
+static void byte_copy_0(uint8_t *to, uint64_t l, const uint8_t *from)
+{
+  uint64_t i;
+  for (i = 0; i < l; ++i) to[i] = from[i];
+  to[i] = 0;
+}
+
+/* Sets l bytes in `to` to `v`. */
+static void byte_set(uint8_t *to, uint64_t l, uint8_t v)
+{
+  uint64_t i;
+  for (i = 0; i < l; ++i) to[i] = v;
+}
+
 static int read_next_record(miniseed_file_t *f)
 {
   uint8_t drh[SEED_DATA_RECORD_HEADER_BYTES], b1k[SEED_BLOCKETTE_1000_BYTES];
@@ -21,6 +36,26 @@ static int read_next_record(miniseed_file_t *f)
   f->next_row = f->record_header.data_offset;
   f->row_word = 16;
   f->word_sample = 0;
+  return 0;
+}
+
+static int flush_record(miniseed_file_t *file)
+{
+  int i;
+  if (file->record_header.num_samples == 0) return 0;
+  /* Write headers. */
+  seed_write_data_record_header(file->write_buffer, &file->record_header);
+  seed_write_blockette_1000(file->write_buffer + 0x30, &file->blockette_1000);
+  byte_set(file->write_buffer + 0x38, 8, 0);
+  byte_set(file->write_buffer + file->write_pos, 4096 - file->write_pos, 0);
+  if (fwrite(file->write_buffer, 4096, 1, file->file_handle) != 1) return -1;
+  /* Change headers for next record. */
+  file->write_pos = 0x40;
+  file->record_header.sequence_number += 1;
+  for (i = 0; i < file->record_header.num_samples; ++i) {
+    taia_add(&file->record_header.start_time, &file->record_header.start_time, &file->sample_interval);
+  }
+  file->record_header.num_samples = 0;
   return 0;
 }
 
@@ -46,11 +81,51 @@ err1:
   return 0;
 }
 
-miniseed_file_t *miniseed_file_create(const char *path);
+miniseed_file_t *miniseed_file_create(const char *path)
+{
+  /* Allocate memory for the handle. */
+  miniseed_file_t *file = malloc(sizeof(miniseed_file_t));
+  if (!file) return 0;
+  /* Try to open the file. */
+  if (!(file->file_handle = fopen(path, "w"))) goto err1;
+  file->mode = 1;
+  /* Allocate write buffer. */
+  if (!(file->write_buffer = malloc(4096))) goto err2;
+  /* Fill header with stuff. */
+  file->record_header.sequence_number = 1;
+  byte_copy_0(file->record_header.station_identifier, 5, (uint8_t*)"     ");
+  byte_copy_0(file->record_header.location_identifier, 2, (uint8_t*)"  ");
+  byte_copy_0(file->record_header.channel_identifier, 3, (uint8_t*)"   ");
+  byte_copy_0(file->record_header.network_code, 2, (uint8_t*)"  ");
+  file->record_header.num_samples = 0;
+  file->record_header.activity_flags = 0;
+  file->record_header.io_flags = 0;
+  file->record_header.data_quality_flags = 0;
+  file->record_header.blockette_count = 1;
+  file->record_header.time_correction = 0;
+  file->record_header.data_offset = 0x40;
+  file->record_header.blockette_offset = 0x30;
+  file->blockette_1000.next_blockette = 0;
+  file->blockette_1000.encoding = 3; /* int32 */
+  file->blockette_1000.word_order = 1; /* big endian */
+  file->blockette_1000.data_record_length = 12; /* 4096 bytes */
+  /* Return handle. */
+  return file;
+  /* Undo everything in case of an error. */
+err2:
+  fclose(file->file_handle);
+err1:
+  free(file);
+  return 0;
+}
 
 void miniseed_file_close(miniseed_file_t *file)
 {
   if (!file) return;
+  if (file->mode == 1) {
+    flush_record(file);
+    free(file->write_buffer);
+  }
   fclose(file->file_handle);
   free(file);
 }
@@ -106,6 +181,7 @@ int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)
     case 3: /* 32bit integers. */
       *frame = file->row[file->row_word];
       file->row_word += 1;
+      file->frame += 1;
       return 0;
     case 10: /* Steim1 compression. */
       if (file->frame == 0) {
@@ -135,8 +211,52 @@ int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)
   }
 }
 
-int miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame);
+int miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame)
+{
+  if (!file) return -3;
+  if (file->record_header.num_samples >= 1008)
+    flush_record(file);
+  st_i32_be(file->write_buffer + file->write_pos, *frame);
+  file->write_pos += 4;
+  file->record_header.num_samples += 1;
+  return -3;
+}
 
-int miniseed_file_read_double_frame(miniseed_file_t *file, double *frame);
+int miniseed_file_read_double_frame(miniseed_file_t *file, double *frame)
+{
+  int32_t f;
+  int r = miniseed_file_read_int_frame(file, &f);
+  if (r >= 0)
+    *frame = f * (1.0 / 0x7fffffff);
+  return r;
+}
 
-int miniseed_file_write_double_frame(miniseed_file_t *file, const double *frame);
+int miniseed_file_write_double_frame(miniseed_file_t *file, const double *frame)
+{
+  int32_t f = *frame * 0x7fffffff;
+  return miniseed_file_write_int_frame(file, &f);
+}
+
+int miniseed_file_set_start_time(miniseed_file_t *file, struct taia *t)
+{
+  if (!file) return -1;
+  file->record_header.start_time = *t;
+  return 0;
+}
+
+int miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_rate)
+{
+  int16_t f, m;
+  uint64_t n, a;
+  if (!file) return -1;
+  seed_sample_rate_from_int(sample_rate, &f, &m);
+  a = 1000000000000000000ULL / sample_rate;
+  n = a / 1000000000ULL;
+  a = a % 1000000000ULL;
+  file->record_header.sample_rate_factor = f;
+  file->record_header.sample_rate_multiplier = m;
+  file->sample_interval.sec.x = 0;
+  file->sample_interval.nano = n;
+  file->sample_interval.atto = a;
+  return 0;
+}
