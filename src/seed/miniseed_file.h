@@ -66,7 +66,8 @@ extern int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame);
  * Returns -3 in case of an error. */
 extern int miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame);
 
-/* Exactly like the int functions, but with doubles. */
+/* Exactly like the int functions, but with doubles.
+ * Values range from -1.0 to 1.0. */
 extern int miniseed_file_read_double_frame(miniseed_file_t *file, double *frame);
 extern int miniseed_file_write_double_frame(miniseed_file_t *file, const double *frame);
 

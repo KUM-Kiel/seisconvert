@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+/* Structure for binary headers. */
+#define KUMY_BINARY_HEADER_BYTES 400
 struct kumy_binary_header_s {
   uint32_t job_id;
   uint32_t year;
@@ -15,12 +17,14 @@ struct kumy_binary_header_s {
 typedef struct kumy_binary_header_s kumy_binary_header_t;
 
 /* Reads a kumy_binary_header_t from a 400 byte uint8_t buffer.
-   Returns -1 if the buffer is malformed. */
-extern int kumy_binary_header_read(kumy_binary_header_t *header, uint8_t *buffer);
+ * Returns -1 if the buffer is malformed. */
+extern int kumy_binary_header_read(kumy_binary_header_t *header, const uint8_t *buffer);
 
 /* Writes a kumy_binary_header_t to a 400 byte uint8_t buffer. */
 extern int kumy_binary_header_write(uint8_t *buffer, kumy_binary_header_t *header);
 
+/* Structure for text headers. */
+#define KUMY_TEXT_HEADER_BYTES 3200
 struct kumy_text_header_s {
   uint8_t content[3200];
   /* C1 */
@@ -42,8 +46,8 @@ struct kumy_text_header_s {
 typedef struct kumy_text_header_s kumy_text_header_t;
 
 /* Reads a kumy_text_header_t from a 3200 byte uint8_t buffer.
-   Returns -1 if the buffer is malformed. */
-extern int kumy_text_header_read(kumy_text_header_t *header, uint8_t *buffer);
+ * Returns -1 if the buffer is malformed. */
+extern int kumy_text_header_read(kumy_text_header_t *header, const uint8_t *buffer);
 
 /* Writes a kumy_text_header_t to a 3200 byte uint8_t buffer. */
 extern int kumy_text_header_write(uint8_t *buffer, kumy_text_header_t *header);
@@ -54,10 +58,10 @@ extern kumy_frame_config_t kumy_get_frame_config(kumy_binary_header_t *header);
 
 extern int kumy_get_frame_size(kumy_frame_config_t fc);
 
-extern int kumy_read_int_frame(kumy_frame_config_t fc, int32_t *samples, uint8_t *buffer);
-extern int kumy_write_int_frame(kumy_frame_config_t fc, uint8_t *buffer, int32_t *samples);
+extern int kumy_read_int_frame(kumy_frame_config_t fc, int32_t *samples, const uint8_t *buffer);
+extern int kumy_write_int_frame(kumy_frame_config_t fc, uint8_t *buffer, const int32_t *samples);
 
-extern int kumy_read_double_frame(kumy_frame_config_t fc, double *samples, uint8_t *buffer);
-extern int kumy_write_double_frame(kumy_frame_config_t fc, uint8_t *buffer, double *samples);
+extern int kumy_read_double_frame(kumy_frame_config_t fc, double *samples, const uint8_t *buffer);
+extern int kumy_write_double_frame(kumy_frame_config_t fc, uint8_t *buffer, const double *samples);
 
 #endif

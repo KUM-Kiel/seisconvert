@@ -3,7 +3,8 @@ local make = require("make")
 local m = make()
 
 m:lib("kumy", {
-  m:c("kumy", {"kumy.h"})
+  m:c("kumy", {"kumy.h"}),
+  m:c("kumy_file", {"kumy_file.h", "kumy.h"})
 })
 
 m:lib("seed", {
@@ -100,7 +101,11 @@ m:program("seedtest", {
 }, {"seed", "wav", "number", "tai"})
 
 m:program("wav2seed", {
-  m:c("wav2seed", {"seed/seed.h"})
+  m:c("wav2seed", {})
 }, {"seed", "wav", "number", "tai"})
+
+m:program("kumy2seed", {
+  m:c("kumy2seed", {})
+}, {"seed", "kumy", "number", "tai"})
 
 m:gen("Makefile")

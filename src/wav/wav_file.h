@@ -8,7 +8,7 @@
 
 #include "wav.h"
 
-/* The structure for storing handles to WAV-Files. */
+/* The structure for storing handles to WAV files. */
 typedef struct wav_file_s wav_file_t;
 struct wav_file_s {
   /* Userdata. */

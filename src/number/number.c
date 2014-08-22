@@ -252,19 +252,17 @@ int write_int(uint8_t *x, uint64_t xlen, int64_t i, int pad)
 
 int parse_int(int64_t *i, const uint8_t *x, uint64_t xlen)
 {
-  int p = 1, s = 0;
+  int p = 1, s = 0, j;
   int64_t t = 0;
   if (x[0] == '-') p = 0;
-  while (xlen > 1 - p) {
-    --xlen;
-    if (x[xlen] == ' ') {
+  for (j = 1 - p; j < xlen; ++j) {
+    if ('0' <= x[j] && x[j] <= '9') {
+      t = t * 10 + x[j] - '0';
       s = 1;
-    } else if ('0' <= x[xlen] && x[xlen] <= '9' && !s) {
-      t = t * 10 + x[xlen] - '0';
-    } else {
+    } else if (x[j] != ' ' || s) {
       return -1;
     }
   }
-  *i = t;
+  *i = p ? t : -t;
   return 0;
 }

@@ -3,9 +3,9 @@ COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy
 LINK = $(CC) -Lbuild -o
 MAKELIB = $(AR) rcs
 
-TARGETS = build/objects/kumy/kumy.o build/libkumy.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libwav.a build/objects/buffer/buffer.o build/libbuffer.a build/objects/number/number.o build/libnumber.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy2wav.o build/objects/cos.o build/objects/wav_header.o build/objects/seedtest.o build/objects/wav2seed.o
+TARGETS = build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o build/libkumy.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libseed.a build/objects/segy/segy.o build/libsegy.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libwav.a build/objects/buffer/buffer.o build/libbuffer.a build/objects/number/number.o build/libnumber.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/libtai.a build/objects/test.o build/objects/wav_test.o build/objects/lowpass.o build/objects/highpass.o build/objects/fm.o build/objects/kumy2wav.o build/objects/cos.o build/objects/wav_header.o build/objects/seedtest.o build/objects/wav2seed.o build/objects/kumy2seed.o
 
-all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libnumber.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed
+all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libnumber.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed build/kumy2seed
 build/test: build/objects/test.o build/libkumy.a build/libwav.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
@@ -46,10 +46,14 @@ build/wav2seed: build/objects/wav2seed.o build/libseed.a build/libwav.a build/li
 	@echo [LD] build/wav2seed
 	@mkdir -p build/
 	@$(LINK) build/wav2seed build/objects/wav2seed.o -lseed -lwav -lnumber -ltai
-build/libkumy.a: build/objects/kumy/kumy.o Makefile
+build/kumy2seed: build/objects/kumy2seed.o build/libseed.a build/libkumy.a build/libnumber.a build/libtai.a Makefile
+	@echo [LD] build/kumy2seed
+	@mkdir -p build/
+	@$(LINK) build/kumy2seed build/objects/kumy2seed.o -lseed -lkumy -lnumber -ltai
+build/libkumy.a: build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o Makefile
 	@echo [AR] build/libkumy.a
 	@mkdir -p build/
-	@$(MAKELIB) build/libkumy.a build/objects/kumy/kumy.o
+	@$(MAKELIB) build/libkumy.a build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o
 build/libseed.a: build/objects/seed/seed.o build/objects/seed/miniseed_file.o Makefile
 	@echo [AR] build/libseed.a
 	@mkdir -p build/
@@ -78,6 +82,10 @@ build/objects/kumy/kumy.o: src/kumy/kumy.c src/kumy/kumy.h Makefile
 	@echo [CC] build/objects/kumy/kumy.o
 	@mkdir -p build/objects/kumy/
 	@$(COMPILE) -o build/objects/kumy/kumy.o src/kumy/kumy.c
+build/objects/kumy/kumy_file.o: src/kumy/kumy_file.c src/kumy/kumy_file.h src/kumy/kumy.h Makefile
+	@echo [CC] build/objects/kumy/kumy_file.o
+	@mkdir -p build/objects/kumy/
+	@$(COMPILE) -o build/objects/kumy/kumy_file.o src/kumy/kumy_file.c
 build/objects/seed/seed.o: src/seed/seed.c src/seed/seed.h src/number/number.h src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/seed/seed.o
 	@mkdir -p build/objects/seed/
@@ -270,9 +278,13 @@ build/objects/seedtest.o: src/seedtest.c src/seed/seed.h Makefile
 	@echo [CC] build/objects/seedtest.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/seedtest.o src/seedtest.c
-build/objects/wav2seed.o: src/wav2seed.c src/seed/seed.h Makefile
+build/objects/wav2seed.o: src/wav2seed.c Makefile
 	@echo [CC] build/objects/wav2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav2seed.o src/wav2seed.c
+build/objects/kumy2seed.o: src/kumy2seed.c Makefile
+	@echo [CC] build/objects/kumy2seed.o
+	@mkdir -p build/objects/
+	@$(COMPILE) -o build/objects/kumy2seed.o src/kumy2seed.c
 clean:
 	rm -rf build

@@ -67,7 +67,7 @@ void wav_file_close(wav_file_t *file)
   uint8_t h[WAV_HEADER_BYTES];
   if (!file) return;
   if (file->mode == 1) {
-    /* Rewrite header with cerrect num_frames. */
+    /* Rewrite header with correct num_frames. */
     wav_header_write(h, &file->header);
     rewind(file->file_handle);
     fwrite(h, WAV_HEADER_BYTES, 1, file->file_handle);
@@ -79,15 +79,17 @@ void wav_file_close(wav_file_t *file)
 
 int wav_file_read_int_frame(wav_file_t *file, int32_t *frame)
 {
-  if (!file || !frame) return -3;
+  if (!file || !frame || file->mode != 0) return -3;
+  if (file->header.num_frames == 0) return -1;
   if (fread(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -1;
   wav_read_int_frame(file->frame_config, frame, file->buffer);
+  file->header.num_frames -= 1;
   return 0;
 }
 
 int wav_file_write_int_frame(wav_file_t *file, const int32_t *frame)
 {
-  if (!file || !frame) return -3;
+  if (!file || !frame || file->mode != 1) return -3;
   wav_write_int_frame(file->frame_config, file->buffer, frame);
   file->header.num_frames += 1;
   if (fwrite(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -3;
@@ -96,18 +98,19 @@ int wav_file_write_int_frame(wav_file_t *file, const int32_t *frame)
 
 int wav_file_read_double_frame(wav_file_t *file, double *frame)
 {
-  if (!file || !frame) return -3;
+  if (!file || !frame || file->mode != 0) return -3;
+  if (file->header.num_frames == 0) return -1;
   if (fread(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -1;
   wav_read_double_frame(file->frame_config, frame, file->buffer);
+  file->header.num_frames -= 1;
   return 0;
 }
 
 int wav_file_write_double_frame(wav_file_t *file, const double *frame)
 {
-  if (!file || !frame) return -3;
+  if (!file || !frame || file->mode != 1) return -3;
   wav_write_double_frame(file->frame_config, file->buffer, frame);
   file->header.num_frames += 1;
   if (fwrite(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -3;
   return 0;
 }
-
