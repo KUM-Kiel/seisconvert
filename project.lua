@@ -86,7 +86,7 @@ m:program("fm", {
 
 m:program("kumy2wav", {
   m:c("kumy2wav", {"wav/wav.h", "kumy/kumy.h"})
-}, {"wav", "number", "kumy"})
+}, {"wav", "number", "kumy", "tai"})
 
 m:program("cos", {
   m:c("cos", {"wav/wav_file.h", "wav/wav.h"})

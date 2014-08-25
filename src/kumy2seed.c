@@ -53,7 +53,6 @@ static int mkdir_p(const char *path)
 }
 
 static const char channel_names[KUMY_FILE_CHANNELS] = "HXYZ";
-static const char ending[] = ".C.seed";
 
 int main(int argc, char **argv)
 {

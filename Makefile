@@ -26,10 +26,10 @@ build/fm: build/objects/fm.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/fm
 	@mkdir -p build/
 	@$(LINK) build/fm build/objects/fm.o -lwav -lnumber -lm
-build/kumy2wav: build/objects/kumy2wav.o build/libwav.a build/libnumber.a build/libkumy.a Makefile
+build/kumy2wav: build/objects/kumy2wav.o build/libwav.a build/libnumber.a build/libkumy.a build/libtai.a Makefile
 	@echo [LD] build/kumy2wav
 	@mkdir -p build/
-	@$(LINK) build/kumy2wav build/objects/kumy2wav.o -lwav -lnumber -lkumy
+	@$(LINK) build/kumy2wav build/objects/kumy2wav.o -lwav -lnumber -lkumy -ltai
 build/cos: build/objects/cos.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/cos
 	@mkdir -p build/
