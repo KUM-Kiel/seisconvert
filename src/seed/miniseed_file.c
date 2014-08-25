@@ -109,6 +109,7 @@ miniseed_file_t *miniseed_file_create(const char *path)
   file->blockette_1000.encoding = 3; /* int32 */
   file->blockette_1000.word_order = 1; /* big endian */
   file->blockette_1000.data_record_length = 12; /* 4096 bytes */
+  file->write_pos = 0x40;
   /* Return handle. */
   return file;
   /* Undo everything in case of an error. */
