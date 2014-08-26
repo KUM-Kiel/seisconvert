@@ -106,7 +106,7 @@ miniseed_file_t *miniseed_file_create(const char *path)
   file->record_header.data_offset = 0x40;
   file->record_header.blockette_offset = 0x30;
   file->blockette_1000.next_blockette = 0;
-  file->blockette_1000.encoding = 3; /* int32 */
+  file->blockette_1000.encoding = 10; /* Steim1 */
   file->blockette_1000.word_order = 1; /* big endian */
   file->blockette_1000.data_record_length = 12; /* 4096 bytes */
   file->write_pos = 0x40;
@@ -188,7 +188,7 @@ int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)
       if (file->frame == 0) {
         *frame = file->last_sample = file->row[1];
         file->frame += 1;
-        file->row_word = 3;
+        file->row_word = 4;
         file->word_sample = 0;
       } else {
         while (samples_in_word(file->row, file->row_word) == 0) {
@@ -212,15 +212,137 @@ int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)
   }
 }
 
+static uint64_t row_begin(uint64_t pos)
+{
+  return pos & ~0x3F;
+}
+
+static int bytes_needed(int32_t s)
+{
+  if (-128 <= s && s < 128)
+    return 1;
+  else if (-32768 <= s && s < 32768)
+    return 2;
+  else
+    return 4;
+}
+
+static void set_samples_in_word(uint8_t *row, int word, int samples)
+{
+  int x, ls;
+  switch (samples) {
+    case 4: x = 1; break;
+    case 2: x = 2; break;
+    case 1: x = 3; break;
+    case 0: x = 0; break;
+    default: return;
+  }
+  ls = 30 - 2 * word;
+  st_i32_be(row, (ld_i32_be(row) & ~(3 << ls)) | (x << ls));
+}
+
+static int combine(uint8_t *b, uint64_t p1, uint64_t p2)
+{
+  int32_t s1, s2, s3, s4, r1, r2;
+  int w1, w2, sw1, sw2;
+  w1 = (p1 % 64) / 4;
+  w2 = (p2 % 64) / 4;
+  r1 = ld_i32_be(b + row_begin(p1));
+  r2 = ld_i32_be(b + row_begin(p2));
+  sw1 = samples_in_word(&r1, w1);
+  sw2 = samples_in_word(&r2, w2);
+  if (sw1 > 2 || sw1 != sw2)
+    return -1;
+  if (sw1 == 1) {
+    s1 = ld_i32_be(b + p1);
+    s2 = ld_i32_be(b + p2);
+    if (bytes_needed(s1) > 2 || bytes_needed(s2) > 2)
+      return -1;
+    st_i16_be(b + p1, s1);
+    st_i16_be(b + p1 + 2, s2);
+    st_i32_be(b + p2, 0);
+    set_samples_in_word(b + row_begin(p1), w1, 2);
+    set_samples_in_word(b + row_begin(p2), w2, 0);
+    return 0;
+  } else if (sw1 == 2) {
+    s1 = ld_i16_be(b + p1);
+    s2 = ld_i16_be(b + p1 + 2);
+    s3 = ld_i16_be(b + p2);
+    s4 = ld_i16_be(b + p2 + 2);
+    if (bytes_needed(s1) > 1 || bytes_needed(s2) > 1 ||
+        bytes_needed(s3) > 1 || bytes_needed(s4) > 1)
+      return -1;
+    b[p1] = s1;
+    b[p1 + 1] = s2;
+    b[p1 + 2] = s3;
+    b[p1 + 3] = s4;
+    set_samples_in_word(b + row_begin(p1), w1, 4);
+    set_samples_in_word(b + row_begin(p2), w2, 0);
+    return 0;
+  }
+  return -1;
+}
+
 int miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame)
 {
+  uint64_t pp;
+
   if (!file) return -3;
-  if (file->record_header.num_samples >= 1008)
-    flush_record(file);
-  st_i32_be(file->write_buffer + file->write_pos, *frame);
-  file->write_pos += 4;
-  file->record_header.num_samples += 1;
-  return -3;
+  switch (file->blockette_1000.encoding) {
+    case 3: /* 32bit integers. */
+      if (file->record_header.num_samples >= 1008)
+        flush_record(file);
+      st_i32_be(file->write_buffer + file->write_pos, *frame);
+      file->write_pos += 4;
+      file->record_header.num_samples += 1;
+      return 0;
+    case 10: /* Steim1 compression. */
+      /* Check if a new record is needed. */
+      if (file->write_pos == 4096) {
+        flush_record(file);
+      }
+      /* Write the sample. */
+      if (file->record_header.num_samples == 0) {
+        st_i32_be(file->write_buffer + 0x40, 0);
+        st_i32_be(file->write_buffer + 0x44, *frame);
+        st_i32_be(file->write_buffer + 0x48, *frame);
+        st_i32_be(file->write_buffer + 0x4c, *frame);
+        set_samples_in_word(file->write_buffer + 0x40, 3, 1);
+        file->write_pos = 0x50;
+        file->last_sample = *frame;
+        file->record_header.num_samples += 1;
+      } else {
+        if (file->write_pos == row_begin(file->write_pos)) {
+          st_i32_be(file->write_buffer + file->write_pos, 0);
+          file->write_pos += 4;
+        }
+        st_i32_be(file->write_buffer + 0x48, *frame);
+        st_i32_be(file->write_buffer + file->write_pos, *frame - file->last_sample);
+        pp = row_begin(file->write_pos);
+        set_samples_in_word(file->write_buffer + pp, (file->write_pos - pp) / 4, 1);
+        file->last_sample = *frame;
+        file->record_header.num_samples += 1;
+        /* Try combining samples. */
+        if (file->record_header.num_samples >= 2) {
+          pp = file->write_pos - 4;
+          if (pp % 64 == 0)
+            pp -= 4;
+          if (combine(file->write_buffer, pp, file->write_pos) == 0)
+            file->write_pos = pp;
+          if (file->record_header.num_samples >= 4) {
+            pp = file->write_pos - 4;
+            if (pp % 64 == 0)
+              pp -= 4;
+            if (combine(file->write_buffer, pp, file->write_pos) == 0)
+              file->write_pos = pp;
+          }
+        }
+        file->write_pos += 4;
+      }
+      return 0;
+    default: /* Unsupported. */
+      return -3;
+  }
 }
 
 int miniseed_file_read_double_frame(miniseed_file_t *file, double *frame)
