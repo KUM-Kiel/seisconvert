@@ -58,6 +58,15 @@ extern int miniseed_file_set_start_time(miniseed_file_t *file, struct taia *t);
  * beginning on files in write mode. */
 extern int miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_rate);
 
+/* Sets the file info.
+ *   station up to 5 characters,
+ *   location up to 2 characters,
+ *   channel up to 3 characters,
+ *   network up to 2 characters.
+ * Any field may be shorter or a zero pointer, in which case it gets padded or
+ * completely filled with spaces. */
+extern int miniseed_file_set_info(miniseed_file_t *file, const char *station, const char *location, const char *channel, const char *network);
+
 /* Reads an int frame from a MiniSEED file in read mode.
  * Returns -1 if there is no more data in the file.
  * Returns -3 if there was an error or the file is malformed. */

@@ -383,3 +383,50 @@ int miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_rate)
   file->sample_interval.atto = a;
   return 0;
 }
+
+int miniseed_file_set_info(miniseed_file_t *file, const char *station, const char *location, const char *channel, const char *network)
+{
+  int i, _0;
+  if (!file) return -1;
+  /* Set station_identifier. */
+  for (i = 0, _0 = 0; i < 5; ++i) {
+    if (!_0 && station && station[i]) {
+      file->record_header.station_identifier[i] = station[i];
+    } else {
+      _0 = 1;
+      file->record_header.station_identifier[i] = ' ';
+    }
+  }
+  file->record_header.station_identifier[5] = 0;
+  /* Set location_identifier. */
+  for (i = 0, _0 = 0; i < 2; ++i) {
+    if (!_0 && location && location[i]) {
+      file->record_header.location_identifier[i] = location[i];
+    } else {
+      _0 = 1;
+      file->record_header.location_identifier[i] = ' ';
+    }
+  }
+  file->record_header.location_identifier[2] = 0;
+  /* Set channel_identifier. */
+  for (i = 0, _0 = 0; i < 3; ++i) {
+    if (!_0 && channel && channel[i]) {
+      file->record_header.channel_identifier[i] = channel[i];
+    } else {
+      _0 = 1;
+      file->record_header.channel_identifier[i] = ' ';
+    }
+  }
+  file->record_header.channel_identifier[3] = 0;
+  /* Set network_code. */
+  for (i = 0, _0 = 0; i < 2; ++i) {
+    if (!_0 && network && network[i]) {
+      file->record_header.network_code[i] = network[i];
+    } else {
+      _0 = 1;
+      file->record_header.network_code[i] = ' ';
+    }
+  }
+  file->record_header.network_code[2] = 0;
+  return 0;
+}

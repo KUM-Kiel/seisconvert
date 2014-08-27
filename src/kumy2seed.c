@@ -52,7 +52,7 @@ static int mkdir_p(const char *path)
   return 0;
 }
 
-static const char channel_names[KUMY_FILE_CHANNELS] = "HXYZ";
+static const char *channel_names[] = {"H", "SX", "SY", "SZ"};
 
 int main(int argc, char **argv)
 {
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 
   for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
     caltime_utc(&ct, &start_time.sec, 0, 0);
-    snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%c.seed",
+    snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%s.seed",
       folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second, channel_names[i]);
 
     if (!(mseed[i] = miniseed_file_create((char*)oname))) {
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     }
     miniseed_file_set_sample_rate(mseed[i], sample_rate);
     miniseed_file_set_start_time(mseed[i], &start_time);
-    mseed[i]->record_header.channel_identifier[0] = channel_names[i];
+    miniseed_file_set_info(mseed[i], 0, 0, channel_names[i], 0);
   }
 
   while (kumy_file_read_int_frame(kumy, frame) >= 0) {
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
       for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
         miniseed_file_close(mseed[i]);
         caltime_utc(&ct, &tt.sec, 0, 0);
-        snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%c.seed",
+        snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%s.seed",
           folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second, channel_names[i]);
         if (!(mseed[i] = miniseed_file_create((char*)oname))) {
           fprintf(stderr, "Invalid file: %s.\n", oname);
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
         }
         miniseed_file_set_sample_rate(mseed[i], sample_rate);
         miniseed_file_set_start_time(mseed[i], &tt);
-        mseed[i]->record_header.channel_identifier[0] = channel_names[i];
+        miniseed_file_set_info(mseed[i], 0, 0, channel_names[i], 0);
       }
       frames = frames_per_file;
       tt.sec.x += seconds_per_file;
