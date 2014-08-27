@@ -191,8 +191,12 @@ int miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)
       if (file->frame == 0) {
         *frame = file->last_sample = file->row[1];
         file->frame += 1;
-        file->row_word = 4;
-        file->word_sample = 0;
+        file->row_word = 3;
+        file->word_sample = 1;
+        if (file->word_sample == samples_in_word(file->row, file->row_word)) {
+          file->word_sample = 0;
+          file->row_word += 1;
+        }
       } else {
         while (samples_in_word(file->row, file->row_word) == 0) {
           file->row_word += 1;

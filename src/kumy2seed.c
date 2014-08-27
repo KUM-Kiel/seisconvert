@@ -5,10 +5,11 @@
 #include "taia.h"
 #include "caltime.h"
 #include "number.h"
+#include <errno.h>
 
+/* POSIX specific. */
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <errno.h>
 
 int parse_text_date(struct taia *t, const uint8_t *x)
 {
