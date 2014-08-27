@@ -141,7 +141,8 @@ int main(int argc, char **argv)
     }
     miniseed_file_set_sample_rate(mseed[i], sample_rate);
     miniseed_file_set_start_time(mseed[i], &start_time);
-    miniseed_file_set_info(mseed[i], 0, 0, channel_names[i], 0);
+    miniseed_file_set_info(mseed[i], "OBS", "DE", channel_names[i], "K");
+    miniseed_file_set_compression(mseed[i], 1);
   }
 
   while (kumy_file_read_int_frame(kumy, frame) >= 0) {
@@ -158,7 +159,8 @@ int main(int argc, char **argv)
         }
         miniseed_file_set_sample_rate(mseed[i], sample_rate);
         miniseed_file_set_start_time(mseed[i], &tt);
-        miniseed_file_set_info(mseed[i], 0, 0, channel_names[i], 0);
+        miniseed_file_set_info(mseed[i], "OBS", "DE", channel_names[i], "K");
+        miniseed_file_set_compression(mseed[i], 1);
       }
       frames = frames_per_file;
       tt.sec.x += seconds_per_file;

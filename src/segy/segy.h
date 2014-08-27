@@ -7,7 +7,8 @@
 #define SEGY_NO 0
 #define SEGY_YES 1
 
-/* Beware, these numbers differ from the numbers written to the header.
+/* Units.
+ * Beware, these numbers differ from the numbers written to the header.
  * Always use these named constants, as they are remapped to the appropiate numbers. */
 #define SEGY_OTHER -1
 #define SEGY_UNKNOWN 0
@@ -31,6 +32,8 @@
 #define SEGY_BAR 13
 
 #define SEGY_KILOGRAM 14
+
+#define SEGY_BAR_METER 15
 
 typedef struct segy_text_header_s segy_text_header_t;
 struct segy_text_header_s {
@@ -115,14 +118,14 @@ struct segy_binary_header_s {
 #define SEGY_POLARITY_UP 2
 
 /* Reads a segy_binary_header_t from a 400 byte uint8_t buffer.
-   Returns -1 if the buffer is malformed. */
+ * Returns -1 if the buffer is malformed. */
 extern int segy_binary_header_read(segy_binary_header_t *header, const uint8_t *buffer);
 
 /* Writes a segy_binary_header_t to a 400 byte uint8_t buffer. */
 extern int segy_binary_header_write(uint8_t *buffer, segy_binary_header_t *header);
 
 typedef struct segy_trace_header_s segy_trace_header_t;
-struct segy_trace_header_S {
+struct segy_trace_header_s {
   int32_t sequence_number_in_line;
   int32_t sequence_number_in_file;
   int32_t original_field_recor_number;
@@ -281,5 +284,12 @@ struct segy_trace_header_S {
 
 #define SEGY_OVER_TRAVEL_UP 1
 #define SEGY_OVER_TRAVEL_DOWN 2
+
+/* Reads a segy_trace_header_t from a 240 byte uint8_t buffer.
+ * Returns -1 if the buffer is malformed. */
+extern int segy_trace_header_read(segy_trace_header_t *header, const uint8_t *buffer);
+
+/* Writes a segy_trace_header_t to a 240 byte uint8_t buffer. */
+extern int segy_trace_header_write(uint8_t *buffer, segy_trace_header_t *header);
 
 #endif

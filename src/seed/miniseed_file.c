@@ -46,12 +46,15 @@ static int flush_record(miniseed_file_t *file)
   /* Write headers. */
   seed_write_data_record_header(file->write_buffer, &file->record_header);
   seed_write_blockette_1000(file->write_buffer + 0x30, &file->blockette_1000);
+  /* Set unused space to 0. */
   byte_set(file->write_buffer + 0x38, 8, 0);
   byte_set(file->write_buffer + file->write_pos, 4096 - file->write_pos, 0);
+  /* Write the rcord to disk. */
   if (fwrite(file->write_buffer, 4096, 1, file->file_handle) != 1) return -1;
   /* Change headers for next record. */
   file->write_pos = 0x40;
   file->record_header.sequence_number += 1;
+  /* Calculate start time of next record (sample_interval * num_samples). */
   for (i = 0; i < file->record_header.num_samples; ++i) {
     taia_add(&file->record_header.start_time, &file->record_header.start_time, &file->sample_interval);
   }
@@ -428,5 +431,12 @@ int miniseed_file_set_info(miniseed_file_t *file, const char *station, const cha
     }
   }
   file->record_header.network_code[2] = 0;
+  return 0;
+}
+
+int miniseed_file_set_compression(miniseed_file_t *file, int compression)
+{
+  if (!file) return -1;
+  file->blockette_1000.encoding = compression ? 10 : 3;
   return 0;
 }

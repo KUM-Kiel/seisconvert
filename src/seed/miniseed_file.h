@@ -67,6 +67,12 @@ extern int miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_
  * completely filled with spaces. */
 extern int miniseed_file_set_info(miniseed_file_t *file, const char *station, const char *location, const char *channel, const char *network);
 
+/* Activates or deactivates data compression.
+ * Set compression to a nonzero value if the file should be compressed.
+ * This is the default.
+ * May not be called after one of the write methods. */
+extern int miniseed_file_set_compression(miniseed_file_t *file, int compression);
+
 /* Reads an int frame from a MiniSEED file in read mode.
  * Returns -1 if there is no more data in the file.
  * Returns -3 if there was an error or the file is malformed. */
