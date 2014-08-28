@@ -31,14 +31,16 @@ return function(options)
   local _includes = ""
   local _all = ""
   local _cflags = ""
+  local _ldflags = ""
   local _extra = ""
 
   if options then
     _cflags = options.cflags and " " .. options.cflags or ""
+    _ldflags = options.ldflags and " " .. options.ldflags or ""
     _extra = options.extra or ""
   end
 
-  local function lib(m, name, objects)
+  local function lib(self, name, objects)
     local thelib = "build/lib" .. name .. ".a"
     _all = _all .. " " .. thelib
     _targets[#_targets + 1] = thelib
@@ -65,7 +67,7 @@ return function(options)
     _libs[name] = l
   end
 
-  local function program(m, name, objects, libs)
+  local function program(self, name, objects, libs)
     local theprogram = "build/" .. name
     _programs[name] = true
     _all = _all .. " " .. theprogram
@@ -92,7 +94,7 @@ return function(options)
     _programs[#_programs + 1] = p
   end
 
-  local function c(m, name, deps)
+  local function c(self, name, deps)
     local d = {name .. ".c"}
     deps = deps or {}
     for i, v in ipairs(deps) do
@@ -120,14 +122,14 @@ return function(options)
     end
   end
 
-  local function gen(m, name)
+  local function gen(self, name)
     local f = io.open(name, "w")
     for i, o in ipairs(_objects) do
       update_deps(o)
     end
     f:write("# This file was automatically generated. Do not edit!\n")
-    f:write("COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99" .. _includes .. "\n")
-    f:write("LINK = $(CC) -Lbuild -o\n")
+    f:write("COMPILE = $(CC) -c" .. _cflags .. _includes .. "\n")
+    f:write("LINK = $(CC) -Lbuild\n")
     f:write("MAKELIB = $(AR) rcs\n\n")
     f:write("TARGETS = " .. table.concat(_targets, " ") .. "\n\n")
     if _extra ~= "" then
@@ -146,7 +148,7 @@ return function(options)
       f:write(p.target .. ": " .. table.concat(p.objects, " ") .. d .. " " .. name .. "\n")
       f:write("\t@echo [LD] " .. p.target .. "\n")
       f:write("\t@mkdir -p " .. folder(p.target) .. "\n")
-      f:write("\t@$(LINK) " .. p.target .. " " .. table.concat(p.objects, " ") .. l .. "\n")
+      f:write("\t@$(LINK) -o " .. p.target .. " " .. table.concat(p.objects, " ") .. l .. _ldflags .. "\n")
     end
     for i, l in ipairs(_libs) do
       f:write(l.target .. ": " .. table.concat(l.objects, " ") .. " " .. name .. "\n")
@@ -158,7 +160,7 @@ return function(options)
       f:write(o.target .. ": " .. table.concat(o.deps, " ") .. " " .. name .. "\n")
       f:write("\t@echo [CC] " .. o.target .. "\n")
       f:write("\t@mkdir -p " .. folder(o.target) .. "\n")
-      f:write("\t@$(COMPILE)" .. _cflags .. " -o " .. o.target .. " " .. o.source .. "\n")
+      f:write("\t@$(COMPILE)" .. " -o " .. o.target .. " " .. o.source .. "\n")
     end
     f:write("clean:\n\trm -rf build\n")
   end

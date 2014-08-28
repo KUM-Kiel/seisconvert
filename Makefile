@@ -1,6 +1,6 @@
 # This file was automatically generated. Do not edit!
 COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/buffer -Isrc/number -Isrc/tai
-LINK = $(CC) -Lbuild -o
+LINK = $(CC) -Lbuild
 MAKELIB = $(AR) rcs
 
 TARGETS = build/libkumy.a build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o build/libseed.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libsegy.a build/objects/segy/segy.o build/libwav.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libbuffer.a build/objects/buffer/buffer.o build/libnumber.a build/objects/number/number.o build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/test build/objects/test.o build/wav_test build/objects/wav_test.o build/lowpass build/objects/lowpass.o build/highpass build/objects/highpass.o build/fm build/objects/fm.o build/kumy2wav build/objects/kumy2wav.o build/cos build/objects/cos.o build/wav_header build/objects/wav_header.o build/seedtest build/objects/seedtest.o build/wav2seed build/objects/wav2seed.o build/kumy2seed build/objects/kumy2seed.o
@@ -9,47 +9,47 @@ all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuf
 build/test: build/objects/test.o build/libkumy.a build/libwav.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
-	@$(LINK) build/test build/objects/test.o -lkumy -lwav -lnumber -ltai -lm
+	@$(LINK) -o build/test build/objects/test.o -lkumy -lwav -lnumber -ltai -lm
 build/wav_test: build/objects/wav_test.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/wav_test
 	@mkdir -p build/
-	@$(LINK) build/wav_test build/objects/wav_test.o -lwav -lnumber -lm
+	@$(LINK) -o build/wav_test build/objects/wav_test.o -lwav -lnumber -lm
 build/lowpass: build/objects/lowpass.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/lowpass
 	@mkdir -p build/
-	@$(LINK) build/lowpass build/objects/lowpass.o -lwav -lnumber -lm
+	@$(LINK) -o build/lowpass build/objects/lowpass.o -lwav -lnumber -lm
 build/highpass: build/objects/highpass.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/highpass
 	@mkdir -p build/
-	@$(LINK) build/highpass build/objects/highpass.o -lwav -lnumber -lm
+	@$(LINK) -o build/highpass build/objects/highpass.o -lwav -lnumber -lm
 build/fm: build/objects/fm.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/fm
 	@mkdir -p build/
-	@$(LINK) build/fm build/objects/fm.o -lwav -lnumber -lm
+	@$(LINK) -o build/fm build/objects/fm.o -lwav -lnumber -lm
 build/kumy2wav: build/objects/kumy2wav.o build/libwav.a build/libnumber.a build/libkumy.a build/libtai.a Makefile
 	@echo [LD] build/kumy2wav
 	@mkdir -p build/
-	@$(LINK) build/kumy2wav build/objects/kumy2wav.o -lwav -lnumber -lkumy -ltai
+	@$(LINK) -o build/kumy2wav build/objects/kumy2wav.o -lwav -lnumber -lkumy -ltai
 build/cos: build/objects/cos.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/cos
 	@mkdir -p build/
-	@$(LINK) build/cos build/objects/cos.o -lwav -lnumber -lm
+	@$(LINK) -o build/cos build/objects/cos.o -lwav -lnumber -lm
 build/wav_header: build/objects/wav_header.o build/libwav.a build/libnumber.a Makefile
 	@echo [LD] build/wav_header
 	@mkdir -p build/
-	@$(LINK) build/wav_header build/objects/wav_header.o -lwav -lnumber -lm
+	@$(LINK) -o build/wav_header build/objects/wav_header.o -lwav -lnumber -lm
 build/seedtest: build/objects/seedtest.o build/libseed.a build/libwav.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/seedtest
 	@mkdir -p build/
-	@$(LINK) build/seedtest build/objects/seedtest.o -lseed -lwav -lnumber -ltai
+	@$(LINK) -o build/seedtest build/objects/seedtest.o -lseed -lwav -lnumber -ltai
 build/wav2seed: build/objects/wav2seed.o build/libseed.a build/libwav.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/wav2seed
 	@mkdir -p build/
-	@$(LINK) build/wav2seed build/objects/wav2seed.o -lseed -lwav -lnumber -ltai
+	@$(LINK) -o build/wav2seed build/objects/wav2seed.o -lseed -lwav -lnumber -ltai
 build/kumy2seed: build/objects/kumy2seed.o build/libseed.a build/libkumy.a build/libnumber.a build/libtai.a Makefile
 	@echo [LD] build/kumy2seed
 	@mkdir -p build/
-	@$(LINK) build/kumy2seed build/objects/kumy2seed.o -lseed -lkumy -lnumber -ltai
+	@$(LINK) -o build/kumy2seed build/objects/kumy2seed.o -lseed -lkumy -lnumber -ltai
 build/libkumy.a: build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o Makefile
 	@echo [AR] build/libkumy.a
 	@mkdir -p build/
