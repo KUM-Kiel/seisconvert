@@ -27,7 +27,7 @@ int parse_text_date(struct taia *t, const uint8_t *x)
   return 0;
 }
 
-static int last(int c, const char *x)
+static int last(char c, const char *x)
 {
   int i, r = -1;
   for (i = 0; x[i] > 0; ++i) {

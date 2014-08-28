@@ -41,6 +41,7 @@ return function(options)
   local function lib(m, name, objects)
     local thelib = "build/lib" .. name .. ".a"
     _all = _all .. " " .. thelib
+    _targets[#_targets + 1] = thelib
     local l = {
       target = thelib,
       objects = {}
@@ -60,7 +61,6 @@ return function(options)
       l.objects[#l.objects + 1] = theobject
     end
     _includes = _includes .. " -Isrc/" .. name
-    _targets[#_targets + 1] = thelib
     _libs[#_libs + 1] = l
     _libs[name] = l
   end
@@ -69,6 +69,7 @@ return function(options)
     local theprogram = "build/" .. name
     _programs[name] = true
     _all = _all .. " " .. theprogram
+    _targets[#_targets + 1] = theprogram
     local p = {
       target = theprogram,
       objects = {},
@@ -93,6 +94,7 @@ return function(options)
 
   local function c(m, name, deps)
     local d = {name .. ".c"}
+    deps = deps or {}
     for i, v in ipairs(deps) do
       d[i + 1] = v
     end
@@ -104,8 +106,25 @@ return function(options)
     }
   end
 
+  local function update_deps(cfile)
+    local mm = io.popen("cc -MM " .. cfile.source .. _includes):read("*a")
+    local t = {}
+    for i, d in ipairs(cfile.deps) do
+      t[d] = true
+    end
+    for d in string.gmatch(mm, "%s([%w_%./]+)") do
+      if not t[d] then
+        cfile.deps[#cfile.deps + 1] = d
+      end
+      t[d] = true
+    end
+  end
+
   local function gen(m, name)
     local f = io.open(name, "w")
+    for i, o in ipairs(_objects) do
+      update_deps(o)
+    end
     f:write("# This file was automatically generated. Do not edit!\n")
     f:write("COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99" .. _includes .. "\n")
     f:write("LINK = $(CC) -Lbuild -o\n")
