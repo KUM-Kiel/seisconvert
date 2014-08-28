@@ -109,16 +109,18 @@ return function(options)
   end
 
   local function update_deps(cfile)
-    local mm = io.popen("cc -MM " .. cfile.source .. _includes):read("*a")
-    local t = {}
-    for i, d in ipairs(cfile.deps) do
-      t[d] = true
-    end
-    for d in string.gmatch(mm, "%s([%w_%./]+)") do
-      if not t[d] then
-        cfile.deps[#cfile.deps + 1] = d
+    if io.open(cfile.source) then
+      local mm = io.popen("cc -MM " .. cfile.source .. _includes):read("*a")
+      local t = {}
+      for i, d in ipairs(cfile.deps) do
+        t[d] = true
       end
-      t[d] = true
+      for d in string.gmatch(mm, "%s([%w_%./]+)") do
+        if not t[d] then
+          cfile.deps[#cfile.deps + 1] = d
+        end
+        t[d] = true
+      end
     end
   end
 
