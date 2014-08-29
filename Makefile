@@ -1,127 +1,107 @@
 # This file was automatically generated. Do not edit!
-COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/kumy -Isrc/seed -Isrc/segy -Isrc/wav -Isrc/buffer -Isrc/number -Isrc/tai
+COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/seisconvert -Isrc/tai
 LINK = $(CC) -Lbuild
 MAKELIB = $(AR) rcs
 
-TARGETS = build/libkumy.a build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o build/libseed.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o build/libsegy.a build/objects/segy/segy.o build/libwav.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o build/libbuffer.a build/objects/buffer/buffer.o build/libnumber.a build/objects/number/number.o build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/test build/objects/test.o build/wav_test build/objects/wav_test.o build/lowpass build/objects/lowpass.o build/highpass build/objects/highpass.o build/fm build/objects/fm.o build/kumy2wav build/objects/kumy2wav.o build/cos build/objects/cos.o build/wav_header build/objects/wav_header.o build/seedtest build/objects/seedtest.o build/wav2seed build/objects/wav2seed.o build/kumy2seed build/objects/kumy2seed.o
+TARGETS = build/libseisconvert.a build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/test build/objects/test.o build/wav_test build/objects/wav_test.o build/lowpass build/objects/lowpass.o build/highpass build/objects/highpass.o build/fm build/objects/fm.o build/kumy2wav build/objects/kumy2wav.o build/cos build/objects/cos.o build/wav_header build/objects/wav_header.o build/seedtest build/objects/seedtest.o build/wav2seed build/objects/wav2seed.o build/kumy2seed build/objects/kumy2seed.o
 
-all: build/libkumy.a build/libseed.a build/libsegy.a build/libwav.a build/libbuffer.a build/libnumber.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed build/kumy2seed
-build/test: build/objects/test.o build/libkumy.a build/libwav.a build/libnumber.a build/libtai.a Makefile
+all: build/libseisconvert.a build/libtai.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed build/kumy2seed
+build/test: build/objects/test.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
-	@$(LINK) -o build/test build/objects/test.o -lkumy -lwav -lnumber -ltai -lm
-build/wav_test: build/objects/wav_test.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/test build/objects/test.o -lseisconvert -ltai -lm
+build/wav_test: build/objects/wav_test.o build/libseisconvert.a Makefile
 	@echo [LD] build/wav_test
 	@mkdir -p build/
-	@$(LINK) -o build/wav_test build/objects/wav_test.o -lwav -lnumber -lm
-build/lowpass: build/objects/lowpass.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/wav_test build/objects/wav_test.o -lseisconvert -lm
+build/lowpass: build/objects/lowpass.o build/libseisconvert.a Makefile
 	@echo [LD] build/lowpass
 	@mkdir -p build/
-	@$(LINK) -o build/lowpass build/objects/lowpass.o -lwav -lnumber -lm
-build/highpass: build/objects/highpass.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/lowpass build/objects/lowpass.o -lseisconvert -lm
+build/highpass: build/objects/highpass.o build/libseisconvert.a Makefile
 	@echo [LD] build/highpass
 	@mkdir -p build/
-	@$(LINK) -o build/highpass build/objects/highpass.o -lwav -lnumber -lm
-build/fm: build/objects/fm.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/highpass build/objects/highpass.o -lseisconvert -lm
+build/fm: build/objects/fm.o build/libseisconvert.a Makefile
 	@echo [LD] build/fm
 	@mkdir -p build/
-	@$(LINK) -o build/fm build/objects/fm.o -lwav -lnumber -lm
-build/kumy2wav: build/objects/kumy2wav.o build/libwav.a build/libnumber.a build/libkumy.a build/libtai.a Makefile
+	@$(LINK) -o build/fm build/objects/fm.o -lseisconvert -lm
+build/kumy2wav: build/objects/kumy2wav.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/kumy2wav
 	@mkdir -p build/
-	@$(LINK) -o build/kumy2wav build/objects/kumy2wav.o -lwav -lnumber -lkumy -ltai
-build/cos: build/objects/cos.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/kumy2wav build/objects/kumy2wav.o -lseisconvert -ltai
+build/cos: build/objects/cos.o build/libseisconvert.a Makefile
 	@echo [LD] build/cos
 	@mkdir -p build/
-	@$(LINK) -o build/cos build/objects/cos.o -lwav -lnumber -lm
-build/wav_header: build/objects/wav_header.o build/libwav.a build/libnumber.a Makefile
+	@$(LINK) -o build/cos build/objects/cos.o -lseisconvert -lm
+build/wav_header: build/objects/wav_header.o build/libseisconvert.a Makefile
 	@echo [LD] build/wav_header
 	@mkdir -p build/
-	@$(LINK) -o build/wav_header build/objects/wav_header.o -lwav -lnumber -lm
-build/seedtest: build/objects/seedtest.o build/libseed.a build/libwav.a build/libnumber.a build/libtai.a Makefile
+	@$(LINK) -o build/wav_header build/objects/wav_header.o -lseisconvert -lm
+build/seedtest: build/objects/seedtest.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/seedtest
 	@mkdir -p build/
-	@$(LINK) -o build/seedtest build/objects/seedtest.o -lseed -lwav -lnumber -ltai
-build/wav2seed: build/objects/wav2seed.o build/libseed.a build/libwav.a build/libnumber.a build/libtai.a Makefile
+	@$(LINK) -o build/seedtest build/objects/seedtest.o -lseisconvert -ltai
+build/wav2seed: build/objects/wav2seed.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/wav2seed
 	@mkdir -p build/
-	@$(LINK) -o build/wav2seed build/objects/wav2seed.o -lseed -lwav -lnumber -ltai
-build/kumy2seed: build/objects/kumy2seed.o build/libseed.a build/libkumy.a build/libnumber.a build/libtai.a Makefile
+	@$(LINK) -o build/wav2seed build/objects/wav2seed.o -lseisconvert -ltai
+build/kumy2seed: build/objects/kumy2seed.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/kumy2seed
 	@mkdir -p build/
-	@$(LINK) -o build/kumy2seed build/objects/kumy2seed.o -lseed -lkumy -lnumber -ltai
-build/libkumy.a: build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o Makefile
-	@echo [AR] build/libkumy.a
+	@$(LINK) -o build/kumy2seed build/objects/kumy2seed.o -lseisconvert -ltai
+build/libseisconvert.a: build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o Makefile
+	@echo [AR] build/libseisconvert.a
 	@mkdir -p build/
-	@$(MAKELIB) build/libkumy.a build/objects/kumy/kumy.o build/objects/kumy/kumy_file.o
-build/libseed.a: build/objects/seed/seed.o build/objects/seed/miniseed_file.o Makefile
-	@echo [AR] build/libseed.a
-	@mkdir -p build/
-	@$(MAKELIB) build/libseed.a build/objects/seed/seed.o build/objects/seed/miniseed_file.o
-build/libsegy.a: build/objects/segy/segy.o Makefile
-	@echo [AR] build/libsegy.a
-	@mkdir -p build/
-	@$(MAKELIB) build/libsegy.a build/objects/segy/segy.o
-build/libwav.a: build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o Makefile
-	@echo [AR] build/libwav.a
-	@mkdir -p build/
-	@$(MAKELIB) build/libwav.a build/objects/wav/wav.o build/objects/wav/filter.o build/objects/wav/fm.o build/objects/wav/wav_file.o
-build/libbuffer.a: build/objects/buffer/buffer.o Makefile
-	@echo [AR] build/libbuffer.a
-	@mkdir -p build/
-	@$(MAKELIB) build/libbuffer.a build/objects/buffer/buffer.o
-build/libnumber.a: build/objects/number/number.o Makefile
-	@echo [AR] build/libnumber.a
-	@mkdir -p build/
-	@$(MAKELIB) build/libnumber.a build/objects/number/number.o
+	@$(MAKELIB) build/libseisconvert.a build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o
 build/libtai.a: build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o Makefile
 	@echo [AR] build/libtai.a
 	@mkdir -p build/
 	@$(MAKELIB) build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o
-build/objects/kumy/kumy.o: src/kumy/kumy.c src/kumy/kumy.h Makefile
-	@echo [CC] build/objects/kumy/kumy.o
-	@mkdir -p build/objects/kumy/
-	@$(COMPILE) -o build/objects/kumy/kumy.o src/kumy/kumy.c
-build/objects/kumy/kumy_file.o: src/kumy/kumy_file.c src/kumy/kumy_file.h src/kumy/kumy.h Makefile
-	@echo [CC] build/objects/kumy/kumy_file.o
-	@mkdir -p build/objects/kumy/
-	@$(COMPILE) -o build/objects/kumy/kumy_file.o src/kumy/kumy_file.c
-build/objects/seed/seed.o: src/seed/seed.c src/seed/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/number/number.h src/tai/caltime.h src/tai/caldate.h Makefile
-	@echo [CC] build/objects/seed/seed.o
-	@mkdir -p build/objects/seed/
-	@$(COMPILE) -o build/objects/seed/seed.o src/seed/seed.c
-build/objects/seed/miniseed_file.o: src/seed/miniseed_file.c src/seed/miniseed_file.h src/seed/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/number/number.h Makefile
-	@echo [CC] build/objects/seed/miniseed_file.o
-	@mkdir -p build/objects/seed/
-	@$(COMPILE) -o build/objects/seed/miniseed_file.o src/seed/miniseed_file.c
-build/objects/segy/segy.o: src/segy/segy.c src/segy/segy.h src/number/number.h Makefile
-	@echo [CC] build/objects/segy/segy.o
-	@mkdir -p build/objects/segy/
-	@$(COMPILE) -o build/objects/segy/segy.o src/segy/segy.c
-build/objects/wav/wav.o: src/wav/wav.c src/wav/wav.h src/number/number.h Makefile
-	@echo [CC] build/objects/wav/wav.o
-	@mkdir -p build/objects/wav/
-	@$(COMPILE) -o build/objects/wav/wav.o src/wav/wav.c
-build/objects/wav/filter.o: src/wav/filter.c src/wav/filter.h Makefile
-	@echo [CC] build/objects/wav/filter.o
-	@mkdir -p build/objects/wav/
-	@$(COMPILE) -o build/objects/wav/filter.o src/wav/filter.c
-build/objects/wav/fm.o: src/wav/fm.c src/wav/fm.h Makefile
-	@echo [CC] build/objects/wav/fm.o
-	@mkdir -p build/objects/wav/
-	@$(COMPILE) -o build/objects/wav/fm.o src/wav/fm.c
-build/objects/wav/wav_file.o: src/wav/wav_file.c src/wav/wav_file.h src/wav/wav.h Makefile
-	@echo [CC] build/objects/wav/wav_file.o
-	@mkdir -p build/objects/wav/
-	@$(COMPILE) -o build/objects/wav/wav_file.o src/wav/wav_file.c
-build/objects/buffer/buffer.o: src/buffer/buffer.c src/buffer/buffer.h Makefile
-	@echo [CC] build/objects/buffer/buffer.o
-	@mkdir -p build/objects/buffer/
-	@$(COMPILE) -o build/objects/buffer/buffer.o src/buffer/buffer.c
-build/objects/number/number.o: src/number/number.c src/number/number.h Makefile
-	@echo [CC] build/objects/number/number.o
-	@mkdir -p build/objects/number/
-	@$(COMPILE) -o build/objects/number/number.o src/number/number.c
+build/objects/seisconvert/kumy.o: src/seisconvert/kumy.c src/seisconvert/kumy.h Makefile
+	@echo [CC] build/objects/seisconvert/kumy.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/kumy.o src/seisconvert/kumy.c
+build/objects/seisconvert/kumy_file.o: src/seisconvert/kumy_file.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h Makefile
+	@echo [CC] build/objects/seisconvert/kumy_file.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/kumy_file.o src/seisconvert/kumy_file.c
+build/objects/seisconvert/seed.o: src/seisconvert/seed.c src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/number.h src/tai/caltime.h src/tai/caldate.h Makefile
+	@echo [CC] build/objects/seisconvert/seed.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/seed.o src/seisconvert/seed.c
+build/objects/seisconvert/miniseed_file.o: src/seisconvert/miniseed_file.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/number.h Makefile
+	@echo [CC] build/objects/seisconvert/miniseed_file.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/miniseed_file.o src/seisconvert/miniseed_file.c
+build/objects/seisconvert/segy.o: src/seisconvert/segy.c src/seisconvert/segy.h src/seisconvert/number.h Makefile
+	@echo [CC] build/objects/seisconvert/segy.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/segy.o src/seisconvert/segy.c
+build/objects/seisconvert/wav.o: src/seisconvert/wav.c src/seisconvert/wav.h src/seisconvert/number.h Makefile
+	@echo [CC] build/objects/seisconvert/wav.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/wav.o src/seisconvert/wav.c
+build/objects/seisconvert/wav_file.o: src/seisconvert/wav_file.c src/seisconvert/wav_file.h src/seisconvert/wav.h Makefile
+	@echo [CC] build/objects/seisconvert/wav_file.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/wav_file.o src/seisconvert/wav_file.c
+build/objects/seisconvert/filter.o: src/seisconvert/filter.c src/seisconvert/filter.h Makefile
+	@echo [CC] build/objects/seisconvert/filter.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/filter.o src/seisconvert/filter.c
+build/objects/seisconvert/fm.o: src/seisconvert/fm.c src/seisconvert/fm.h Makefile
+	@echo [CC] build/objects/seisconvert/fm.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/fm.o src/seisconvert/fm.c
+build/objects/seisconvert/buffer.o: src/seisconvert/buffer.c src/seisconvert/buffer.h Makefile
+	@echo [CC] build/objects/seisconvert/buffer.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/buffer.o src/seisconvert/buffer.c
+build/objects/seisconvert/number.o: src/seisconvert/number.c src/seisconvert/number.h Makefile
+	@echo [CC] build/objects/seisconvert/number.o
+	@mkdir -p build/objects/seisconvert/
+	@$(COMPILE) -o build/objects/seisconvert/number.o src/seisconvert/number.c
 build/objects/tai/caldate_fmjd.o: src/tai/caldate_fmjd.c src/tai/caldate.h Makefile
 	@echo [CC] build/objects/tai/caldate_fmjd.o
 	@mkdir -p build/objects/tai/
@@ -242,47 +222,47 @@ build/objects/tai/taia_unpack.o: src/tai/taia_unpack.c src/tai/taia.h src/tai/ta
 	@echo [CC] build/objects/tai/taia_unpack.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_unpack.o src/tai/taia_unpack.c
-build/objects/test.o: src/test.c src/kumy/kumy.h src/wav/wav.h src/wav/fm.h Makefile
+build/objects/test.o: src/test.c src/seisconvert/kumy.h src/seisconvert/wav.h src/seisconvert/fm.h Makefile
 	@echo [CC] build/objects/test.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/test.o src/test.c
-build/objects/wav_test.o: src/wav_test.c src/wav/wav.h Makefile
+build/objects/wav_test.o: src/wav_test.c src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/wav_test.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav_test.o src/wav_test.c
-build/objects/lowpass.o: src/lowpass.c src/wav/wav.h src/wav/filter.h Makefile
+build/objects/lowpass.o: src/lowpass.c src/seisconvert/wav.h src/seisconvert/filter.h Makefile
 	@echo [CC] build/objects/lowpass.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/lowpass.o src/lowpass.c
-build/objects/highpass.o: src/highpass.c src/wav/wav.h src/wav/filter.h Makefile
+build/objects/highpass.o: src/highpass.c src/seisconvert/wav.h src/seisconvert/filter.h Makefile
 	@echo [CC] build/objects/highpass.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/highpass.o src/highpass.c
-build/objects/fm.o: src/fm.c src/wav/wav.h src/wav/fm.h Makefile
+build/objects/fm.o: src/fm.c src/seisconvert/wav.h src/seisconvert/fm.h Makefile
 	@echo [CC] build/objects/fm.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/fm.o src/fm.c
-build/objects/kumy2wav.o: src/kumy2wav.c src/kumy/kumy_file.h src/kumy/kumy.h src/wav/wav_file.h src/wav/wav.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/number/number.h Makefile
+build/objects/kumy2wav.o: src/kumy2wav.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
 	@echo [CC] build/objects/kumy2wav.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2wav.o src/kumy2wav.c
-build/objects/cos.o: src/cos.c src/wav/wav_file.h src/wav/wav.h Makefile
+build/objects/cos.o: src/cos.c src/seisconvert/wav_file.h src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/cos.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/cos.o src/cos.c
-build/objects/wav_header.o: src/wav_header.c src/wav/wav.h Makefile
+build/objects/wav_header.o: src/wav_header.c src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/wav_header.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav_header.o src/wav_header.c
-build/objects/seedtest.o: src/seedtest.c src/seed/miniseed_file.h src/seed/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/wav/wav_file.h src/wav/wav.h Makefile
+build/objects/seedtest.o: src/seedtest.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/wav_file.h src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/seedtest.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/seedtest.o src/seedtest.c
-build/objects/wav2seed.o: src/wav2seed.c src/seed/miniseed_file.h src/seed/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/wav/wav_file.h src/wav/wav.h src/tai/caltime.h src/tai/caldate.h Makefile
+build/objects/wav2seed.o: src/wav2seed.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/caltime.h src/tai/caldate.h Makefile
 	@echo [CC] build/objects/wav2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav2seed.o src/wav2seed.c
-build/objects/kumy2seed.o: src/kumy2seed.c src/kumy/kumy_file.h src/kumy/kumy.h src/seed/miniseed_file.h src/seed/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/number/number.h Makefile
+build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
 	@echo [CC] build/objects/kumy2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2seed.o src/kumy2seed.c

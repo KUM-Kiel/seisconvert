@@ -4,28 +4,13 @@ local m = make{
   cflags = "-Wall -pedantic -O3 -std=c99"
 }
 
-m:lib("kumy", {
-  m:c("kumy"), m:c("kumy_file")
-})
-
-m:lib("seed", {
-  m:c("seed"), m:c("miniseed_file")
-})
-
-m:lib("segy", {
-  m:c("segy")
-})
-
-m:lib("wav", {
-  m:c("wav"), m:c("filter"), m:c("fm"), m:c("wav_file")
-})
-
-m:lib("buffer", {
-  m:c("buffer")
-})
-
-m:lib("number", {
-  m:c("number")
+m:lib("seisconvert", {
+  m:c("kumy"), m:c("kumy_file"),
+  m:c("seed"), m:c("miniseed_file"),
+  m:c("segy"),
+  m:c("wav"), m:c("wav_file"),
+  m:c("filter"), m:c("fm"),
+  m:c("buffer"), m:c("number")
 })
 
 m:lib("tai", {
@@ -41,46 +26,46 @@ m:lib("tai", {
 
 m:program("test", {
   m:c("test")
-}, {"kumy", "wav", "number", "tai", "m"})
+}, {"seisconvert", "tai", "m"})
 
 m:program("wav_test", {
   m:c("wav_test")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("lowpass", {
   m:c("lowpass")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("highpass", {
   m:c("highpass")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("fm", {
   m:c("fm")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("kumy2wav", {
   m:c("kumy2wav")
-}, {"wav", "number", "kumy", "tai"})
+}, {"seisconvert", "tai"})
 
 m:program("cos", {
   m:c("cos")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("wav_header", {
   m:c("wav_header")
-}, {"wav", "number", "m"})
+}, {"seisconvert", "m"})
 
 m:program("seedtest", {
   m:c("seedtest")
-}, {"seed", "wav", "number", "tai"})
+}, {"seisconvert", "tai"})
 
 m:program("wav2seed", {
   m:c("wav2seed")
-}, {"seed", "wav", "number", "tai"})
+}, {"seisconvert", "tai"})
 
 m:program("kumy2seed", {
   m:c("kumy2seed")
-}, {"seed", "kumy", "number", "tai"})
+}, {"seisconvert", "tai"})
 
 m:gen("Makefile")
