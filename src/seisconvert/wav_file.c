@@ -114,3 +114,22 @@ int wav_file_write_double_frame(wav_file_t *file, const double *frame)
   if (fwrite(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -3;
   return 0;
 }
+
+int wav_file_read_float_frame(wav_file_t *file, float *frame)
+{
+  if (!file || !frame || file->mode != 0) return -3;
+  if (file->header.num_frames == 0) return -1;
+  if (fread(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -1;
+  wav_read_float_frame(file->frame_config, frame, file->buffer);
+  file->header.num_frames -= 1;
+  return 0;
+}
+
+int wav_file_write_float_frame(wav_file_t *file, const float *frame)
+{
+  if (!file || !frame || file->mode != 1) return -3;
+  wav_write_float_frame(file->frame_config, file->buffer, frame);
+  file->header.num_frames += 1;
+  if (fwrite(file->buffer, wav_get_frame_size(file->frame_config), 1, file->file_handle) != 1) return -3;
+  return 0;
+}

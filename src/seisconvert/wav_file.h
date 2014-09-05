@@ -51,4 +51,9 @@ extern int wav_file_write_int_frame(wav_file_t *file, const int32_t *frame);
 extern int wav_file_read_double_frame(wav_file_t *file, double *frame);
 extern int wav_file_write_double_frame(wav_file_t *file, const double *frame);
 
+/* Exactly like the int functions, but with floats.
+ * The values range from -1.0 to 1.0. */
+extern int wav_file_read_float_frame(wav_file_t *file, float *frame);
+extern int wav_file_write_float_frame(wav_file_t *file, const float *frame);
+
 #endif

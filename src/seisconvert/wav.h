@@ -87,4 +87,18 @@ extern int wav_read_double_frame(wav_frame_config_t fc, double *samples, const u
  * Returns the number of bytes read from buffer or, in case of an error, -1. */
 extern int wav_write_double_frame(wav_frame_config_t fc, uint8_t *buffer, const double *samples);
 
+/* Reads a signal frame with the specified frame config from buffer[0], buffer[1], ...
+ * buffer[wav_get_frame_size(fc) - 1] and stores it in samples[0], samples[1], ...
+ * samples[wav_get_num_channels(fc) - 1].
+ * It converts the samples to float as appropiate for the frame config.
+ * Returns the number of bytes read from buffer or, in case of an error, -1. */
+extern int wav_read_float_frame(wav_frame_config_t fc, float *samples, const uint8_t *buffer);
+
+/* Writes a signal frame with the specified frame config to buffer[0], buffer[1], ...
+ * buffer[wav_get_frame_size(fc) - 1]. The samples are taken from samples[0], samples[1], ...
+ * samples[wav_get_num_channels(fc) - 1].
+ * It converts the samples from float to the appropiate format for the given frame config.
+ * Returns the number of bytes read from buffer or, in case of an error, -1. */
+extern int wav_write_float_frame(wav_frame_config_t fc, uint8_t *buffer, const float *samples);
+
 #endif

@@ -399,3 +399,114 @@ int wav_write_double_frame(wav_frame_config_t fc, u8 *buffer, const double *samp
   /* Return bytes written. */
   return FRAME_SIZE(fc);
 }
+
+int wav_read_float_frame(wav_frame_config_t fc, float *samples, const u8 *buffer)
+{
+  int i, b;
+  float s = 0;
+  /* Check for valid pointers. */
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
+  /* Calculate the scaling factor.
+   * This determines which value should become 1.0. */
+  switch (b) {
+    case 8:  s = 1.0 / 0x7f; break;
+    case 12: s = 1.0 / 0x7ff0; break;
+    case 16: s = 1.0 / 0x7fff; break;
+    case 24: s = 1.0 / 0x7fffff00; break;
+    case 32: s = 1.0 / 0x7fffffff; break;
+  }
+  /* Read one sample for each channel. */
+  FOR(i, NUM_CHANNELS(fc)) {
+    switch (b) {
+      case 8:
+        /* Read one byte signed and scale it.
+         * This must be done with the correct cast for the sign to be
+         * interpreted correctly. */
+        samples[i] = (i8)buffer[i] * s;
+        break;
+      case 12:
+      case 16:
+        /* Read two bytes. Again the cast is important. */
+        samples[i] = ld_i16_le(buffer) * s;
+        buffer += 2;
+        break;
+      case 24:
+        /* Read three bytes.
+         * Here the cast is already done by the helper function. */
+        samples[i] = read_sample_24(buffer) * s;
+        buffer += 3;
+        break;
+      case 32:
+        /* Read four bytes. Again the cast is important. */
+        samples[i] = ld_i32_le(buffer) * s;
+        buffer += 4;
+        break;
+      default:
+        /* Issue an error, if the bit depth is not supported. */
+        return -1;
+    }
+  }
+  /* Return bytes read. */
+  return FRAME_SIZE(fc);
+}
+
+/* Limits a to between -1 and 1.
+ * We use this function to improve the overdriving behavior to clipping instead
+ * of wrapping around. */
+static float limitf(float a)
+{
+  return a < -1 ? -1 : (a > 1 ? 1 : a);
+}
+
+int wav_write_float_frame(wav_frame_config_t fc, u8 *buffer, const float *samples)
+{
+  int i, b;
+  float s = 0;
+  /* Check for valid pointers. */
+  if (!samples || !buffer) return -1;
+  b = BIT_DEPTH(fc);
+  /* Calculate the scaling factor.
+   * This inverts the scaling above. */
+  switch (b) {
+    case 8:  s = 0x7f; break;
+    case 12: s = 0x7ff0; break;
+    case 16: s = 0x7fff; break;
+    case 24: s = 0x7fffff00; break;
+    case 32: s = 0x7fffffff; break;
+  }
+  /* Write one sample for each channel. */
+  FOR(i, NUM_CHANNELS(fc)) {
+    switch (b) {
+      case 8:
+        /* Store a scaled byte. */
+        buffer[i] = (i8)(limitf(samples[i]) * s);
+        break;
+      case 12:
+        /* Store two bytes with the least significant 4 bits cleared. */
+        st_i16_le(buffer, (i16)(limitf(samples[i]) * s) & 0xfff0);
+        buffer += 2;
+        break;
+      case 16:
+        /* Store two bytes. */
+        st_i16_le(buffer, (limitf(samples[i]) * s));
+        buffer += 2;
+        break;
+      case 24:
+        /* Store three bytes with the helper function. */
+        write_sample_24(buffer, limitf(samples[i]) * s);
+        buffer += 3;
+        break;
+      case 32:
+        /* Store four bytes. */
+        st_i32_le(buffer, (limitf(samples[i]) * s));
+        buffer += 4;
+        break;
+      default:
+        /* Issue an error, if the bit depth is not supported. */
+        return -1;
+    }
+  }
+  /* Return bytes written. */
+  return FRAME_SIZE(fc);
+}
