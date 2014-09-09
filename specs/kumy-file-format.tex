@@ -35,7 +35,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-09-08.
+\footnote{\raggedright Date of this document: 2014-09-09.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -53,12 +53,42 @@ Handling and storage of this byte stream is up to the application and the operat
 This could be a file on a hard disc or SD card, but a TCP stream would be perfectly acceptable as well.
 
 Characters may be depicted by their hexadecimal representation.
-So the string represented by “\x{48}\x{65}\x{6c}\x{6c}\x{6f}\x{20}\x{57}\x{6f}\x{72}\x{6c}\x{64}\x{21}” is the same as “Hello World!”.
+So the string represented by <48 65 6c 6c 6f 20 57 6f 72 6c 64 21> is the same as “Hello World!”.
 
-\subsection{Byte Order}
+\subsection{Fixed Length Integers}
 
 All binary integers are in little endian format.
 Signed integers shall be interpreted as two’s complement.
+
+The KUM-Y format mainly utilises signed and unsigned 64 bit integers, also refered to as i64 and u64 in this document.
+Other sizes are i32 and u32 for signed and unsigned 32 bit integers as well as i16 and u16 for signed and unsigned 16 bit integers.
+Remember, as they all are in little endian format, the first byte contains the least significant bits!
+
+\subsection{Variable Length Integers}
+
+Samples are encoded using integers of variable length.
+This has the advantage of reasonable compression ratios for small, highly correlated signals, especially when used with a low order linear prediction filter.
+
+A variable length integer consists of zero or more bytes between \(128\) and \(191\) inclusive, i.\,e.\ the first two bits are “10”, and one byte between \(0\) and \(127\) inclusive, i.\,e.\ the first bit is “0”.
+
+The first byte includes after the “10” the six least significant bits of the number, the next byte includes the next six bits and so on.
+The last bit then contains the most significant seven bits (after the “1”).
+If the number fits into seven bits, i.\,e.\ it is between \(-64\) and \(63\) inclusive, then it is encoded in just one byte with a leading “0” bit.
+The number is interpreted as a two’s complement integer.
+Note, that the second bit of the last byte always encodes the sign.
+
+Conforming applications always have to use the shortest possible representaton for a variable length integer.
+So it is not allowed to encode e.\,g.\ 27 as <9b 00> instead of <1b>.
+
+The following algorithm can be used to write an arbitrary integer \(n\) in variable length encoding.
+
+\begin{verbatim}
+while (n < -64 || 63 < n) {
+  putchar(n & 0x3f | 0x80);
+  n >>= 6;
+}
+putchar(n & 0x7f);
+\end{verbatim}
 
 \subsection{Strings}
 
@@ -70,7 +100,7 @@ Strings may be of arbitrary length as they are always embedded with their byte l
 \subsection{Times and Durations}
 
 Times and durations are encoded as 128 bit TAIA labels.
-A TAIA label consists of an unsigned 64 bit integer \(s\), an unsigned 32 bit integer \(n\) and an unsigned 32 bit integer \(a\).
+A TAIA label consists of an i64 \(s\), an u32 \(n\) and an u32 \(a\) encoded as fixed size integers right after another.
 \(n\) and \(a\) are limited to between 0 and 999,999,999 inclusive.
 
 The TAIA label then encodes the duration
@@ -91,11 +121,11 @@ The general structure of a KUM-Y file is depicted in figure \ref{structure}.
 \centerline{\begin{tikzpicture}
 \draw
   (0, 0) rectangle +(4, -0.6) +(2, -0.3) node{Magic Number}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Text Metadata}
+  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Textual Metadata}
   ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Binary Header}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data Frame}
+  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data}
   ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{\(\dotsm\)}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data Frame};
+  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data};
 \end{tikzpicture}}
 \caption{Structure of a KUM-Y File}
 \label{structure}
@@ -104,16 +134,16 @@ The general structure of a KUM-Y file is depicted in figure \ref{structure}.
 \subsection{Magic Number}
 
 Every KUM-Y file must start with a byte sequence, that identifies the file as KUM-Y format.
-The sequence is “\x{4b}\x{55}\x{4d}\x{2d}\x{59}\x{20}\x{31}\x{0a}” (i.\,e.\ “KUM-Y 1” followed by a carriage return) for version 1 of the format.
+The sequence is <4b 55 4d 2d 59 20 31 0a> (i.\,e.\ “KUM-Y 1” followed by a carriage return) for version 1 of the format.
 
 The magic number may change in future revisions of the format to allow easy detection of the format version.
 
-\subsection{Text Metadata}
+\subsection{Textual Metadata}
 
 After the magic number follows human readable information associated with the file.
-This text metadata is a string of arbitrary length, encoded as the byte length of the string in decimal with ascii digits, followed by \x{0a}, followed by the string data, followed by \x{0a}\x{04}.
+This text metadata is a string of arbitrary length, encoded as the byte length of the string in decimal with ascii digits, followed by <0a>, followed by the string data, followed by <0a 04>.
 
-The length must be encoded in the shortest possible manner, so leading zeros are disallowed except when the length is zero itself.
+The length must be encoded in the shortest possible manner, so leading zeros are disallowed except for the empty string, which is encoded as <30 0a 0a 04>.
 
 With this definition the file can be easily opened with any text editor and the textual information can be inspected.
 
@@ -124,9 +154,93 @@ It shall not be interpreted in any way by processing applications conforming to 
 
 The binary header encodes all the information, that is necessary to read the time series in the file.
 
-\subsection{Data Frames}
+In the binary header strings are encoded as an u64 byte length followed by the string data.
 
-The data frames contain the actual time series data, as well as some additional data of interest, such as the estimated clock skew.
-Each data frame is protected by a checksum to detect possible transmission errors.
+The header fields are in particular:
+\begin{enumerate}
+  \item u64 ­­­­– The length of the header in bytes.
+  \item string – The recording ID.
+  This might be an arbitrary recorder identifier (e.\,g.\ the serial number) together with an increasing number or a human readable form of the start time.
+  This should be customiseable by the user.
+  \item u64 – The number of channels in this file.
+  \item For each channel:
+  \begin{enumerate}
+    \item string – The channel name.
+    \item u64 – The sample rate in Hz.
+    The sample rate can not be below 1\,Hz.
+    \item u64 – The channel gain.
+    This field should be set to the maximum value, that the specific instrument can produce.
+    This will be the value, to which the channel shall be normalised.
+    For example, if the instrument’s ADC produces signed 16 bit samples, this value should be set to 32,767.
+    \item u64 – Linear prediction filter used for compression.
+    Possible values are:
+    \begin{quote}
+      0 – No prediction is made. Samples are uncompressed apart from the variable length encoding.
+
+      1 – Sample repetition. The sample values of this channel are differences.
+
+      2 – Linear extrapolation. Samples are predicted via linear extrapolation.
+    \end{quote}
+    See section \ref{compression} for more information on compression.
+  \end{enumerate}
+  \item taia – The start time.
+  This TAIA label indicates, when the recording has been started.
+  \item taia – The start time.
+  This TAIA label indicates, when the recording has been started.
+  \item u64 - The number of clock skew measurements.
+  \item For each clock skew measurement:
+  \begin{enumerate}
+    \item taia – The measurement time as taken by the internal clock.
+    \item taia – The measured skew.
+    If this value is added to the measurement time, one gets the real time of the measurement.
+  \end{enumerate}
+  \item u64 – The total number of samples in the file, i.\,e.\ of all channels added together.
+\end{enumerate}
+
+\section{Data}
+
+The data section contains the actual time series data, as well as some additional data of interest, such as the estimated clock skew.
+
+The data is encoded as sequence of variable length integers, one for each sample.
+Note that no variable length integer uses bytes greater than \(191\).
+These bytes are used for non sample data, which can be embedded anywhere in the stream between the sample data.
+
+\subsection{Sample Interleaving}
+
+To allow for different sample rates per channel the sample data needs to be interleaved.
+This is done in a way, that permits small buffers, because samples can be written as soon as they are produced.
+
+Samples which occur concurrently are written in order of their channels.
+Samples which occur at different times are written in their timely order.
+
+It is implicitly assumed, that the first sample of each channel is synchronized, i.\,e.\ they all occur at the same time.
+
+If the greatest common divisor of the individual sample rates is kept as high as possible the interleaving periods will be kept short, which greatly improves performance.
+
+\subsection{Control Frames}
+
+Aside from sample data, the data stream contains control frames, that carry additional information.
+A control frame can be identified by it’s first byte which is always larger than \(191\).
+It can appear anywhere in the data stream except in the middle of a multi byte sample or another control frame.
+
+\begin{itemize}
+  \item Sample number (0xc0) – This value is followed by a variable length integer.
+  The integer encodes the number of the next sample.
+  It is used to recover from lost passages of the file and to allow skipping to specific times.
+  \item Summation constant (0xc1) – This value is followed by a variable length integer.
+  The integer encodes what the last sample should have been.
+  This value is used to recover from errors or missing passages in the file.
+  It can also be used to allow skipping to specific times without reading the entire file.
+  Note that this does not replace a sample.
+  \item Padding (0xfe) – This value can be used if the writing application wishes to pad the data.
+  It is silently ignored.
+  \item Lost sample (0xff) – This value is a replacement for a lost or unknown sample.
+  It replaces a sample value and counts towards the total number of samples in the file.
+\end{itemize}
+
+\subsection{Compression}
+\label{compression}
+
+The sample data may be compressed on a per channel basis using linear prediction.
 
 \end{document}
