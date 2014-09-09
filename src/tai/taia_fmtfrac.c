@@ -4,7 +4,7 @@ unsigned int taia_fmtfrac(s,t)
 char *s;
 struct taia *t;
 {
-  unsigned long x;
+  uint32_t x;
 
   if (s) {
     x = t->atto;

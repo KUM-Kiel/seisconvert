@@ -4,7 +4,7 @@ void tai_pack(s,t)
 char *s;
 struct tai *t;
 {
-  uint64 x;
+  int64_t x;
 
   x = t->x;
   s[7] = x & 255; x >>= 8;

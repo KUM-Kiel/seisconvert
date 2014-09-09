@@ -66,11 +66,11 @@ build/objects/seisconvert/kumy_file.o: src/seisconvert/kumy_file.c src/seisconve
 	@echo [CC] build/objects/seisconvert/kumy_file.o
 	@mkdir -p build/objects/seisconvert/
 	@$(COMPILE) -o build/objects/seisconvert/kumy_file.o src/seisconvert/kumy_file.c
-build/objects/seisconvert/seed.o: src/seisconvert/seed.c src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/number.h src/tai/caltime.h src/tai/caldate.h Makefile
+build/objects/seisconvert/seed.o: src/seisconvert/seed.c src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/seisconvert/number.h src/tai/caltime.h src/tai/caldate.h Makefile
 	@echo [CC] build/objects/seisconvert/seed.o
 	@mkdir -p build/objects/seisconvert/
 	@$(COMPILE) -o build/objects/seisconvert/seed.o src/seisconvert/seed.c
-build/objects/seisconvert/miniseed_file.o: src/seisconvert/miniseed_file.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/number.h Makefile
+build/objects/seisconvert/miniseed_file.o: src/seisconvert/miniseed_file.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/seisconvert/number.h Makefile
 	@echo [CC] build/objects/seisconvert/miniseed_file.o
 	@mkdir -p build/objects/seisconvert/
 	@$(COMPILE) -o build/objects/seisconvert/miniseed_file.o src/seisconvert/miniseed_file.c
@@ -134,15 +134,15 @@ build/objects/tai/caltime_scan.o: src/tai/caltime_scan.c src/tai/caltime.h src/t
 	@echo [CC] build/objects/tai/caltime_scan.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/caltime_scan.o src/tai/caltime_scan.c
-build/objects/tai/caltime_tai.o: src/tai/caltime_tai.c src/tai/tai.h src/tai/uint64.h src/tai/leapsecs.h src/tai/caldate.h src/tai/caltime.h Makefile
+build/objects/tai/caltime_tai.o: src/tai/caltime_tai.c src/tai/tai.h src/tai/leapsecs.h src/tai/caldate.h src/tai/caltime.h Makefile
 	@echo [CC] build/objects/tai/caltime_tai.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/caltime_tai.o src/tai/caltime_tai.c
-build/objects/tai/caltime_utc.o: src/tai/caltime_utc.c src/tai/tai.h src/tai/uint64.h src/tai/leapsecs.h src/tai/caldate.h src/tai/caltime.h Makefile
+build/objects/tai/caltime_utc.o: src/tai/caltime_utc.c src/tai/tai.h src/tai/leapsecs.h src/tai/caldate.h src/tai/caltime.h Makefile
 	@echo [CC] build/objects/tai/caltime_utc.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/caltime_utc.o src/tai/caltime_utc.c
-build/objects/tai/leapsecs_add.o: src/tai/leapsecs_add.c src/tai/leapsecs.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/leapsecs_add.o: src/tai/leapsecs_add.c src/tai/leapsecs.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/leapsecs_add.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/leapsecs_add.o src/tai/leapsecs_add.c
@@ -150,75 +150,75 @@ build/objects/tai/leapsecs_init.o: src/tai/leapsecs_init.c src/tai/leapsecs.h Ma
 	@echo [CC] build/objects/tai/leapsecs_init.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/leapsecs_init.o src/tai/leapsecs_init.c
-build/objects/tai/leapsecs_read.o: src/tai/leapsecs_read.c src/tai/tai.h src/tai/uint64.h src/tai/leapsecs.h Makefile
+build/objects/tai/leapsecs_read.o: src/tai/leapsecs_read.c src/tai/tai.h src/tai/leapsecs.h Makefile
 	@echo [CC] build/objects/tai/leapsecs_read.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/leapsecs_read.o src/tai/leapsecs_read.c
-build/objects/tai/leapsecs_sub.o: src/tai/leapsecs_sub.c src/tai/leapsecs.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/leapsecs_sub.o: src/tai/leapsecs_sub.c src/tai/leapsecs.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/leapsecs_sub.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/leapsecs_sub.o src/tai/leapsecs_sub.c
-build/objects/tai/tai_add.o: src/tai/tai_add.c src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/tai_add.o: src/tai/tai_add.c src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/tai_add.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/tai_add.o src/tai/tai_add.c
-build/objects/tai/tai_now.o: src/tai/tai_now.c src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/tai_now.o: src/tai/tai_now.c src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/tai_now.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/tai_now.o src/tai/tai_now.c
-build/objects/tai/tai_pack.o: src/tai/tai_pack.c src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/tai_pack.o: src/tai/tai_pack.c src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/tai_pack.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/tai_pack.o src/tai/tai_pack.c
-build/objects/tai/tai_sub.o: src/tai/tai_sub.c src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/tai_sub.o: src/tai/tai_sub.c src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/tai_sub.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/tai_sub.o src/tai/tai_sub.c
-build/objects/tai/tai_unpack.o: src/tai/tai_unpack.c src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/tai_unpack.o: src/tai/tai_unpack.c src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/tai_unpack.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/tai_unpack.o src/tai/tai_unpack.c
-build/objects/tai/taia_add.o: src/tai/taia_add.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_add.o: src/tai/taia_add.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_add.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_add.o src/tai/taia_add.c
-build/objects/tai/taia_approx.o: src/tai/taia_approx.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_approx.o: src/tai/taia_approx.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_approx.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_approx.o src/tai/taia_approx.c
-build/objects/tai/taia_fmtfrac.o: src/tai/taia_fmtfrac.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_fmtfrac.o: src/tai/taia_fmtfrac.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_fmtfrac.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_fmtfrac.o src/tai/taia_fmtfrac.c
-build/objects/tai/taia_frac.o: src/tai/taia_frac.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_frac.o: src/tai/taia_frac.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_frac.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_frac.o src/tai/taia_frac.c
-build/objects/tai/taia_half.o: src/tai/taia_half.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_half.o: src/tai/taia_half.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_half.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_half.o src/tai/taia_half.c
-build/objects/tai/taia_less.o: src/tai/taia_less.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_less.o: src/tai/taia_less.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_less.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_less.o src/tai/taia_less.c
-build/objects/tai/taia_now.o: src/tai/taia_now.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_now.o: src/tai/taia_now.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_now.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_now.o src/tai/taia_now.c
-build/objects/tai/taia_pack.o: src/tai/taia_pack.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_pack.o: src/tai/taia_pack.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_pack.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_pack.o src/tai/taia_pack.c
-build/objects/tai/taia_sub.o: src/tai/taia_sub.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_sub.o: src/tai/taia_sub.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_sub.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_sub.o src/tai/taia_sub.c
-build/objects/tai/taia_tai.o: src/tai/taia_tai.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_tai.o: src/tai/taia_tai.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_tai.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_tai.o src/tai/taia_tai.c
-build/objects/tai/taia_unpack.o: src/tai/taia_unpack.c src/tai/taia.h src/tai/tai.h src/tai/uint64.h Makefile
+build/objects/tai/taia_unpack.o: src/tai/taia_unpack.c src/tai/taia.h src/tai/tai.h Makefile
 	@echo [CC] build/objects/tai/taia_unpack.o
 	@mkdir -p build/objects/tai/
 	@$(COMPILE) -o build/objects/tai/taia_unpack.o src/tai/taia_unpack.c
@@ -242,7 +242,7 @@ build/objects/fm.o: src/fm.c src/seisconvert/wav.h src/seisconvert/fm.h Makefile
 	@echo [CC] build/objects/fm.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/fm.o src/fm.c
-build/objects/kumy2wav.o: src/kumy2wav.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
+build/objects/kumy2wav.o: src/kumy2wav.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
 	@echo [CC] build/objects/kumy2wav.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2wav.o src/kumy2wav.c
@@ -254,15 +254,15 @@ build/objects/wav_header.o: src/wav_header.c src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/wav_header.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav_header.o src/wav_header.c
-build/objects/seedtest.o: src/seedtest.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/wav_file.h src/seisconvert/wav.h Makefile
+build/objects/seedtest.o: src/seedtest.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/seisconvert/wav_file.h src/seisconvert/wav.h Makefile
 	@echo [CC] build/objects/seedtest.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/seedtest.o src/seedtest.c
-build/objects/wav2seed.o: src/wav2seed.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/caltime.h src/tai/caldate.h Makefile
+build/objects/wav2seed.o: src/wav2seed.c src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/seisconvert/wav_file.h src/seisconvert/wav.h src/tai/caltime.h src/tai/caldate.h Makefile
 	@echo [CC] build/objects/wav2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav2seed.o src/wav2seed.c
-build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/uint64.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
+build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h Makefile
 	@echo [CC] build/objects/kumy2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2seed.o src/kumy2seed.c

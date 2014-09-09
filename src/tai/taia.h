@@ -5,8 +5,8 @@
 
 struct taia {
   struct tai sec;
-  unsigned long nano; /* 0...999999999 */
-  unsigned long atto; /* 0...999999999 */
+  uint32_t nano; /* 0...999999999 */
+  uint32_t atto; /* 0...999999999 */
 } ;
 
 extern void taia_tai();

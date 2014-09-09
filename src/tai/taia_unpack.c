@@ -4,7 +4,7 @@ void taia_unpack(s,t)
 char *s;
 struct taia *t;
 {
-  unsigned long x;
+  uint32_t x;
 
   tai_unpack(s,&t->sec);
   s += 8;

@@ -1,6 +1,8 @@
 #ifndef CALDATE_H
 #define CALDATE_H
 
+#include <stdint.h>
+
 struct caldate {
   long year;
   int month;

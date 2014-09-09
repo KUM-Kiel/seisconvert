@@ -12,7 +12,7 @@ int *pwday;
 int *pyday;
 {
   struct tai t2 = *t;
-  uint64 u;
+  int64_t u;
   int leap;
   long s;
 

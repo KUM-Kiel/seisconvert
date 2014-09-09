@@ -5,8 +5,8 @@ char *s;
 struct caltime *ct;
 {
   char *t = s;
-  unsigned long z;
-  unsigned long c;
+  uint32_t z;
+  uint32_t c;
   int sign;
 
   t += caldate_scan(t,&ct->date);

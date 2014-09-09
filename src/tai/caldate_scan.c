@@ -6,8 +6,8 @@ struct caldate *cd;
 {
   int sign = 1;
   char *t = s;
-  unsigned long z;
-  unsigned long c;
+  uint32_t z;
+  uint32_t c;
 
   if (*t == '-') { ++t; sign = -1; }
   z = 0; while ((c = (unsigned char) (*t - '0')) <= 9) { z = z * 10 + c; ++t; }

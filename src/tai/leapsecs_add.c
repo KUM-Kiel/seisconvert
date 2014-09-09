@@ -11,7 +11,7 @@ struct tai *t;
 int hit;
 {
   int i;
-  uint64 u;
+  int64_t u;
 
   if (leapsecs_init() == -1) return;
 
