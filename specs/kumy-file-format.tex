@@ -5,6 +5,7 @@
 \usepackage{amssymb}
 \usepackage{enumerate}
 \usepackage{tikz}
+\usepackage{ragged2e}
 \usepackage{polyglossia}
 \usepackage{microtype}
 \setdefaultlanguage{english}
@@ -27,6 +28,57 @@
 %\markright{\textup{The KUM-Y File Format \hfill September 2014}}
 
 \newcommand{\x}[1]{\textbackslash{}x#1}
+
+%\setlength{\skip\footins}{15pt plus 15pt minus 0pt}
+%\setlength{\footnotesep}{10pt}
+%\renewcommand{\footnoterule}{%
+%  \kern -6pt
+%  \noindent \rule[3pt]{30pt}{1.5pt}
+%  \kern 4.5pt
+%}
+
+%\makeatletter%
+%\long\def\@makefntext#1{%
+%  \noindent\RaggedRight \textrm{\textbf{\@thefnmark} #1}}%
+%\makeatother
+
+\DeclareTextFontCommand{\textref}{\rmfamily}
+
+\renewenvironment{quote}
+{\list{}{
+  \setlength{\rightmargin}{0cm}
+  \setlength{\leftmargin}{0.75cm}}%
+\item\relax\ignorespaces}
+{\unskip\unskip\endlist}
+
+\newenvironment{openingquote}
+{\list{}{
+  \setlength{\rightmargin}{0cm}
+  \setlength{\leftmargin}{5cm}}%
+\item\relax\fontsize{8pt}{12pt}\selectfont\ignorespaces}
+{\unskip\unskip\endlist}
+
+\newenvironment{literature}
+{\list{}{
+  \setlength{\leftmargin}{10pt}
+  \setlength{\labelwidth}{0pt}
+  \setlength{\labelsep}{0pt}
+  \setlength{\itemindent}{-10pt}
+  \setlength{\itemsep}{-2pt}
+}\RaggedRight}
+{\endlist}
+
+\newcommand\litref[1]{\textref{[#1]}}
+\newenvironment{refliterature}
+{\list{}{
+  \setlength{\leftmargin}{45pt}
+  \setlength{\labelwidth}{45pt}
+  \setlength{\labelsep}{0pt}
+  \setlength{\itemindent}{0pt}
+  \setlength{\itemsep}{-2pt}
+  \let\makelabel\litref
+}\RaggedRight}
+{\endlist}
 
 \begin{document}
 
@@ -65,6 +117,7 @@ Other sizes are i32 and u32 for signed and unsigned 32 bit integers as well as i
 Remember, as they all are in little endian format, the first byte contains the least significant bits!
 
 \subsection{Variable Length Integers}
+\label{varint}
 
 Samples are encoded using integers of variable length.
 This has the advantage of reasonable compression ratios for small, highly correlated signals, especially when used with a low order linear prediction filter.
@@ -77,8 +130,8 @@ If the number fits into seven bits, i.\,e.\ it is between \(-64\) and \(63\) inc
 The number is interpreted as a two’s complement integer.
 Note, that the second bit of the last byte always encodes the sign.
 
-Conforming applications always have to use the shortest possible representaton for a variable length integer.
-So it is not allowed to encode e.\,g.\ 27 as <9b 00> instead of <1b>.
+Conforming applications should always use the shortest possible representaton for a variable length integer.
+So it is highly discouraged to encode e.\,g.\ 27 as <9b 00> instead of <1b>.
 
 The following algorithm can be used to write an arbitrary integer \(n\) in variable length encoding.
 
@@ -99,15 +152,15 @@ Strings may be of arbitrary length as they are always embedded with their byte l
 
 \subsection{Times and Durations}
 
-Times and durations are encoded as 128 bit TAIA labels.
-A TAIA label consists of an i64 \(s\), an u32 \(n\) and an u32 \(a\) encoded as fixed size integers right after another.
-\(n\) and \(a\) are limited to between 0 and 999,999,999 inclusive.
+Times and durations are encoded as 96 bit TAI64N labels.
+A TAI64N label consists of an i64 \(s\) and an u32 \(n\) encoded as fixed size integers right after another.
+\(n\) is limited to between 0 and 999,999,999 inclusive.
 
-The TAIA label then encodes the duration
+The TAI64N label then encodes the duration
 \[
-  d = \left(s + n\cdot10^{-9} + a\cdot10^{-18}\right) \cdot 1\text{\,s}.
+  d = \left(s + n\cdot10^{-9}\right) \cdot 1\text{\,s}.
 \]
-If the label represents an absolute time, then it is calculated as
+If the label represents an absolute time rather than a duration, then it is calculated as
 \[
   t = t_{1970} + d - 2^{62}\text{\,s}
 \]
@@ -147,8 +200,11 @@ The length must be encoded in the shortest possible manner, so leading zeros are
 
 With this definition the file can be easily opened with any text editor and the textual information can be inspected.
 
-On the other hand, this metadata is of solely informative interest.
-It shall not be interpreted in any way by processing applications conforming to this document.
+It is highly recommended to use a multiple of 3200 bytes for the length and format the metadata according to the SEG-Y text header (see \litref{Segy02}).
+This ensures a convinient and well known data layout for geophysicists.
+
+%On the other hand, this metadata is of solely informative interest.
+%It shall not be interpreted in any way by processing applications conforming to this document.
 
 \subsection{Binary Header}
 
@@ -162,16 +218,23 @@ The header fields are in particular:
   \item string – The recording ID.
   This might be an arbitrary recorder identifier (e.\,g.\ the serial number) together with an increasing number or a human readable form of the start time.
   This should be customiseable by the user.
+  \item i64 – The sample rate multiplier.
+  This number scales the sample rate of every channel by a common factor.
+  If the number is positive, it acts as a multiplier, if it is negative, it acts as a divisor.
+  A value of zero is not allowed.
+
+  If a channel with a rate of one sample per minute is needed, you can set this value to \(-60\) and set the channel’s sample rate to 1.
   \item u64 – The number of channels in this file.
   \item For each channel:
   \begin{enumerate}
     \item string – The channel name.
-    \item u64 – The sample rate in Hz.
-    The sample rate can not be below 1\,Hz.
-    \item u64 – The channel gain.
-    This field should be set to the maximum value, that the specific instrument can generate.
+    \item u64 – The sample rate.
+    When this field is multiplied with the sample rate multiplier one gets the sample rate in Hz.
+    The sample rate can not be zero.
+    \item u64 – The channel resolution.
+    This field should be set to the maximum sample value, that the specific instrument can generate.
     This will be the value, to which the channel shall be normalised.
-    For example, if the instrument’s ADC generates signed 16 bit samples, this value should be set to 32,767.
+    For example, if the instrument’s ADC generates signed 16 bit samples, this value should be set to \(32,767 = 2^{15} - 1\).
     \item u64 – Linear prediction filter used for compression.
     Possible values are:
     \begin{quote}
@@ -179,35 +242,36 @@ The header fields are in particular:
 
       1 – Sample repetition. The sample values of this channel are differences.
 
-      2 – Linear extrapolation. Samples are predicted via linear extrapolation.
+      2 – Linear continuation. Samples are predicted via linear continuation.
     \end{quote}
     See section \ref{compression} for more information on compression.
   \end{enumerate}
-  \item taia – The start time.
-  This TAIA label indicates, when the recording has been started.
-  \item taia – The stop time.
-  This TAIA label indicates, when the recording has been stopped.
+  \item TAI64N – The start time.
+  This TAI64N label indicates, when the recording has been started.
+  \item TAI64N – The stop time.
+  This TAI64N label indicates, when the recording has been stopped.
   \item u64 - The number of clock skew measurements.
   \item For each clock skew measurement:
   \begin{enumerate}
     \item taia – The measurement time as taken by the internal clock.
     \item taia – The measured skew.
     If this value is added to the measurement time, one gets the real time of the measurement.
+    For example, if the internal clock is to slow, the skew will be positive.
   \end{enumerate}
   \item u64 – The total number of samples in the file, i.\,e.\ of all channels added together.
 \end{enumerate}
 
 \section{Data}
 
-The data section contains the actual time series data, as well as some additional data of interest, such as the estimated clock skew.
+The data section contains the samples, as well as some additional data of interest, such as the estimated clock skew.
 
 The data is encoded as sequence of variable length integers, one for each sample.
-Note that no variable length integer uses bytes greater than \(191\).
+Note that no variable length integer uses bytes greater than \(191\) (i.\,e.\ bytes beginning with “11”, see section \ref{varint}).
 These bytes are used for non sample data, which can be embedded anywhere in the stream between the sample data.
 
 \subsection{Sample Interleaving}
 
-To allow for different sample rates per channel the sample data needs to be interleaved.
+To allow for different sample rates for the individual channels, the samples need to be interleaved.
 This is done in a way, that permits small buffers, because samples can be written as soon as they are produced.
 
 Samples which occur concurrently are written in order of their channels.
@@ -224,26 +288,27 @@ A control frame can be identified by it’s first byte which is always larger th
 It can appear anywhere in the data stream except in the middle of a multi byte sample or another control frame.
 
 \begin{itemize}
-  \item Sample number (0xc0) – This value is followed by a variable length integer.
+  \item Time stamp (0xc0) – This value is followed by an i64 and an u32, which together form a TAI64N label.
+  This TAI64N label encodes the absolute time of the next sample as measured by the internal clock.
+  \item Lost sample (0xc1) – This value is a replacement for a lost or unknown sample.
+  It replaces a sample value and counts towards the total number of samples in the file.
+  Though, it is skipped by linear prediction, so the prediction for the next sample is made on the basis of it’s predecessors.
+  \item Padding (0xc2) – This value can be used if the writing application wishes to pad the data.
+  It is silently ignored.
+  \item Annotation (0xc3) – This value is followed by a variable length integer and a string of bytes.
+  The integer encodes the byte length of the string.
+  The string is an arbitrary annotation that might be displayed in the waveform display of a viewing application.
+  \item Sample number (0xc4) – This value is followed by a variable length integer.
   The integer encodes the number of the next sample.
+  The number is counted over all channels, so there is no channel specific number.
   It is used to recover from lost passages of the file and to allow skipping to specific times.
-  \item Summation constant (0xc1) – This value is followed by a variable length integer.
+  \item Summation constant (0xc5) – This value is followed by a variable length integer.
   The integer encodes what the last sample should have been.
   This value is used to recover from errors or missing passages in the file.
   It can also be used to allow skipping to specific times without reading the entire file.
   Note that this does not replace a sample.
-  \item Time stamp (0xd0) – This value is followed by an i64 and two u32s, which together form a TAIA label.
-  This TAIA label encodes the absolute time of the next sample as measured by the internal clock.
-  \item Estimated skew (0xd1) – This value is followed by an i64 and two u32s, which together form a TAIA label.
-  This TAIA label encodes the estimated clock skew.
-  \item Annotation (0xe0) – This value is followed by a variable length integer and a string of bytes.
-  The integer encodes the byte length of the string.
-  The string is an arbitrary annotation that might be displayed in the waveform display of a viewing application.
-  \item Padding (0xfe) – This value can be used if the writing application wishes to pad the data.
-  It is silently ignored.
-  \item Lost sample (0xff) – This value is a replacement for a lost or unknown sample.
-  It replaces a sample value and counts towards the total number of samples in the file.
-  Though, it is skipped by linear prediction, so the prediction for the next sample is made on the basis of it’s predecessors.
+  \item Estimated skew (0xc6) – This value is followed by an i64 and and u32, which together form a TAI64N label.
+  This TAI64N label encodes the estimated clock skew.
 \end{itemize}
 
 \subsection{Compression}
@@ -252,7 +317,10 @@ It can appear anywhere in the data stream except in the middle of a multi byte s
 The sample data may be compressed on a per channel basis using linear prediction.
 This is controlled by the compression field of each channel.
 
-The predictor is used to predict the next sample, so only the difference of the real sample to the predicted one needs to be encoded.
+Note, that all filters result in lossless compression.
+All sample values are exactly reconstructed without any changes or loss of information.
+
+The predictor is used to predict the next sample, so only the difference of the real sample value to the predicted value needs to be encoded.
 
 Let \(x[n]\) be the \(n\)th sample and \(y[n]\) the \(n\)th prediction.
 Then the \(n\)th difference is calculated as
@@ -268,21 +336,28 @@ This is indicated by the channel’s predictor number in the binary header.
 \]
 This means, that all the samples are directly encoded in the stream.
 This predictor is suitable for signals with small magnitude.
-If the signal changes very slow but has larger magnitudes, the difference predictor might generate better results.
+If the signal changes very slow but has larger magnitudes, the zero order hold predictor might generate better results.
 
-1: This is a simple difference predictor with
+1: This is a simple zero order hold predictor with
 \[
   y[n] = x[n - 1].
 \]
 
-2: This is a linear extrapolation filter with
+2: This is a linear continuation predictor with
 \[
   y[n] = 2x[n - 1] - x[n - 2].
 \]
 
-From time to time the state of the predictor should be output in the data stream.
+From time to time (e.\,g.\ once a second) the state of the predictor should be output in the data stream.
 This allows for recovery from lost or damaged passages and enabels skipping into the stream.
 The different predictors need different amounts of samples for recovery.
-So for the linear extrapolation predictor two consecutive samples must be provided.
+So while the zero order hold predictor only needs a single sample, for the linear continuation predictor two consecutive samples must be provided.
+
+\section{Literature}
+
+\begin{refliterature}
+\item[Seed12] \textsc{Ahern, T. \& Dost, B.} \textit{Standard for the Exchange of Earthquake Data.} Incorporated Research Institutions for Seismology, 2012.
+\item[Segy02] \textsc{Norris, M. \& Faichney, A.} \textit{SEG Y rev 1 Data Exchange format.} Society of Exploration Geophysicist, 2002.
+\end{refliterature}
 
 \end{document}
