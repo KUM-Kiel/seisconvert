@@ -35,7 +35,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-09-09.
+\footnote{\raggedright Date of this document: 2014-09-10.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -109,9 +109,9 @@ The TAIA label then encodes the duration
 \]
 If the label represents an absolute time, then it is calculated as
 \[
-  t = t_0 + d - 2^{62}\text{\,s}
+  t = t_{1970} + d - 2^{62}\text{\,s}
 \]
-where \(t_0\) is the moment that began 1970\,TAI.
+where \(t_{1970}\) is the moment that began 1970\,TAI.
 
 \section{Structure of a KUM-Y File}
 
@@ -140,7 +140,7 @@ The magic number may change in future revisions of the format to allow easy dete
 
 \subsection{Textual Metadata}
 
-After the magic number follows human readable information associated with the file.
+The magic number is followed by human readable information associated with the file.
 This text metadata is a string of arbitrary length, encoded as the byte length of the string in decimal with ascii digits, followed by <0a>, followed by the string data, followed by <0a 04>.
 
 The length must be encoded in the shortest possible manner, so leading zeros are disallowed except for the empty string, which is encoded as <30 0a 0a 04>.
@@ -215,7 +215,7 @@ Samples which occur at different times are written in their timely order.
 
 It is implicitly assumed, that the first sample of each channel is synchronized, i.\,e.\ they all occur at the same time.
 
-If the greatest common divisor of the individual sample rates is kept as high as possible the interleaving periods will be kept short, which greatly improves performance.
+If the greatest common divisor of the individual sample rates is kept as large as possible the interleaving periods will be kept short, which greatly improves performance.
 
 \subsection{Control Frames}
 
@@ -232,15 +232,57 @@ It can appear anywhere in the data stream except in the middle of a multi byte s
   This value is used to recover from errors or missing passages in the file.
   It can also be used to allow skipping to specific times without reading the entire file.
   Note that this does not replace a sample.
+  \item Time stamp (0xd0) – This value is followed by an i64 and two u32s, which together form a TAIA label.
+  This TAIA label encodes the absolute time of the next sample as measured by the internal clock.
+  \item Estimated skew (0xd1) – This value is followed by an i64 and two u32s, which together form a TAIA label.
+  This TAIA label encodes the estimated clock skew.
+  \item Annotation (0xe0) – This value is followed by a variable length integer and a string of bytes.
+  The integer encodes the byte length of the string.
+  The string is an arbitrary annotation that might be displayed in the waveform display of a viewing application.
   \item Padding (0xfe) – This value can be used if the writing application wishes to pad the data.
   It is silently ignored.
   \item Lost sample (0xff) – This value is a replacement for a lost or unknown sample.
   It replaces a sample value and counts towards the total number of samples in the file.
+  Though, it is skipped by linear prediction, so the prediction for the next sample is made on the basis of it’s predecessors.
 \end{itemize}
 
 \subsection{Compression}
 \label{compression}
 
 The sample data may be compressed on a per channel basis using linear prediction.
+This is controlled by the compression field of each channel.
+
+The predictor is used to predict the next sample, so only the difference of the real sample to the predicted one needs to be encoded.
+
+Let \(x[n]\) be the \(n\)th sample and \(y[n]\) the \(n\)th prediction.
+Then the \(n\)th difference is calculated as
+\[
+  d[n] = x[n] - y[n].
+\]
+There are multiple predictors to choose from.
+This is indicated by the channel’s predictor number in the binary header.
+
+0: No prediction is made, so it is always
+\[
+  y[n] = 0.
+\]
+This means, that all the samples are directly encoded in the stream.
+This predictor is suitable for signals with small magnitude.
+If the signal changes very slow but has larger magnitudes, the difference predictor might generate better results.
+
+1: This is a simple difference predictor with
+\[
+  y[n] = x[n - 1].
+\]
+
+2: This is a linear extrapolation filter with
+\[
+  y[n] = 2x[n - 1] - x[n - 2].
+\]
+
+From time to time the state of the predictor should be output in the data stream.
+This allows for recovery from lost or damaged passages and enabels skipping into the stream.
+The different predictors need different amounts of samples for recovery.
+So for the linear extrapolation predictor two consecutive samples must be provided.
 
 \end{document}
