@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Seisconvert</title>
+    <style type="text/css">
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        font-size: 14px;
+        font-family: 'Open Sans', 'Myriad Pro', sans-serif;
+      }
+
+      body {
+        padding: 2rem;
+        background: #eee;
+      }
+
+      .header {
+        max-width: 52rem;
+        margin: 0 auto;
+      }
+
+      .content {
+        max-width: 50rem;
+        margin: 0 auto;
+        padding: 1rem;
+        background: #fff;
+        box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.5);
+        border-radius: 0.4rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        line-height: 1.5em;
+        font-weight: bold;
+        margin: 0 0 1rem 0;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        line-height: 1.5em;
+        font-weight: bold;
+        margin: 0 0 0.5rem 0;
+      }
+
+      h3 {
+        font-size: 1.2rem;
+        line-height: 1.5em;
+        font-weight: bold;
+        margin: 0 0 0.5rem 0;
+      }
+
+      h4 {
+        font-size: 1rem;
+        line-height: 1.5em;
+        font-weight: bold;
+      }
+
+      p {
+        line-height: 1.5rem;
+        margin: 0 0 1rem;
+      }
+
+      .codeblock {
+        display: block;
+        font-family: 'Ubuntu Mono', Consolas, Monaco, "Andale Mono", monospace;
+        line-height: 1em;
+        white-space: pre-wrap;
+        padding: 0.4rem;
+        margin: 0.2rem 0;
+        border-left: 0.2rem solid #36a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Seisconvert</h1>
+    </div>
+    <div class="content">
+      <h2>Introduction</h2>
+      <p>
+        The Seisconvert library is a library for handling of several seismic data formats.
+        It supports KUM-Y, MiniSEED, SEG-Y and WAV.
+      </p>
+      <h2>Compiling</h2>
+      <p>
+        Just do
+        <span class="codeblock">$ make</span>
+        in the main directory.
+        This will build the libraries and the utility programs.
+      </p>
+      <h2>Components</h2>
+      <h3>MiniSEED</h3>
+      <p>
+        The API for MiniSEED is based on the header file “miniseed_file.h”.
+        All the functions of this module handle with the type “miniseed_file_t”, which represents an open MiniSEED file.
+      </p>
+      <h4>Reading</h4>
+      <p>
+        A file can be opened with
+        <span class="codeblock">miniseed_file_open(const char *filename)</span>
+        This will return a miniseed_file_t ready for reading or NULL on error.
+      </p>
+      <p>
+        Now one can repeatedly call either
+        <span class="codeblock">miniseed_file_read_int_frame(miniseed_file_t *file, int32_t *frame)</span>
+        or
+        <span class="codeblock">miniseed_file_read_double_frame(miniseed_file_t *file, double *frame)</span>
+        until a negative value is returned.
+        This will read one sample from the file in each call and stores it to the frame pointer.
+        The int variant of this function stores a 32 bit integer, the double variant stores a normalised double, i.&#8239;e. 1.0 as double is the same as 0x7f&#8239;ff&#8239;ff&#8239;ff as integer.
+      </p>
+      <p>
+        The read functions return 0 if a sample was read, –1 if there was no more data and –3 in case of an error.
+      </p>
+      <p>
+        When you are done with reading, the file must be closed with
+        <span class="codeblock">miniseed_file_close(miniseed_file_t *file)</span>
+      </p>
+      <h4>Writing</h4>
+      <p>
+        If the file should instead be opened for writing, one may call
+        <span class="codeblock">miniseed_file_create(const char *filename)</span>
+        This will return a file in write mode or NULL in case of an error.
+      </p>
+      <p>
+        If a file has been opened in write mode, the sample rate must be set before any data can be written.
+        This is done by calling
+        <span class="codeblock">miniseed_file_set_sample_rate(miniseed_file_t *file, uint32_t sample_rate)</span>
+      </p>
+      <p>
+        The start time must be set as well, i.&#8239;e. the time, when the recording was started.
+        This is done with
+        <span class="codeblock">miniseed_file_set_start_time(miniseed_file_t *file, struct taia *t)</span>
+      </p>
+      <p>
+        After initialisation, one can optionally set the channel metadata with
+        <span class="codeblock">miniseed_file_set_info(miniseed_file_t *file, const char *station, const char *location, const char *channel, const char *network)</span>
+        The fields may be NULL, in which case the specific info remains unchanged.
+      </p>
+      <p>
+        When all fields have been set, one can start writing samples to the file.
+        This is done with the functions
+        <span class="codeblock">miniseed_file_write_int_frame(miniseed_file_t *file, const int32_t *frame)</span>
+        and
+        <span class="codeblock">miniseed_file_write_double_frame(miniseed_file_t *file, const double *frame)</span>
+      </p>
+      <p>
+        When you are done with writing, the file must be closed with
+        <span class="codeblock">miniseed_file_close(miniseed_file_t *file)</span>
+        This is especially important, as the last block will not be written to disk until this function is called.
+      </p>
+      <h4>Example</h4>
+      <p>
+        <span class="codeblock">#include &quot;miniseed_file.h&quot;
+
+int main()
+{
+  miniseed_file_t *file;
+  int32_t frame[1];
+
+  file = miniseed_file_open("testfile.seed");
+  while (miniseed_file_read_int_frame(file, frame) >= 0) {
+    /* Do something with frame[0] ... */
+  }
+  miniseed_file_close(file);
+
+  return 0;
+}</span>
+      </p>
+      <h3>WAV</h3>
+      <p>
+        The API for WAV is based on the header file “wav_file.h”.
+        All the functions of this module handle with the type “wav_file_t”, which represents an open WAV file.
+      </p>
+      <h4>Reading</h4>
+      <p>
+        A file can be opened with
+        <span class="codeblock">wav_file_t *wav_file_open(const char *path);</span>
+        This will return a wav_file_t ready for reading or NULL on error.
+      </p>
+      <p>
+        There are several functions to access the parameters of the file.
+        <span class="codeblock">uint32_t wav_file_sample_rate(wav_file_t *file);
+uint16_t wav_file_num_channels(wav_file_t *file);
+uint16_t wav_file_bit_depth(wav_file_t *file);
+uint16_t wav_file_num_frames(wav_file_t *file);
+uint32_t wav_file_position(wav_file_t *file);</span>
+        They return the sample rate, the number of channels, the bit depth, the total number of frames in the file and the current position.
+      </p>
+      <p>
+        Now one can repeatedly call one of
+        <span class="codeblock">int wav_file_read_int_frame(wav_file_t *file, int32_t *frame);
+int wav_file_read_double_frame(wav_file_t *file, double *frame);
+int wav_file_read_float_frame(wav_file_t *file, float *frame);</span>
+        until a negative value is returned.
+        This will read one frame from the file, i.&#8239;e. one sample for each channel, in each call and stores it to the frame pointer.
+        There must be enough space to hold one value for every channel.
+        The int variant of this function reads a 32 bit integer, the float and double variants read a normalised float or double.
+      </p>
+      <p>
+        The read functions return 0 if a frame was read, –1 if there was no more data and –3 in case of an error.
+      </p>
+      <p>
+        While reading the file, you can seek to a position in the file by calling
+        <span class="codeblock">int wav_file_seek(const char *path, uint32_t frame);</span>
+        This will make subsequent read calls read from this position.
+      </p>
+      <p>
+        When you are done with reading, the file must be closed with
+        <span class="codeblock">void wav_file_close(wav_file_t *file);</span>
+      </p>
+      <h4>Writing</h4>
+      <p>
+        If the file should instead be opened for writing, one may call
+        <span class="codeblock">wav_file_t *wav_file_create(const char *path, uint32_t sample_rate, uint16_t num_channels, uint16_t bit_depth);</span>
+        This will return a file in write mode or NULL in case of an error.
+        The sample rate, number of channels and bit depth must be specified in the call.
+      </p>
+      <p>
+        When the file is created, one can start writing frames to the file.
+        This is done with the functions
+        <span class="codeblock">int wav_file_write_int_frame(wav_file_t *file, const int32_t *frame);
+int wav_file_write_double_frame(wav_file_t *file, const double *frame);
+int wav_file_write_float_frame(wav_file_t *file, const float *frame);</span>
+        Each frame must have one value per channel.
+      </p>
+      <p>
+        When you are done with writing, the file again must be closed with
+        <span class="codeblock">void wav_file_close(wav_file_t *file);</span>
+        This is especially important, as the number of frames will not be written to disk until this function is called.
+      </p>
+      <h4>Example</h4>
+      <p>
+        This example program converts a WAV file with up to 16 channels to 8 bit.
+        <span class="codeblock">#include &quot;wav_file.h&quot;
+
+int main()
+{
+  wav_file_t *in, *out;
+  double frame[16];
+  uint16_t c;
+
+  in = wav_file_open("in.wav");
+  if ((c = wav_file_num_channels(in)) > 16) return -1;
+  out = wav_file_create("out.wav", wav_file_sample_rate(in), c, 8);
+  while (wav_file_read_double_frame(in, frame) >= 0) {
+    wav_file_write_double_frame(out, frame);
+  }
+  wav_file_close(in);
+  wav_file_close(out);
+
+  return 0;
+}</span>
+      </p>
+    </div>
+  </body>
+</html>

@@ -1,13 +1,14 @@
-\documentclass[parskip=half, DIV=12]{scrartcl}
-\usepackage{xltxtra}
-\usepackage{fontspec}
+\documentclass[DIV=10, parskip=half]{scrartcl}
 \usepackage[fleqn]{amsmath}
+\usepackage{mathspec}
+\usepackage{xltxtra}
 \usepackage{amssymb}
 \usepackage{enumerate}
 \usepackage{tikz}
+\usepackage{ragged2e}
 \usepackage{polyglossia}
 \usepackage{microtype}
-\setdefaultlanguage{german}
+\setdefaultlanguage{english}
 
 \addtokomafont{disposition}{\rmfamily}
 \newcommand{\R}{\mathbb{R}}
@@ -20,8 +21,55 @@
 \let\TagsLeftOff\tagsleft@false
 \makeatother
 
-\pagestyle{myheadings}
-\markright{\textup{Seisconvert \hfill August 2014}}
+\newcommand{\x}[1]{\textbackslash{}x#1}
+
+\DeclareTextFontCommand{\textref}{\rmfamily}
+
+\renewenvironment{quote}
+{\list{}{
+  \setlength{\rightmargin}{0cm}
+  \setlength{\leftmargin}{0.75cm}}%
+\item\relax\ignorespaces}
+{\unskip\unskip\endlist}
+
+\newenvironment{openingquote}
+{\list{}{
+  \setlength{\rightmargin}{0cm}
+  \setlength{\leftmargin}{5cm}}%
+\item\relax\fontsize{8pt}{12pt}\selectfont\ignorespaces}
+{\unskip\unskip\endlist}
+
+\newenvironment{literature}
+{\list{}{
+  \setlength{\leftmargin}{10pt}
+  \setlength{\labelwidth}{0pt}
+  \setlength{\labelsep}{0pt}
+  \setlength{\itemindent}{-10pt}
+  \setlength{\itemsep}{-2pt}
+}\RaggedRight}
+{\endlist}
+
+\newcommand\litref[1]{\textref{[#1]}}
+\newenvironment{refliterature}
+{\list{}{
+  \setlength{\leftmargin}{45pt}
+  \setlength{\labelwidth}{45pt}
+  \setlength{\labelsep}{0pt}
+  \setlength{\itemindent}{0pt}
+  \setlength{\itemsep}{-2pt}
+  \let\makelabel\litref
+}\RaggedRight}
+{\endlist}
+
+%\sloppy
+
+\newcommand{\docline}[1]{%
+  \begin{quote}
+  \raggedright\texttt{#1}
+  \end{quote}
+}
+
+\sloppy
 
 \begin{document}
 
@@ -34,5 +82,67 @@
 \vspace{1cm}
 
 \section{Introduction}
+
+The Seisconvert library is a library for handling of several seismic data formats.
+It supports KUM-Y, MiniSEED, SEG-Y and WAV.
+
+\section{Components}
+
+\subsection{MiniSEED}
+
+The API for MiniSEED is based on the header file “miniseed\_file.h”.
+All the functions of this module handle with the type “miniseed\_file\_t”, which represents an open MiniSEED file.
+
+\subsubsection{Reading}
+
+A file can be opend with
+\docline{miniseed\_file\_open(const char *filename)}
+This will return a miniseed\_file\_t ready for reading or NULL on error.
+
+Now one can repeatedly call either
+\docline{miniseed\_file\_read\_int\_frame(miniseed\_file\_t *file, int32\_t *frame)}
+or
+\docline{miniseed\_file\_read\_double\_frame(miniseed\_file\_t *file, double *frame)}
+until a negative value is returned.
+This will read one sample from the file in each call and stores it to the frame pointer.
+The int variant of this function stores a 32 bit integer, the double variant stores a normalised double, i.\,e.\ 1.0 as double is the same as 0x7f\,ff\,ff\,ff as integer.
+
+The read functions return \(0\) if a sample was read, \(-1\) if there was no more data and \(-3\) in case of an error.
+
+When you are done with reading, the file must be closed with
+\docline{miniseed\_file\_close(miniseed\_file\_t *file)}
+
+\subsubsection{Writing}
+
+If the file should instead be opened for writing, one may call
+\docline{miniseed\_file\_create(const char *filename)}
+This will return a file in write mode or NULL in case of an error.
+
+If a file has been opened in write mode, the sample rate must be set before any data can be written.
+This is done by calling
+\docline{miniseed\_file\_set\_sample\_rate(miniseed\_file\_t *file, uint32\_t sample\_rate)}
+
+The start time must be set as well, i.\,e.\ the time, when the recording was started.
+This is done with
+\docline{miniseed\_file\_set\_start\_time(miniseed\_file\_t *file, struct taia *t)}
+
+After initialisation, one can optionally set the channel metadata with
+\docline{miniseed\_file\_set\_info(miniseed\_file\_t *file, const char *station, const char *location, const char *channel, const char *network)}
+The fields may be NULL, in which case the specific info remains unchanged.
+
+When all fields have been set, one can start writing samples to the file.
+This is done with the functions
+\docline{miniseed\_file\_write\_int\_frame(miniseed\_file\_t *file, const int32\_t *frame)}
+and
+\docline{miniseed\_file\_write\_double\_frame(miniseed\_file\_t *file, const double *frame)}
+
+When you are done with writing, the file must be closed with
+\docline{miniseed\_file\_close(miniseed\_file\_t *file)}
+This is especially important, as the last block will not be written to disk until this function is called.
+
+\subsection{WAV}
+
+The API for WAV is based on the header file “wav\_file.h”.
+All the functions of this module handle with the type “wav\_file\_t”, which represents an open WAV file.
 
 \end{document}
