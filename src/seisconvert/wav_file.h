@@ -21,6 +21,8 @@ struct wav_file_s {
   wav_header_t header;
   /* WAV frame config. */
   wav_frame_config_t frame_config;
+  /* Current position. */
+  uint32_t position;
   /* Frame buffer. */
   uint8_t *buffer;
 };
@@ -30,11 +32,29 @@ extern wav_file_t *wav_file_open(const char *path);
 
 /* Creates a WAV file for writing with the given sample rate, number of channels
  * and bit depth. */
-extern wav_file_t *wav_file_create(const char *path, unsigned long sample_rate, unsigned int num_channels, unsigned int bit_depth);
+extern wav_file_t *wav_file_create(const char *path, uint32_t sample_rate, uint16_t num_channels, uint16_t bit_depth);
 
 /* Closes an open WAV file, frees it's resources and writes all pending frames
  * to disk. */
 extern void wav_file_close(wav_file_t *file);
+
+/* Returns the sample rate of the WAV file. */
+extern uint32_t wav_file_sample_rate(wav_file_t *file);
+
+/* Returns the number of channels of the WAV file. */
+extern uint16_t wav_file_num_channels(wav_file_t *file);
+
+/* Returns the bit depth of the WAV file. */
+extern uint16_t wav_file_bit_depth(wav_file_t *file);
+
+/* Returns the number of frames in the file. */
+extern uint16_t wav_file_num_frames(wav_file_t *file);
+
+/* Returns the position in the file, i.e. which frame will be read next. */
+extern uint32_t wav_file_position(wav_file_t *file);
+
+/* Seeks to the specified frame in the file. This works only on files in read mode. */
+extern int wav_file_seek(wav_file_t *file, uint32_t frame);
 
 /* Reads a frame from the WAV file and stores it as 32 bit integers.
  * The supplied frame pointer must have enough space for one int32_t per channel.
