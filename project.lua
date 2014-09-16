@@ -68,4 +68,9 @@ m:program("kumy2seed", {
   m:c("kumy2seed")
 }, {"seisconvert", "tai"})
 
+m:program("sdread", {
+  m:c("sdread")
+}, {"seisconvert", "tai"})
+
+
 m:gen("Makefile")
