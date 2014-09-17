@@ -126,8 +126,6 @@ int main(int argc, char **argv)
   if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
   writ = ld_u64_be(block + 47) * 896;
 
-  printf("%lld %lld\n", (long long)addr, (long long)writ);
-
   if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
 
   for (i = 0; i < writ; ++i) {
@@ -144,6 +142,7 @@ int main(int argc, char **argv)
         /* Time */
         if (want_start_time) {
           bcd_taia(&start_time, block + 4);
+          last_time = start_time;
           want_start_time = 0;
           /* Create file */
           print_text_date((uint8_t *)filename + 14, &start_time);
@@ -154,21 +153,22 @@ int main(int argc, char **argv)
       }
     }
   }
-  printf("%d Frames.\n", (int)frames);
 
-  for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
-    print_text_date(kumy->text_header[i].content + 1871, &start_time);
-    print_text_date(kumy->text_header[i].content + 1951, &last_time);
-    print_text_date(kumy->text_header[i].content + 2031, &last_time);
-    print_text_date(kumy->text_header[i].content + 2111, &last_time);
-    write_int(kumy->text_header[i].content + 2191, 8, 0, 1);
-    write_int(kumy->text_header[i].content + 2271, 8, 1000000 / samp, 1);
-    write_int(kumy->text_header[i].content + 2351, 3, i, 1);
-    write_int(kumy->text_header[i].content + 2431, 3, 1, 1);
-    kumy_binary_header_set_date(&kumy->binary_header[i], &start_time);
+  if (!want_start_time) {
+    for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
+      print_text_date(kumy->text_header[i].content + 1871, &start_time);
+      print_text_date(kumy->text_header[i].content + 1951, &last_time);
+      print_text_date(kumy->text_header[i].content + 2031, &last_time);
+      print_text_date(kumy->text_header[i].content + 2111, &last_time);
+      write_int(kumy->text_header[i].content + 2191, 8, 0, 1);
+      write_int(kumy->text_header[i].content + 2271, 8, 1000000 / samp, 1);
+      write_int(kumy->text_header[i].content + 2351, 3, i, 1);
+      write_int(kumy->text_header[i].content + 2431, 3, 1, 1);
+      kumy_binary_header_set_date(&kumy->binary_header[i], &start_time);
+    }
+    kumy_file_close(kumy);
   }
 
-  kumy_file_close(kumy);
   fclose(sdcard);
   return 0;
 
