@@ -120,10 +120,32 @@ int main(int argc, char **argv)
   }
 
   if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
+
+  if  (ld_u32_be(block)      != 0x74696d65 /* time */
+    || ld_u32_be(block + 29) != 0x61646472 /* addr */
+    || ld_u32_be(block + 37) != 0x73616d70 /* samp */
+    || ld_u32_be(block + 43) != 0x77726974 /* writ */
+    || ld_u32_be(block + 55) != 0x6e777269 /* nwri */
+    || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
+    || ld_u32_be(block + 71) != 0x74656d70 /* temp */
+    || ld_u32_be(block + 77) != 0x68756d69 /* humi */
+  ) goto fail;
+
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
 
   if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
+
+  if  (ld_u32_be(block)      != 0x74696d65 /* time */
+    || ld_u32_be(block + 29) != 0x61646472 /* addr */
+    || ld_u32_be(block + 37) != 0x73616d70 /* samp */
+    || ld_u32_be(block + 43) != 0x77726974 /* writ */
+    || ld_u32_be(block + 55) != 0x6e777269 /* nwri */
+    || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
+    || ld_u32_be(block + 71) != 0x74656d70 /* temp */
+    || ld_u32_be(block + 77) != 0x68756d69 /* humi */
+  ) goto fail;
+
   writ = ld_u64_be(block + 47) * 896;
 
   if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
@@ -174,6 +196,6 @@ int main(int argc, char **argv)
 
 fail:
   fclose(sdcard);
-  fprintf(stderr, "Read error.\n");
+  fprintf(stderr, "Read error: SD Card malformed.\n");
   return -1;
 }
