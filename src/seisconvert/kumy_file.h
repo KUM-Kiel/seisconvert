@@ -33,7 +33,7 @@ extern kumy_file_t *kumy_file_open(const char *path);
 
 /* Creates a KUMY file for writing with the given sample rate, number of channels
  * and bit depth. */
-extern kumy_file_t *kumy_file_create(const char *path);
+extern kumy_file_t *kumy_file_create(const char *path, uint32_t sample_rate);
 
 /* Closes an open KUMY file, frees it's resources and writes all pending frames
  * to disk. */

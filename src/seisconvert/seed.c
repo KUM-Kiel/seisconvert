@@ -182,20 +182,13 @@ int seed_btime2taia(struct taia *t, const seed_btime_t *btime)
   return 0;
 }
 
-static const int month_begin[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-static const int month_begin_leap[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
-
 int seed_taia2btime(seed_btime_t *btime, const struct taia *t)
 {
   struct caltime ct;
   caltime_utc(&ct, &t->sec, 0, 0);
 
   btime->year = ct.date.year;
-  if (btime->year % 400 == 0 || (btime->year % 4 == 0 && btime->year % 100 != 0)) {
-    btime->julian_day = month_begin_leap[ct.date.month - 1] + ct.date.day;
-  } else {
-    btime->julian_day = month_begin[ct.date.month - 1] + ct.date.day;
-  }
+  btime->julian_day = julian_day(ct.date.day, ct.date.month, ct.date.year);
   btime->hour = ct.hour;
   btime->minute = ct.minute;
   btime->second = ct.second;

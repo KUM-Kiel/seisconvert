@@ -266,3 +266,14 @@ int parse_int(int64_t *i, const uint8_t *x, uint64_t xlen)
   *i = p ? t : -t;
   return 0;
 }
+
+static const int month_begin[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+static const int month_begin_leap[] = {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
+int julian_day(int day, int month, int year)
+{
+  if (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)) {
+    return month_begin_leap[month - 1] + day;
+  } else {
+    return month_begin[month - 1] + day;
+  }
+}

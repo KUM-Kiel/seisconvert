@@ -53,4 +53,7 @@ extern int write_int(uint8_t *x, uint64_t xlen, int64_t i, int pad);
  * Else -1 will be returned and i is left untouched. */
 extern int parse_int(int64_t *i, const uint8_t *x, uint64_t xlen);
 
+/* Returns the julian day for a given day, month and year. */
+extern int julian_day(int day, int month, int year);
+
 #endif

@@ -270,7 +270,7 @@ build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisc
 	@echo [CC] build/objects/kumy2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2seed.o src/kumy2seed.c
-build/objects/sdread.o: src/sdread.c src/seisconvert/wav_file.h src/seisconvert/wav.h src/seisconvert/number.h Makefile
+build/objects/sdread.o: src/sdread.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/number.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h Makefile
 	@echo [CC] build/objects/sdread.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/sdread.o src/sdread.c
