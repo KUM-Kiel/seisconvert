@@ -124,9 +124,11 @@ int main(int argc, char **argv)
   samp = ld_u16_be(block + 41);
 
   if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
-  writ = ld_u32_be(block + 47) * 896;
+  writ = ld_u64_be(block + 47) * 896;
 
-  fseek(sdcard, addr * BLOCKSIZE, SEEK_SET);
+  printf("%lld %lld\n", (long long)addr, (long long)writ);
+
+  if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
 
   for (i = 0; i < writ; ++i) {
     if (!fread(block, FRAMESIZE, 1, sdcard)) goto fail;
