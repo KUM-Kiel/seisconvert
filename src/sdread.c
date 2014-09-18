@@ -169,7 +169,6 @@ int main(int argc, char **argv)
 
   if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
 
-  progress(0);
   for (i = 0; i < n; ++i) {
     if (!fread(block, FRAMESIZE, 1, sdcard)) goto fail;
     frame[0] = ld_i32_be(block);
@@ -189,12 +188,13 @@ int main(int argc, char **argv)
           /* Create file */
           print_text_date((uint8_t *)filename + 14, &start_time);
           kumy = kumy_file_create(filename, samp);
+          printf("%s\n", filename);
         } else {
           bcd_taia(&last_time, block + 4);
         }
       }
     }
-    if (i % 10000 == 0) {
+    if (i % 10000 == 0 && !want_start_time) {
       percent = 100 * i / n;
       if (percent != old_percent) {
         progress(percent);
