@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 {
   FILE *sdcard = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, writ, samp, i, frames = 0;
+  uint64_t addr, last_addr, writ, samp, i, n, frames = 0;
   uint8_t block[BLOCKSIZE];
   char filename[] = "KUM.recording.YYYY.DDD.HH.MM.SS.muk1";
   int32_t frame[4];
@@ -146,11 +146,14 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 77) != 0x68756d69 /* humi */
   ) goto fail;
 
-  writ = ld_u64_be(block + 47) * 896;
+  last_addr = ld_u32_be(block + 33);
+  writ = ld_u64_be(block + 47);
+
+  n = (last_addr - addr) * (BLOCKSIZE / FRAMESIZE);
 
   if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
 
-  for (i = 0; i < writ; ++i) {
+  for (i = 0; i < n; ++i) {
     if (!fread(block, FRAMESIZE, 1, sdcard)) goto fail;
     frame[0] = ld_i32_be(block);
     if (!(frame[0] & 1) && !want_start_time) {
@@ -174,6 +177,11 @@ int main(int argc, char **argv)
         }
       }
     }
+  }
+
+  if (writ != frames) {
+    fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
+    fprintf(stderr, "%lld/%lld Frames\n", (long long)frames, (long long)writ);
   }
 
   if (!want_start_time) {
