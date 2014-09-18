@@ -37,7 +37,7 @@ int main(int argc, char **argv)
   miniseed_file_close(mseed);
   wav_file_close(wav);
 
-  fprintf(stderr, "%lld frames.\n", frames);
+  fprintf(stderr, "%lld frames.\n", (long long)frames);
 
   return 0;
 }

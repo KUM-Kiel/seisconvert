@@ -36,7 +36,7 @@ void hexdump(const u8 *b, u64 l)
       }
     }
     if (i % 16 == 0)
-      printf("%08llx | ", i);
+      printf("%08llx | ", (long long)i);
     printf("%02x", b[i]);
     s[i % 16] = printable(b[i]);
   }
