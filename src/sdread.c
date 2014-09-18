@@ -93,6 +93,18 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
   bh->julian_day = julian_day(ct.date.day, ct.date.month, ct.date.year);
 }
 
+static const char *spaces = "                    ";
+static const char *hashes = "####################";
+static void progress(int percent) {
+  int h = percent / 5;
+  int s = 20 - h;
+  printf("[");
+  if (h) if (!fwrite(hashes, h, 1, stdout)) return;
+  if (s) if (!fwrite(spaces, s, 1, stdout)) return;
+  printf("] %3d%%\r", percent);
+  fflush(stdout);
+}
+
 #define BLOCKSIZE 512
 #define FRAMESIZE 16
 
@@ -107,6 +119,7 @@ int main(int argc, char **argv)
   int want_start_time = 1;
   struct taia start_time;
   struct taia last_time;
+  int percent = 0, old_percent = 0;
 
   if (argc < 2) {
     fprintf(stderr, "Usage: %s /dev/sdx\n", argv[0]);
@@ -153,6 +166,7 @@ int main(int argc, char **argv)
 
   if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
 
+  progress(0);
   for (i = 0; i < n; ++i) {
     if (!fread(block, FRAMESIZE, 1, sdcard)) goto fail;
     frame[0] = ld_i32_be(block);
@@ -177,7 +191,16 @@ int main(int argc, char **argv)
         }
       }
     }
+    if (frames % 1000 == 0) {
+      percent = 100 * frames / writ;
+      if (percent != old_percent) {
+        progress(percent);
+        old_percent = percent;
+      }
+    }
   }
+  progress(100);
+  printf("\n");
 
   if (writ != frames) {
     fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
