@@ -96,8 +96,11 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
 static const char *spaces = "                    ";
 static const char *hashes = "####################";
 static void progress(int percent) {
-  int h = percent / 5;
-  int s = 20 - h;
+  int h, s;
+  if (percent < 0) percent = 0;
+  if (percent > 100) percent = 100;
+  h = percent / 5;
+  s = 20 - h;
   printf("[");
   if (h) if (!fwrite(hashes, h, 1, stdout)) return;
   if (s) if (!fwrite(spaces, s, 1, stdout)) return;
@@ -191,8 +194,8 @@ int main(int argc, char **argv)
         }
       }
     }
-    if (frames % 1000 == 0) {
-      percent = 100 * frames / writ;
+    if (i % 10000 == 0) {
+      percent = 100 * i / n;
       if (percent != old_percent) {
         progress(percent);
         old_percent = percent;
