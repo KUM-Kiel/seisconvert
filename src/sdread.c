@@ -7,6 +7,7 @@
 #include "number.h"
 #include "taia.h"
 #include "caltime.h"
+#include "byte.h"
 
 typedef uint8_t u8;
 typedef uint64_t u64;
@@ -93,18 +94,13 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
   bh->julian_day = julian_day(ct.date.day, ct.date.month, ct.date.year);
 }
 
-static const char *spaces = "                    ";
-static const char *hashes = "####################";
 static void progress(int percent) {
-  int h, s;
+  char s[29];
   if (percent < 0) percent = 0;
   if (percent > 100) percent = 100;
-  h = percent / 5;
-  s = 20 - h;
-  printf("[");
-  if (h) if (!fwrite(hashes, h, 1, stdout)) return;
-  if (s) if (!fwrite(spaces, s, 1, stdout)) return;
-  printf("] %3d%%\r", percent);
+  snprintf(s, 29, "[                    ] %3d%%\r", percent);
+  byte_set((uint8_t *)s + 1, percent / 5, '#');
+  if (!fwrite(s, 28, 1, stdout)) return;
   fflush(stdout);
 }
 
@@ -122,7 +118,11 @@ int main(int argc, char **argv)
   int want_start_time = 1;
   struct taia start_time;
   struct taia last_time;
+  struct taia sync_time;
+  struct taia skew_time;
+  int synced = 0, skewed = 0;
   int percent = 0, old_percent = 0;
+  int64_t sync_skew = 0, skew = 0;
 
   if (argc < 2) {
     fprintf(stderr, "Usage: %s /dev/sdx\n", argv[0]);
@@ -150,6 +150,12 @@ int main(int argc, char **argv)
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
 
+  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
+    bcd_taia(&sync_time, block + 19);
+    sync_skew = ld_i32_be(block + 25);
+    synced = 1;
+  }
+
   if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
 
   if  (ld_u32_be(block)      != 0x74696d65 /* time */
@@ -164,6 +170,12 @@ int main(int argc, char **argv)
 
   last_addr = ld_u32_be(block + 33);
   writ = ld_u64_be(block + 47);
+
+  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
+    bcd_taia(&skew_time, block + 19);
+    skew = ld_i32_be(block + 25);
+    skewed = 1;
+  }
 
   n = (last_addr - addr) * (BLOCKSIZE / FRAMESIZE);
 
@@ -211,14 +223,23 @@ int main(int argc, char **argv)
   }
 
   if (!want_start_time) {
+    if (!synced) {
+      sync_time = start_time;
+    }
+
+    if (!skewed) {
+      skew_time = last_time;
+    }
+
     for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
       print_text_date(kumy->text_header[i].content + 1871, &start_time);
       print_text_date(kumy->text_header[i].content + 1951, &last_time);
-      print_text_date(kumy->text_header[i].content + 2031, &last_time);
-      print_text_date(kumy->text_header[i].content + 2111, &last_time);
-      write_int(kumy->text_header[i].content + 2191, 8, 0, 1);
+      print_text_date(kumy->text_header[i].content + 2031, &sync_time);
+      print_text_date(kumy->text_header[i].content + 2111, &skew_time);
+      write_int(kumy->text_header[i].content + 2191, 8, skew - sync_skew, 1);
       write_int(kumy->text_header[i].content + 2271, 8, 1000000 / samp, 1);
-      write_int(kumy->text_header[i].content + 2351, 3, i, 1);
+      write_int(kumy->text_header[i].content + 2351, 3, i + 1, 1);
+      write_int(kumy->text_header[i].content + 2381, 3, KUMY_FILE_CHANNELS, 1);
       write_int(kumy->text_header[i].content + 2431, 3, 1, 1);
       kumy_binary_header_set_date(&kumy->binary_header[i], &start_time);
     }

@@ -10,7 +10,7 @@ m:lib("seisconvert", {
   m:c("segy"),
   m:c("wav"), m:c("wav_file"),
   m:c("filter"), m:c("fm"),
-  m:c("buffer"), m:c("number")
+  m:c("buffer"), m:c("number"), m:c("byte")
 })
 
 m:lib("tai", {
