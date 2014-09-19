@@ -94,11 +94,11 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
   bh->julian_day = julian_day(ct.date.day, ct.date.month, ct.date.year);
 }
 
-static void progress(int percent) {
+static void progress(int percent, int finished) {
   char s[29];
   if (percent < 0) percent = 0;
   if (percent > 100) percent = 100;
-  snprintf(s, 29, "[                    ] %3d%%\r", percent);
+  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
   byte_set((uint8_t *)s + 1, percent / 5, '#');
   if (!fwrite(s, 28, 1, stdout)) return;
   fflush(stdout);
@@ -209,17 +209,16 @@ int main(int argc, char **argv)
     if (i % 10000 == 0 && !want_start_time) {
       percent = 100 * i / n;
       if (percent != old_percent) {
-        progress(percent);
+        progress(percent, 0);
         old_percent = percent;
       }
     }
   }
-  progress(100);
-  printf("\n");
+  progress(100, 1);
 
   if (writ != frames) {
     fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
-    fprintf(stderr, "%lld/%lld Frames\n", (long long)frames, (long long)writ);
+    fprintf(stderr, "%lld/%lld Frames. (%s%lld)\n", (long long)frames, (long long)writ, writ > frames ? "" : "+", (long long)(frames - writ));
   }
 
   if (!want_start_time) {

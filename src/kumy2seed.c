@@ -5,6 +5,7 @@
 #include "taia.h"
 #include "caltime.h"
 #include "number.h"
+#include "byte.h"
 #include <errno.h>
 
 /* POSIX specific. */
@@ -53,6 +54,16 @@ static int mkdir_p(const char *path)
   return 0;
 }
 
+static void progress(int percent, int finished) {
+  char s[29];
+  if (percent < 0) percent = 0;
+  if (percent > 100) percent = 100;
+  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
+  byte_set((uint8_t *)s + 1, percent / 5, '#');
+  if (!fwrite(s, 28, 1, stdout)) return;
+  fflush(stdout);
+}
+
 static const char *channel_names[] = {"H", "SX", "SY", "SZ"};
 
 int main(int argc, char **argv)
@@ -60,10 +71,11 @@ int main(int argc, char **argv)
   kumy_file_t *kumy;
   miniseed_file_t *mseed[KUMY_FILE_CHANNELS];
   int32_t frame[KUMY_FILE_CHANNELS];
-  uint64_t frames, l, frames_per_file;
+  uint64_t frames, l, frames_per_file, frames_total, frame_count = 0;
   int i;
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
+  int percent = 0, old_percent = 0;
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
@@ -103,6 +115,7 @@ int main(int argc, char **argv)
   }
 
   frames_per_file = sample_rate * seconds_per_file;
+  frames_total = kumy->binary_header[0].num_samples;
 
   caltime_utc(&ct, &start_time.sec, 0, 0);
   ct.hour = 0;
@@ -170,8 +183,17 @@ int main(int argc, char **argv)
     for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
       miniseed_file_write_int_frame(mseed[i], frame + i);
     }
+    if (frame_count % 10000 == 0) {
+      percent = 100 * frame_count / frames_total;
+      if (percent != old_percent) {
+        progress(percent, 0);
+        old_percent = percent;
+      }
+    }
     --frames;
+    ++frame_count;
   }
+  progress(100, 1);
 
   kumy_file_close(kumy);
   for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
