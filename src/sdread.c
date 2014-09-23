@@ -122,7 +122,7 @@ int main(int argc, char **argv)
   struct taia sync_time;
   struct taia skew_time;
   int synced = 0, skewed = 0;
-  int percent = 0, old_percent = 0;
+  int percent = 0, old_percent = -1;
   int64_t sync_skew = 0, skew = 0;
 
   if (argc < 2) {

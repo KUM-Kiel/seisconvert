@@ -72,7 +72,7 @@ int main(int argc, char **argv)
   int i;
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
-  int percent = 0, old_percent = 0;
+  int percent = 0, old_percent = -1;
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
