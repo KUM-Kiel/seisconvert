@@ -68,6 +68,10 @@ m:program("kumy2seed", {
   m:c("kumy2seed")
 }, {"seisconvert", "tai"})
 
+m:program("kumy2raw", {
+  m:c("kumy2raw")
+}, {"seisconvert", "tai"})
+
 m:program("sdread", {
   m:c("sdread")
 }, {"seisconvert", "tai"})
