@@ -75,6 +75,7 @@ int main(int argc, char **argv)
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
   int percent = 0, old_percent = -1;
+  char b[4];
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
@@ -167,7 +168,8 @@ int main(int argc, char **argv)
     }
 
     for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
-      fwrite((char *)(frame + i), 4, 1, raw[i]);
+      st_i32_be((uint8_t *)b, frame[i]);
+      fwrite(b, 4, 1, raw[i]);
     }
     if (frame_count % 10000 == 0) {
       percent = 100 * frame_count / frames_total;
