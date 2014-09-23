@@ -1,10 +1,8 @@
 #include "caltime.h"
 
-unsigned int caltime_scan(s,ct)
-char *s;
-struct caltime *ct;
+unsigned int caltime_scan(const char *s, struct caltime *ct)
 {
-  char *t = s;
+  const char *t = s;
   uint32_t z;
   uint32_t c;
   int sign;

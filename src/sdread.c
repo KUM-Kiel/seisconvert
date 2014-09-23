@@ -94,6 +94,7 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
   bh->julian_day = julian_day(ct.date.day, ct.date.month, ct.date.year);
 }
 
+/* Prints a progress bar. If you intend to update the bar, set finished to 0. */
 static void progress(int percent, int finished) {
   char s[29];
   if (percent < 0) percent = 0;

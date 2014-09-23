@@ -1,20 +1,15 @@
 #include "tai.h"
 #include "leapsecs.h"
-#include "caldate.h"
 #include "caltime.h"
 
 /* XXX: breaks tai encapsulation */
 
-void caltime_utc(ct,t,pwday,pyday)
-struct caltime *ct;
-struct tai *t;
-int *pwday;
-int *pyday;
+void caltime_utc(struct caltime *ct, const struct tai *t, int *pwday, int *pyday)
 {
   struct tai t2 = *t;
   int64_t u;
   int leap;
-  long s;
+  int64_t s;
 
   /* XXX: check for overfow? */
 
@@ -29,7 +24,7 @@ int *pyday;
   ct->hour = s;
 
   u /= 86400ULL;
-  caldate_frommjd(&ct->date,/*XXX*/(long) (u - 53375995543064ULL),pwday,pyday);
+  caldate_frommjd(&ct->date, /*XXX*/(u - 53375995543064LL), pwday, pyday);
 
   ct->offset = 0;
 }

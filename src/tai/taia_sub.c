@@ -2,10 +2,7 @@
 
 /* XXX: breaks tai encapsulation */
 
-void taia_sub(t,u,v)
-struct taia *t;
-struct taia *u;
-struct taia *v;
+void taia_sub(struct taia *t, const struct taia *u, const struct taia *v)
 {
   uint32_t unano = u->nano;
   uint32_t uatto = u->atto;

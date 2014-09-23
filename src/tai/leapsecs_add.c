@@ -1,14 +1,11 @@
 #include "leapsecs.h"
-#include "tai.h"
 
 /* XXX: breaks tai encapsulation */
 
 extern struct tai *leapsecs;
 extern int leapsecs_num;
 
-void leapsecs_add(t,hit)
-struct tai *t;
-int hit;
+void leapsecs_add(struct tai *t, int hit)
 {
   int i;
   int64_t u;
@@ -17,7 +14,7 @@ int hit;
 
   u = t->x;
 
-  for (i = 0;i < leapsecs_num;++i) {
+  for (i = 0; i < leapsecs_num; ++i) {
     if (u < leapsecs[i].x) break;
     if (!hit || (u > leapsecs[i].x)) ++u;
   }

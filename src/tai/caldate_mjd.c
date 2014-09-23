@@ -1,17 +1,16 @@
 #include "caldate.h"
 
-static uint32_t times365[4] = { 0, 365, 730, 1095 } ;
-static uint32_t times36524[4] = { 0, 36524UL, 73048UL, 109572UL } ;
-static uint32_t montab[12] =
+static int64_t times365[4] = { 0, 365, 730, 1095 } ;
+static int64_t times36524[4] = { 0, 36524L, 73048L, 109572L } ;
+static int64_t montab[12] =
 { 0, 31, 61, 92, 122, 153, 184, 214, 245, 275, 306, 337 } ;
 /* month length after february is (306 * m + 5) / 10 */
 
-long caldate_mjd(cd)
-struct caldate *cd;
+int64_t caldate_mjd(const struct caldate *cd)
 {
-  long y;
-  long m;
-  long d;
+  int64_t y;
+  int64_t m;
+  int64_t d;
 
   d = cd->day - 678882L;
   m = cd->month - 1;

@@ -131,11 +131,6 @@ int main(int argc, char **argv)
   taia_sub(&dt, &tt, &start_time);
   frames = taia_approx(&dt) / seconds_per_file * frames_per_file;
 
-  /*printf("%016llx.%08lx.%08lx\n", start_time.sec.x, start_time.nano, start_time.atto);
-  printf("%016llx.%08lx.%08lx\n", stop_time.sec.x, stop_time.nano, stop_time.atto);
-  printf("%016llx.%08lx.%08lx\n", sync_time.sec.x, sync_time.nano, sync_time.atto);
-  printf("%016llx.%08lx.%08lx\n", skew_time.sec.x, skew_time.nano, skew_time.atto);*/
-
   l = last('.', argv[1]);
   if (l == -1 || l >= sizeof(folder)) return -1;
 
@@ -146,8 +141,8 @@ int main(int argc, char **argv)
 
   for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
     caltime_utc(&ct, &start_time.sec, 0, 0);
-    snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%s.seed",
-      folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second, channel_names[i]);
+    snprintf(oname, sizeof(oname), "%s/%lld.%02lld.%02lld.%02lld.%02lld.%02lld.%s.seed",
+      folder, (long long)ct.date.year, (long long)ct.date.month, (long long)ct.date.day, (long long)ct.hour, (long long)ct.minute, (long long)ct.second, channel_names[i]);
 
     if (!(mseed[i] = miniseed_file_create((char*)oname))) {
       fprintf(stderr, "Invalid file: %s.\n", oname);
@@ -165,8 +160,8 @@ int main(int argc, char **argv)
       for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
         miniseed_file_close(mseed[i]);
         caltime_utc(&ct, &tt.sec, 0, 0);
-        snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.%s.seed",
-          folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second, channel_names[i]);
+        snprintf(oname, sizeof(oname), "%s/%lld.%02lld.%02lld.%02lld.%02lld.%02lld.%s.seed",
+          folder, (long long)ct.date.year, (long long)ct.date.month, (long long)ct.date.day, (long long)ct.hour, (long long)ct.minute, (long long)ct.second, channel_names[i]);
         if (!(mseed[i] = miniseed_file_create((char*)oname))) {
           fprintf(stderr, "Invalid file: %s.\n", oname);
           return -1;

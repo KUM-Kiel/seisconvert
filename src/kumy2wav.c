@@ -5,6 +5,7 @@
 #include "taia.h"
 #include "caltime.h"
 #include "number.h"
+#include "byte.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -52,17 +53,26 @@ static int mkdir_p(const char *path)
   return 0;
 }
 
-static const char channel_names[KUMY_FILE_CHANNELS] = "HXYZ";
+static void progress(int percent, int finished) {
+  char s[29];
+  if (percent < 0) percent = 0;
+  if (percent > 100) percent = 100;
+  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
+  byte_set((uint8_t *)s + 1, percent / 5, '#');
+  if (!fwrite(s, 28, 1, stdout)) return;
+  fflush(stdout);
+}
 
 int main(int argc, char **argv)
 {
   kumy_file_t *kumy;
   wav_file_t *wav[1];
   int32_t frame[KUMY_FILE_CHANNELS];
-  uint64_t frames, l, frames_per_file;
+  uint64_t frames, l, frames_per_file, frames_total, frame_count = 0;
   int i;
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
+  int percent = 0, old_percent = 0;
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
@@ -102,6 +112,7 @@ int main(int argc, char **argv)
   }
 
   frames_per_file = sample_rate * seconds_per_file;
+  frames_total = kumy->binary_header[0].num_samples;
 
   caltime_utc(&ct, &start_time.sec, 0, 0);
   ct.hour = 0;
@@ -117,11 +128,6 @@ int main(int argc, char **argv)
   taia_sub(&dt, &tt, &start_time);
   frames = taia_approx(&dt) / seconds_per_file * frames_per_file;
 
-  /*printf("%016llx.%08lx.%08lx\n", start_time.sec.x, start_time.nano, start_time.atto);
-  printf("%016llx.%08lx.%08lx\n", stop_time.sec.x, stop_time.nano, stop_time.atto);
-  printf("%016llx.%08lx.%08lx\n", sync_time.sec.x, sync_time.nano, sync_time.atto);
-  printf("%016llx.%08lx.%08lx\n", skew_time.sec.x, skew_time.nano, skew_time.atto);*/
-
   l = last('.', argv[1]);
   if (l == -1 || l >= sizeof(folder)) return -1;
 
@@ -132,8 +138,8 @@ int main(int argc, char **argv)
 
   for (i = 0; i < 1; ++i) {
     caltime_utc(&ct, &start_time.sec, 0, 0);
-    snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.wav",
-      folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second);
+    snprintf(oname, sizeof(oname), "%s/%lld.%02lld.%02lld.%02lld.%02lld.%02lld.wav",
+      folder, (long long)ct.date.year, (long long)ct.date.month, (long long)ct.date.day, (long long)ct.hour, (long long)ct.minute, (long long)ct.second);
 
     if (!(wav[i] = wav_file_create(oname, sample_rate, KUMY_FILE_CHANNELS, 32))) {
       fprintf(stderr, "Invalid file: %s.\n", oname);
@@ -147,8 +153,8 @@ int main(int argc, char **argv)
       for (i = 0; i < 1; ++i) {
         wav_file_close(wav[i]);
         caltime_utc(&ct, &tt.sec, 0, 0);
-        snprintf(oname, sizeof(oname), "%s/%ld.%02d.%02d.%02d.%02d.%02d.wav",
-          folder, ct.date.year, ct.date.month, ct.date.day, ct.hour, ct.minute, ct.second);
+        snprintf(oname, sizeof(oname), "%s/%lld.%02lld.%02lld.%02lld.%02lld.%02lld.wav",
+          folder, (long long)ct.date.year, (long long)ct.date.month, (long long)ct.date.day, (long long)ct.hour, (long long)ct.minute, (long long)ct.second);
         if (!(wav[i] = wav_file_create(oname, sample_rate, KUMY_FILE_CHANNELS, 32))) {
           fprintf(stderr, "Invalid file: %s.\n", oname);
           return -1;
@@ -161,8 +167,17 @@ int main(int argc, char **argv)
     for (i = 0; i < 1; ++i) {
       wav_file_write_int_frame(wav[i], frame + i);
     }
+    if (frame_count % 10000 == 0) {
+      percent = 100 * frame_count / frames_total;
+      if (percent != old_percent) {
+        progress(percent, 0);
+        old_percent = percent;
+      }
+    }
     --frames;
+    ++frame_count;
   }
+  progress(100, 1);
 
   kumy_file_close(kumy);
   for (i = 0; i < 1; ++i) {

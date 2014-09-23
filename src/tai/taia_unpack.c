@@ -1,12 +1,10 @@
 #include "taia.h"
 
-void taia_unpack(s,t)
-char *s;
-struct taia *t;
+void taia_unpack(const char *s, struct taia *t)
 {
   uint32_t x;
 
-  tai_unpack(s,&t->sec);
+  tai_unpack(s, &t->sec);
   s += 8;
 
   x = (unsigned char) s[4];

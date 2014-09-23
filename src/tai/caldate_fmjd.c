@@ -1,13 +1,9 @@
 #include "caldate.h"
 
-void caldate_frommjd(cd,day,pwday,pyday)
-struct caldate *cd;
-long day;
-int *pwday;
-int *pyday;
+void caldate_frommjd(struct caldate *cd, int64_t day, int *pwday, int *pyday)
 {
-  long year;
-  long month;
+  int64_t year;
+  int64_t month;
   int yday;
 
   year = day / 146097L;

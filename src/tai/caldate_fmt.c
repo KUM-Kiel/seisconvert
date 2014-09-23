@@ -1,10 +1,8 @@
 #include "caldate.h"
 
-unsigned int caldate_fmt(s,cd)
-char *s;
-struct caldate *cd;
+unsigned int caldate_fmt(char *s, const struct caldate *cd)
 {
-  long x;
+  int64_t x;
   int i = 0;
 
   x = cd->year; if (x < 0) x = -x; do { ++i; x /= 10; } while(x);

@@ -1,13 +1,12 @@
 #include "caldate.h"
 
-void caldate_easter(cd)
-struct caldate *cd;
+void caldate_easter(struct caldate *cd)
 {
-  long c;
-  long t;
-  long j;
-  long n;
-  long y;
+  int64_t c;
+  int64_t t;
+  int64_t j;
+  int64_t n;
+  int64_t y;
 
   y = cd->year;
 

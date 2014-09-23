@@ -1,7 +1,6 @@
 #include "caldate.h"
 
-void caldate_normalize(cd)
-struct caldate *cd;
+void caldate_normalize(struct caldate *cd)
 {
-  caldate_frommjd(cd,caldate_mjd(cd),(int *) 0,(int *) 0);
+  caldate_frommjd(cd, caldate_mjd(cd), (int *) 0, (int *) 0);
 }

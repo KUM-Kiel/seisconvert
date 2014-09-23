@@ -1,30 +1,27 @@
-#include "caldate.h"
 #include "caltime.h"
 
-unsigned int caltime_fmt(s,ct)
-char *s;
-struct caltime *ct;
+unsigned int caltime_fmt(char *s, const struct caltime *ct)
 {
   unsigned int result;
-  long x;
+  int64_t x;
 
-  result = caldate_fmt(s,&ct->date);
+  result = caldate_fmt(s, &ct->date);
 
   if (s) {
     s += result;
-  
+
     x = ct->hour;
     s[0] = ' ';
     s[2] = '0' + (x % 10); x /= 10;
     s[1] = '0' + (x % 10);
     s += 3;
-  
+
     x = ct->minute;
     s[0] = ':';
     s[2] = '0' + (x % 10); x /= 10;
     s[1] = '0' + (x % 10);
     s += 3;
-    
+
     x = ct->second;
     s[0] = ':';
     s[2] = '0' + (x % 10); x /= 10;

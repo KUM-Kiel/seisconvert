@@ -4,7 +4,11 @@ SEED = $(patsubst %.muk1, %, $(MUKS))
 all: $(SEED)
 
 %: %.muk1
-	../build/kumy2seed $<
+	@echo $<
+	@echo Konvertiere nach MiniSEED
+	@../build/kumy2seed $<
+	@echo Konvertiere nach WAV
+	@../build/kumy2wav $<
 	@touch $@
 
 clean:

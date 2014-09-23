@@ -2,9 +2,7 @@
 
 /* XXX: breaks tai encapsulation */
 
-void taia_half(t,u)
-struct taia *t;
-struct taia *u;
+void taia_half(struct taia *t, const struct taia *u)
 {
   t->atto = u->atto >> 1;
   if (u->nano & 1) t->atto += 500000000UL;

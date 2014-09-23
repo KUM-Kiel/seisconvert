@@ -1,12 +1,10 @@
 #include "taia.h"
 
-void taia_pack(s,t)
-char *s;
-struct taia *t;
+void taia_pack(char *s, const struct taia *t)
 {
   uint32_t x;
 
-  tai_pack(s,&t->sec);
+  tai_pack(s, &t->sec);
   s += 8;
 
   x = t->atto;

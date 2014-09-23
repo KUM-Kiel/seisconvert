@@ -1,13 +1,11 @@
 #include "caldate.h"
 
-unsigned int caldate_scan(s,cd)
-char *s;
-struct caldate *cd;
+unsigned int caldate_scan(const char *s, struct caldate *cd)
 {
   int sign = 1;
-  char *t = s;
-  uint32_t z;
-  uint32_t c;
+  const char *t = s;
+  int64_t z;
+  int64_t c;
 
   if (*t == '-') { ++t; sign = -1; }
   z = 0; while ((c = (unsigned char) (*t - '0')) <= 9) { z = z * 10 + c; ++t; }
