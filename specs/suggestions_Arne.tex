@@ -1,0 +1,116 @@
+(1)
+The KUM-Y file is an exchange format only. It is not meant to be directly used with seismic analysis software, the seismic data needs to be transformed into well known formats before. A software to do so is supplied. 
+
+(2) A variable length integer consists of at least one byte. As said, the format is little endian encoded, so the \emph{Least Significant Byte} comes first.  The first two bits of a byte define the content of the next six bits:
+
+\begin{itemize}
+   \item 10: next 6 bits are less significant bits of the integer. The next byte is also part of the integer.
+   \item 00: next 6 bits are most significant bits of the integer, the integer in total has positive value. This is the last byte of the integer.
+   \item 01: next 6 bits are most significant bits of the integer, the integer in total has negative value. This is the last byte of the integer.
+   \item 11: Not part of an integer. A special command (control frame) follows as described in section {Control_Frames}
+\end{itemize}
+
+% Streichen: A variable length integer consists of zero or more bytes between \(128\) and \(191\) inclusive, i.\,e.\ the first two bits are "`10"'ù, and one byte between \(0\) and \(127\) inclusive, i.\,e.\ the first bit is "`0"' The first byte includes after the "`10"'ù the six least significant bits of the number, the next byte includes the next six bits and so on. The last bit then contains the most significant seven bits (after the "`1"'ù).
+
+If the number fits into seven bits, i.\,e.\ it is between \(-64\) and \(63\) inclusive, then it is encoded in just one byte with a leading "`0"'ù bit.
+The number is interpreted as a two's complement integer.
+Note, that the second bit of the last byte (the \emph{Most Significant Byte}) always encodes the sign.
+
+
+(3) Streichen
+
+(4) Auf keinen Fall eine Tabelle nehmen!! Viel zu einfach!!
+
+(5) Anzahl der Magic Bytes festlegen! 16 Byte d¸rften gen¸gen.
+
+(6) Using the Bytes <0a 04> (Line-Feed End-of-Transmission) ensures that most of the common text-editors do not display the following binary data.
+
+(7) However, this metadata is of solely informative interest. It shall not be interpreted in any way by processing applications.
+
+(8) Sollte die Stringl‰nge festgelegt werden? Etwa: 
+Any string used in the binary header is encapsuled with the bytes <02>, <03> (STX, ETX).
+Oder:
+The recording ID has a fixed length of 80 Bytes.
+
+(9)
+\item string - Experiment-Name. The Experiment-Name has a fixed length of 80 bytes.
+\item string - Experiment-comment. The Experiment-comment has a fixed length of 80 bytes.
+\item string - Station-Name. The Station-Name has a fixed length of 80 bytes.
+\item string - Station-comment. The Station-comment has a fixed length of 80 bytes.
+\item string - Client. Enter name of university or commercial company here. The Client gas a fixed length of 80 bytes.
+\item string - Operator-D. Name and position of the technician who deployed this station. The Operator-D has a fixed length of 80 bytes.
+\item string - Operator-R. Name and position of the technician who recovered this station. The Operator-R has a fixed length of 80 bytes.
+
+\item position - Deployment-position. The user defined GPS-position of the deployment point. Encoding of position data to be defined.
+\item 10 x position - Last position. The ten last positions the internal GPS detects before descending.
+\item 10 x taia - Last GPS. The ten last GPS-times the internal GPS detects before descending.
+\item u16 - Deployment Depth. The depth of the deployment point in meter.
+\item taia - Descending time. The time the station needed to descend to the seafloor.
+
+\item position - Seafloor-position. The position of the station on seafloor - however this is determined.
+\item u16 - Seafloor-Depth. The depth of the station on seafloor. The depth is measured in meter.
+\item u16 - Seafloor-Orientation. The angle between the seismometer X-channel and the gepgraphic northpole. The angle is measured in minutes.
+
+\item position - Recovery-position. The user defined GPS-position of the recovery point.
+\item 10 x position - First position. The ten first positions the internal GPS detects after ascending.
+\item 10 x taia - First GPS. The ten first GPS-times the internal GPS detects after ascending.
+\item u16 - Recovery Depth. The depth of the recovery point in meter.
+\item taia - Ascending time. The time the station needed to ascend from the seafloor.
+
+
+
+
+(10) 
+\emph{Example}: If a channel with a rate of one sample per minute is needed, you can set this value to \(-60\) and set the channel's sample rate to 1. You can also, with same results, set this value to \(-6000\) and set the channel's sample rate to 100. 
+
+ 
+(11) 
+\item u16 - The channel number. 
+\item string - The channel shortcut.
+\item string - The channel name.
+\item string - The channel comment.
+\item i64 - The hardware-gain of the preamplifier.
+\item i64 - The software-gain of the preamplifier.
+
+(12) 
+\item u64 - The sample rate multiplier for this channel in Hz. This multiplier can not be below 1 Hz. The final sample rate of this channel results from this value multiplied by the value of 3. 
+
+(13)
+\item u64 - Linear "`prediction"' filter used for compression. Note that "`prediction"' only represents a mathematical method of encoding the data. No "`forecast"' is made, all data are always encoded loss-less in any of the "`predictions"'.
+ 
+(14) Highly recommanded.
+
+(15) ...are encoded in \emph{differences} instead of \emph{absolute} values.
+
+(16) Again, data are encoded loss-less also when using this filter. 
+
+(17) Bytes higher 191 are used for ...
+
+(18) W‰re es nicht logischer, mit dem kgV zu argumetieren? Wie auch immer, ein Besipiel hinzuf¸gen:
+
+\emph{Example:} Let X, Y, Z have a sample rate of 2 Hz and H a sample rate of 15 Hz. The GMD in this case is 1 (The LCM in this case is 30). The data occur on following sequence:
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+time in ms & 0 & 2& 4& 6& 8& 10& 12& 14& 16& 18& 20& 22& 24& 26& 28& 30& 32& 34& 36& 38& 40& 42& 44& 46& 48& 50& 52& 54& 56& 58& 60& 62& 64& 66& 68& & 70& 72\\
+\hline
+sample taken from & XYZH & & H & & H & & H & & H & & H & & H & & H & XYZ & H & & H & & H & & H & & H & & H & & H & & XYZH & & H & & H & & H \\
+\hline
+\end{tabular}
+In words, there is a XYZ-sequence following by 8 times H, then a XYZ-sequence followed by 7 times H. A complete returning sequence is 3+8+3+7 = 21 samples long.
+
+As an alternative, one can choose this example: Let X, Y, Z have a sample rate of 2 Hz and H a sample rate of 20 Hz. The GMD in this case is 2 (The LCM in this case is 20). The data occur on following sequence:
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+time in ms        & 0    1& 2& 3& 4& 5& 6& 7& 8& 9& 10& 11& 12& 13& 14& 15& 16& 17& 18& 19& 20& 21& 22& 23& 24& 25& 26& 27& 28& 29& 30& 31& 32& 33\\
+\hline
+sample taken from & XYZH & & & H& & &   H& & &   H& & &      H& & &      H& & &      H& & &      H& & &      H& & &      H& & &   XYZH&   &   &  H\\
+\hline
+\end{tabular}
+In words, there is a XYZ-sequence following by 10 times H. A complete returning sequence is 3+10 = 13 samples long.
+
+For this reason, it is highly recommanded to choose prudent sample rates.
+
+(19)
+Ich verstehe das Format 0xc0 nicht. Ein Byte kann doch Werte zwischen 00 und FF annehmen. Also w‰ren doch die Codes c0, c1, c2 usw und nicht 0xc0, 0xc1, oder?
+
+ 
