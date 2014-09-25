@@ -1,3 +1,5 @@
+/* Needed for files larger than 4GiB. */
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include "kumy_file.h"

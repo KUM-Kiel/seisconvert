@@ -108,15 +108,30 @@ static void progress(int percent, int finished) {
 #define BLOCKSIZE 512
 #define FRAMESIZE 16
 
+static const int32_t lost_frame[] = {
+  0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff
+};
+
+#define e_io(c) do {\
+  errorcode = c;\
+  goto ioerror;\
+} while (0)
+
+#define e_fmt(c) do {\
+  errorcode = c;\
+  goto formaterror;\
+} while (0)
+
 int main(int argc, char **argv)
 {
   FILE *sdcard = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ, samp, i, n, frames = 0;
+  uint64_t addr, last_addr, writ, samp, i, j, n, frames = 0;
   uint8_t block[BLOCKSIZE];
   char filename[] = "KUM.recording.YYYY.DDD.HH.MM.SS.muk1";
   int32_t frame[4];
   int want_start_time = 1;
+  int errorcode = 0;
   struct taia start_time;
   struct taia last_time;
   struct taia sync_time;
@@ -124,20 +139,28 @@ int main(int argc, char **argv)
   int synced = 0, skewed = 0;
   int percent = 0, old_percent = -1;
   int64_t sync_skew = 0, skew = 0;
+  char message[2048];
+  struct caltime ct;
+  struct taia t;
+  unsigned int l;
+  uint32_t lost = 0, lost_total = 0;
 
   if (argc < 2) {
     fprintf(stderr, "Usage: %s /dev/sdx\n", argv[0]);
     return -1;
   }
 
+  /* Open the SD card. */
   sdcard = fopen(argv[1], "rb");
   if (!sdcard) {
     fprintf(stderr, "Could not open file '%s': %s.\n", argv[1], strerror(errno));
     return -1;
   }
 
-  if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
+  /* Try reading the first block of the card. */
+  if (!fread(block, BLOCKSIZE, 1, sdcard)) e_io(1);
 
+  /* Check for constant fields in the first block. */
   if  (ld_u32_be(block)      != 0x74696d65 /* time */
     || ld_u32_be(block + 29) != 0x61646472 /* addr */
     || ld_u32_be(block + 37) != 0x73616d70 /* samp */
@@ -146,19 +169,23 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
     || ld_u32_be(block + 71) != 0x74656d70 /* temp */
     || ld_u32_be(block + 77) != 0x68756d69 /* humi */
-  ) goto fail;
+  ) e_fmt(2);
 
+  /* Read start address and sample rate. */
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
 
+  /* Read the synchronisation time and skew, if it is present. */
   if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
     bcd_taia(&sync_time, block + 19);
     sync_skew = ld_i32_be(block + 25);
     synced = 1;
   }
 
-  if (!fread(block, BLOCKSIZE, 1, sdcard)) goto fail;
+  /* Read the second block. */
+  if (!fread(block, BLOCKSIZE, 1, sdcard)) e_io(3);
 
+  /* Check for constant fields in the second block. */
   if  (ld_u32_be(block)      != 0x74696d65 /* time */
     || ld_u32_be(block + 29) != 0x61646472 /* addr */
     || ld_u32_be(block + 37) != 0x73616d70 /* samp */
@@ -167,47 +194,76 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
     || ld_u32_be(block + 71) != 0x74656d70 /* temp */
     || ld_u32_be(block + 77) != 0x68756d69 /* humi */
-  ) goto fail;
+  ) e_fmt(4);
 
+  /* Read end address and number of frames. */
   last_addr = ld_u32_be(block + 33);
   writ = ld_u64_be(block + 47);
 
+  /* Read the skew time and skew, if it is present. */
   if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
     bcd_taia(&skew_time, block + 19);
     skew = ld_i32_be(block + 25);
     skewed = 1;
   }
 
+  /* Calculate the number of frames to read based on the block count. */
   n = (last_addr - addr) * (BLOCKSIZE / FRAMESIZE);
 
-  if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) goto fail;
+  /* Seek to the first data block. */
+  if (fseek(sdcard, addr * BLOCKSIZE, SEEK_SET) == -1) e_io(5);
 
+  /* Read n frames and process them. */
   for (i = 0; i < n; ++i) {
-    if (!fread(block, FRAMESIZE, 1, sdcard)) goto fail;
+    /* Read a frame. */
+    if (!fread(block, FRAMESIZE, 1, sdcard)) e_io(6);
+    /* Load the first value to get the frame type. */
     frame[0] = ld_i32_be(block);
+    /* If the last bit is 1, it is a control frame. Otherwise it is a normal
+     * data frame. */
     if (!(frame[0] & 1) && !want_start_time) {
       ++frames;
+      /* Load the other samples ... */
       frame[1] = ld_i32_be(block + 4);
       frame[2] = ld_i32_be(block + 8);
       frame[3] = ld_i32_be(block + 12);
+      /* ... and write the frame to the outfile. */
       kumy_file_write_int_frame(kumy, frame);
     } else {
-      if (frame[0] == 1) {
-        /* Time */
-        if (want_start_time) {
-          bcd_taia(&start_time, block + 4);
-          last_time = start_time;
-          want_start_time = 0;
-          /* Create file */
-          print_text_date((uint8_t *)filename + 14, &start_time);
-          kumy = kumy_file_create(filename, samp);
-          printf("%s\n", filename);
-        } else {
-          bcd_taia(&last_time, block + 4);
-        }
+      switch (frame[0]) {
+        case 1: /* Time control frame. */
+          /* If this is the first time frame, it is the start time. */
+          if (want_start_time) {
+            /* Parse the time. */
+            bcd_taia(&start_time, block + 4);
+            last_time = start_time;
+            want_start_time = 0;
+            /* Create the outfile with start time in file name. */
+            print_text_date((uint8_t *)filename + 14, &start_time);
+            kumy = kumy_file_create(filename, samp);
+            printf("%s\n", filename);
+          } else {
+            bcd_taia(&last_time, block + 4);
+          }
+          break;
+        case 7: /* Lost frames. */
+          bcd_taia(&t, block + 4);
+          caltime_utc(&ct, &t.sec, 0, 0);
+          l = caltime_fmt(message, &ct);
+          lost = ld_u32_be(block + 10) - lost_total;
+          lost_total += lost;
+          snprintf(message + l, sizeof(message) - l, ": %lld Frames lost.", (long long)lost);
+          printf("%s\n", message);
+          for (j = 0; j < lost; ++j) {
+            kumy_file_write_int_frame(kumy, lost_frame);
+          }
+          break;
+        default: /* Other control frames. */
+          break; /* Just ignore it. */
       }
     }
-    if (i % 10000 == 0 && !want_start_time) {
+    /* Update the progress bar. */
+    if ((i & 0x0fff) == 0 && !want_start_time) {
       percent = 100 * i / n;
       if (percent != old_percent) {
         progress(percent, 0);
@@ -217,20 +273,25 @@ int main(int argc, char **argv)
   }
   progress(100, 1);
 
+  /* Check for consistency with header. */
   if (writ != frames) {
     fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
     fprintf(stderr, "%lld/%lld Frames. (%s%lld)\n", (long long)frames, (long long)writ, writ > frames ? "" : "+", (long long)(frames - writ));
   }
 
+  /* Check if there was any data. */
   if (!want_start_time) {
+    /* If there was no sync, assume the start time as sync time. */
     if (!synced) {
       sync_time = start_time;
     }
-
+    /* If there was no skew measurement, assume the end time as skew time and
+     * zero skew. */
     if (!skewed) {
       skew_time = last_time;
     }
 
+    /* Fill out the remaining header fields. */
     for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
       print_text_date(kumy->text_header[i].content + 1871, &start_time);
       print_text_date(kumy->text_header[i].content + 1951, &last_time);
@@ -249,8 +310,13 @@ int main(int argc, char **argv)
   fclose(sdcard);
   return 0;
 
-fail:
+ioerror:
   fclose(sdcard);
-  fprintf(stderr, "Read error: SD Card malformed.\n");
+  fprintf(stderr, "IO error: There was an error while accessing the SD card. (Error %d)\n", errorcode);
+  return -1;
+
+formaterror:
+  fclose(sdcard);
+  fprintf(stderr, "Read error: The SD card is malformed. (Error %d)\n", errorcode);
   return -1;
 }
