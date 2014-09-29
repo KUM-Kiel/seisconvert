@@ -86,6 +86,17 @@ static void print_text_date(uint8_t *x, const struct taia *t)
   write_int(x + 15, 2, ct.second, 1);
 }
 
+static void print_taia(const struct taia *t)
+{
+  struct caltime ct;
+  unsigned int l;
+  char s[30];
+  caltime_utc(&ct, &t->sec, 0, 0);
+  l = caltime_fmt(s, &ct);
+  s[l] = 0;
+  printf("%s", s);
+}
+
 static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct taia *t)
 {
   struct caltime ct;
@@ -140,9 +151,7 @@ int main(int argc, char **argv)
   int percent = 0, old_percent = -1;
   int64_t sync_skew = 0, skew = 0;
   char message[2048];
-  struct caltime ct;
   struct taia t;
-  unsigned int l;
   uint32_t lost = 0, lost_total = 0;
 
   if (argc < 2) {
@@ -248,11 +257,10 @@ int main(int argc, char **argv)
           break;
         case 7: /* Lost frames. */
           bcd_taia(&t, block + 4);
-          caltime_utc(&ct, &t.sec, 0, 0);
-          l = caltime_fmt(message, &ct);
-          lost = ld_u32_be(block + 10) - lost_total;
+          print_taia(&t);
+          lost = ld_u32_be(block + 10);
           lost_total += lost;
-          snprintf(message + l, sizeof(message) - l, ": %lld Frames lost.", (long long)lost);
+          snprintf(message, sizeof(message), ": %lld Frames lost.", (long long)lost);
           printf("%s\n", message);
           for (j = 0; j < lost; ++j) {
             kumy_file_write_int_frame(kumy, lost_frame);
@@ -297,6 +305,10 @@ int main(int argc, char **argv)
       print_text_date(kumy->text_header[i].content + 1951, &last_time);
       print_text_date(kumy->text_header[i].content + 2031, &sync_time);
       print_text_date(kumy->text_header[i].content + 2111, &skew_time);
+      write_int(kumy->text_header[i].content + 2049, 9, sync_skew, 1);
+      kumy->text_header[i].content[2049] = sync_skew < 0 ? '-' : '+';
+      write_int(kumy->text_header[i].content + 2129, 9, skew, 1);
+      kumy->text_header[i].content[2129] = skew < 0 ? '-' : '+';
       write_int(kumy->text_header[i].content + 2191, 8, skew - sync_skew, 1);
       write_int(kumy->text_header[i].content + 2271, 8, 1000000 / samp, 1);
       write_int(kumy->text_header[i].content + 2351, 3, i + 1, 1);

@@ -259,6 +259,8 @@ int parse_int(int64_t *i, const uint8_t *x, uint64_t xlen)
     if ('0' <= x[j] && x[j] <= '9') {
       t = t * 10 + x[j] - '0';
       s = 1;
+    } else if (x[j] == '+' && !s) {
+      s = 1;
     } else if (x[j] != ' ' || s) {
       return -1;
     }
