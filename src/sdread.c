@@ -282,10 +282,11 @@ int main(int argc, char **argv)
   progress(100, 1);
 
   /* Check for consistency with header. */
-  if (writ != frames) {
+  (void) writ;
+  /*if (writ != frames) {
     fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
     fprintf(stderr, "%lld/%lld Frames. (%s%lld)\n", (long long)frames, (long long)writ, writ > frames ? "" : "+", (long long)(frames - writ));
-  }
+  }*/
 
   /* Check if there was any data. */
   if (!want_start_time) {
