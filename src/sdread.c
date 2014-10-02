@@ -71,7 +71,7 @@ static void bcd_taia(struct taia *t, const uint8_t *bcd)
   t->atto = 0;
 }
 
-static void print_text_date(uint8_t *x, const struct taia *t)
+static int print_text_date(uint8_t *x, const struct taia *t)
 {
   struct caltime ct;
   caltime_utc(&ct, &t->sec, 0, 0);
@@ -84,17 +84,21 @@ static void print_text_date(uint8_t *x, const struct taia *t)
   write_int(x + 12, 2, ct.minute, 1);
   x[14] = '.';
   write_int(x + 15, 2, ct.second, 1);
+  return 17;
 }
 
-static void print_taia(const struct taia *t)
+static int write_taia(const struct taia *t, char *s)
 {
   struct caltime ct;
-  unsigned int l;
-  char s[30];
   caltime_utc(&ct, &t->sec, 0, 0);
-  l = caltime_fmt(s, &ct);
-  s[l] = 0;
-  printf("%s", s);
+  return caltime_fmt(s, &ct);
+}
+
+static void print_taia(const struct taia *t, FILE *f)
+{
+  char s[30];
+  s[write_taia(t, s)] = 0;
+  fprintf(f, "%s", s);
 }
 
 static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct taia *t)
@@ -116,6 +120,21 @@ static void progress(int percent, int finished) {
   fflush(stdout);
 }
 
+#define isalphanum(c) (('0' <= (c) && (c) <= '9') || \
+  ('A' <= (c) && (c) <= 'Z') || ('a' <= (c) && (c) <= 'z'))
+static void string_safe(char *dst, const char *src)
+{
+  while (*src) {
+    if (isalphanum(*src))
+      *dst = *src;
+    else
+      *dst = '_';
+    ++src;
+    ++dst;
+  }
+  *dst = 0;
+}
+
 #define BLOCKSIZE 512
 #define FRAMESIZE 16
 
@@ -133,13 +152,20 @@ static const int32_t lost_frame[] = {
   goto formaterror;\
 } while (0)
 
+static const char
+  *filename_template = "KUM.%s.%s.%s",
+  *muk_extension = "muk1",
+  *log_extension = "log.txt",
+  *default_comment = "Recording";
+
 int main(int argc, char **argv)
 {
-  FILE *sdcard = 0;
+  FILE *sdcard = 0, *logfile = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ, samp, i, j, n, frames = 0;
+  uint64_t addr, last_addr, writ, samp, temp, humi, gain[4], i, j, n, frames = 0;
+  char comment[41], safe_comment[41];
   uint8_t block[BLOCKSIZE];
-  char filename[] = "KUM.recording.YYYY.DDD.HH.MM.SS.muk1";
+  char filename[256], tmp[64];
   int32_t frame[4];
   int want_start_time = 1;
   int errorcode = 0;
@@ -150,9 +176,12 @@ int main(int argc, char **argv)
   int synced = 0, skewed = 0;
   int percent = 0, old_percent = -1;
   int64_t sync_skew = 0, skew = 0;
-  char message[2048];
+  char message[4096] = {0};
+  int message_n = 0;
   struct taia t;
   uint32_t lost = 0, lost_total = 0;
+  uint8_t control[6];
+  int have_control_block = 0;
 
   if (argc < 2) {
     fprintf(stderr, "Usage: %s /dev/sdx\n", argv[0]);
@@ -178,14 +207,25 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
     || ld_u32_be(block + 71) != 0x74656d70 /* temp */
     || ld_u32_be(block + 77) != 0x68756d69 /* humi */
+    || ld_u32_be(block + 83) != 0x6761696e /* gain */
+    || ld_u32_be(block + 91) != 0x636d6e74 /* cmnt */
   ) e_fmt(2);
 
   /* Read start address and sample rate. */
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
+  temp = ld_u16_be(block + 75);
+  humi = ld_u16_be(block + 81);
+  gain[0] = block[87];
+  gain[1] = block[88];
+  gain[2] = block[89];
+  gain[3] = block[90];
+  byte_copy_0((uint8_t *)comment, 40, block + 95);
+  string_safe(safe_comment, comment);
 
   /* Read the synchronisation time and skew, if it is present. */
-  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
+  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
+    !byte_equal(block + 19, 6, (uint8_t *)"\0\0\0\0\0\0")) {
     bcd_taia(&sync_time, block + 19);
     sync_skew = ld_i32_be(block + 25);
     synced = 1;
@@ -203,6 +243,8 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 63) != 0x6c6f7374 /* lost */
     || ld_u32_be(block + 71) != 0x74656d70 /* temp */
     || ld_u32_be(block + 77) != 0x68756d69 /* humi */
+    || ld_u32_be(block + 83) != 0x6761696e /* gain */
+    || ld_u32_be(block + 91) != 0x636d6e74 /* cmnt */
   ) e_fmt(4);
 
   /* Read end address and number of frames. */
@@ -210,12 +252,42 @@ int main(int argc, char **argv)
   writ = ld_u64_be(block + 47);
 
   /* Read the skew time and skew, if it is present. */
-  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew")) {
+  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
+    !byte_equal(block + 19, 6, (uint8_t *)"\0\0\0\0\0\0")) {
     bcd_taia(&skew_time, block + 19);
     skew = ld_i32_be(block + 25);
     skewed = 1;
   }
 
+  message_n += snprintf(message + message_n, sizeof(message) - message_n,
+    "# Recording\n\n"
+    "Comment: %s\n"
+    "Frames: %lld\n"
+    "Channel Gains: H %.1f, X %.1f, Y %.1f, Z %.1f\n",
+    comment,
+    (long long)writ,
+    gain[0] / 10.0,
+    gain[1] / 10.0,
+    gain[2] / 10.0,
+    gain[3] / 10.0);
+  if (synced) {
+    tmp[write_taia(&sync_time, tmp)] = 0;
+    message_n += snprintf(message + message_n, sizeof(message) - message_n,
+      "Synchronisation Time: %s\n"
+      "Skew at Synchronisation: %lld us\n",
+      tmp,
+      (long long)sync_skew);
+  }
+  if (skewed) {
+    tmp[write_taia(&skew_time, tmp)] = 0;
+    message_n += snprintf(message + message_n, sizeof(message) - message_n,
+      "Skew Measurement Time: %s\n"
+      "Skew at Skew Measurement: %lld us\n",
+      tmp,
+      (long long)skew);
+  }
+  message_n += snprintf(message + message_n, sizeof(message) - message_n,
+    "\n# Eventlog\n\n");
   /* Calculate the number of frames to read based on the block count. */
   n = (last_addr - addr) * (BLOCKSIZE / FRAMESIZE);
 
@@ -248,22 +320,52 @@ int main(int argc, char **argv)
             last_time = start_time;
             want_start_time = 0;
             /* Create the outfile with start time in file name. */
-            print_text_date((uint8_t *)filename + 14, &start_time);
+            tmp[print_text_date((uint8_t *)tmp, &start_time)] = 0;
+            snprintf(filename, sizeof(filename), filename_template,
+              *safe_comment ? safe_comment : default_comment, tmp, muk_extension);
             kumy = kumy_file_create(filename, samp);
             printf("%s\n", filename);
+            snprintf(filename, sizeof(filename), filename_template,
+              *safe_comment ? safe_comment : default_comment, tmp, log_extension);
+            logfile = fopen(filename, "w");
+
+            fprintf(logfile, "%s", message);
+
+            print_taia(&start_time, logfile);
+            fprintf(logfile, ": Recording started.\n");
           } else {
             bcd_taia(&last_time, block + 4);
           }
           break;
+        case 3: /* VBat/Humidity */
+          break;
+        case 5: /* Temperature */
+          break;
         case 7: /* Lost frames. */
+          if (want_start_time) break;
           bcd_taia(&t, block + 4);
-          print_taia(&t);
           lost = ld_u32_be(block + 10);
           lost_total += lost;
-          snprintf(message, sizeof(message), ": %lld Frames lost.", (long long)lost);
-          printf("%s\n", message);
+          print_taia(&t, logfile);
+          fprintf(logfile, ": %lld Frames lost.\n", (long long)lost);
           for (j = 0; j < lost; ++j) {
             kumy_file_write_int_frame(kumy, lost_frame);
+          }
+          break;
+        case 9: /* Control frame */
+          if (have_control_block) {
+            if (!byte_equal(control, 6, block + 4)) {
+              print_taia(&last_time, logfile);
+              fprintf(logfile, ": Block check failed.\n");
+              goto end;
+            }
+          } else {
+            byte_copy(control, 6, block + 4);
+            have_control_block = 1;
+            print_taia(&last_time, logfile);
+            fprintf(logfile, ": Control block '%02x %02x %02x %02x %02x %02x'.\n",
+              (int)control[0], (int)control[1], (int)control[2],
+              (int)control[3], (int)control[4], (int)control[5]);
           }
           break;
         default: /* Other control frames. */
@@ -279,13 +381,18 @@ int main(int argc, char **argv)
       }
     }
   }
+end:
   progress(100, 1);
 
   /* Check for consistency with header. */
   (void) writ;
   /*if (writ != frames) {
-    fprintf(stderr, "Warning: Number of frames read differs from number in header. %s\n", writ > frames ? "Some frames might be lost." : "There were extra frames.");
-    fprintf(stderr, "%lld/%lld Frames. (%s%lld)\n", (long long)frames, (long long)writ, writ > frames ? "" : "+", (long long)(frames - writ));
+    fprintf(stderr,
+      "Warning: Number of frames read differs from number in header. %s\n"
+      "%lld/%lld Frames. (%s%lld)\n",
+      writ > frames ? "Some frames might be lost." : "There were extra frames.",
+      (long long)frames, (long long)writ,
+      writ > frames ? "" : "+", (long long)(frames - writ));
   }*/
 
   /* Check if there was any data. */
@@ -317,7 +424,12 @@ int main(int argc, char **argv)
       write_int(kumy->text_header[i].content + 2431, 3, 1, 1);
       kumy_binary_header_set_date(&kumy->binary_header[i], &start_time);
     }
+
+    print_taia(&last_time, logfile);
+    fprintf(logfile, ": Recording ended.\n");
+
     kumy_file_close(kumy);
+    fclose(logfile);
   }
 
   fclose(sdcard);
@@ -325,11 +437,13 @@ int main(int argc, char **argv)
 
 ioerror:
   fclose(sdcard);
-  fprintf(stderr, "IO error: There was an error while accessing the SD card. (Error %d)\n", errorcode);
+  fprintf(stderr, "IO error: There was an error while accessing the SD card."
+    " (Error %d)\n", errorcode);
   return -1;
 
 formaterror:
   fclose(sdcard);
-  fprintf(stderr, "Read error: The SD card is malformed. (Error %d)\n", errorcode);
+  fprintf(stderr, "Read error: The SD card is malformed."
+    " (Error %d)\n", errorcode);
   return -1;
 }
