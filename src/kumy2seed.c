@@ -64,7 +64,19 @@ static void progress(int percent, int finished) {
   fflush(stdout);
 }
 
-static const char *channel_names[] = {"H", "SX", "SY", "SZ"};
+/* Checks if two strings are equal. */
+static int str_equal(const char *a, const char *b)
+{
+  if (!a || !b) return 0;
+  while (*a && *b) {
+    if (*a != *b) return 0;
+    ++a;
+    ++b;
+  }
+  return *a == *b;
+}
+
+static const char *channel_names[] = {"H", "X", "Y", "Z"};
 
 int main(int argc, char **argv)
 {
@@ -76,6 +88,8 @@ int main(int argc, char **argv)
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
   int percent = 0, old_percent = -1;
+  int compression = 1;
+  char *infile = 0;
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
@@ -86,12 +100,22 @@ int main(int argc, char **argv)
   struct taia tt, dt;
 
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <infile.muk1>\n", argv[0]);
+    fprintf(stderr, "Usage: %s [--no-compression] <infile.muk1>\n", argv[0]);
     return -1;
   }
 
-  if (!(kumy = kumy_file_open(argv[1]))) {
-    fprintf(stderr, "Invalid file: %s.\n", argv[1]);
+  infile = argv[1];
+
+  if (argc > 2) {
+    /* Check for options. */
+    if (str_equal(argv[1], "--no-compression")) {
+      compression = 0;
+      infile = argv[2];
+    }
+  }
+
+  if (!(kumy = kumy_file_open(infile))) {
+    fprintf(stderr, "Invalid file: %s.\n", infile);
     return -1;
   }
 
@@ -131,11 +155,11 @@ int main(int argc, char **argv)
   taia_sub(&dt, &tt, &start_time);
   frames = taia_approx(&dt) / seconds_per_file * frames_per_file;
 
-  l = last('.', argv[1]);
+  l = last('.', infile);
   if (l == -1 || l >= sizeof(folder)) return -1;
 
   /* Create folder. */
-  copy(folder, l, argv[1]);
+  copy(folder, l, infile);
   folder[l] = 0;
   mkdir_p(folder);
 
@@ -151,7 +175,7 @@ int main(int argc, char **argv)
     miniseed_file_set_sample_rate(mseed[i], sample_rate);
     miniseed_file_set_start_time(mseed[i], &start_time);
     miniseed_file_set_info(mseed[i], "OBS", "DE", channel_names[i], "K");
-    miniseed_file_set_compression(mseed[i], 1);
+    miniseed_file_set_compression(mseed[i], compression);
   }
 
   while (kumy_file_read_int_frame(kumy, frame) >= 0) {
@@ -169,7 +193,7 @@ int main(int argc, char **argv)
         miniseed_file_set_sample_rate(mseed[i], sample_rate);
         miniseed_file_set_start_time(mseed[i], &tt);
         miniseed_file_set_info(mseed[i], "OBS", "DE", channel_names[i], "K");
-        miniseed_file_set_compression(mseed[i], 1);
+        miniseed_file_set_compression(mseed[i], compression);
       }
       frames = frames_per_file;
       tt.sec.x += seconds_per_file;
