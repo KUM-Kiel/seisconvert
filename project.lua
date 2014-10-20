@@ -24,6 +24,14 @@ m:lib("tai", {
   m:c("taia_tai"), m:c("taia_unpack")
 })
 
+m:lib("bcd", {
+  m:c("bcd_diff"),
+  m:c("bcd_mjd"),
+  m:c("bcd_parse"),
+  m:c("bcd_valid"),
+  m:c("bcd_weekday")
+})
+
 m:program("test", {
   m:c("test")
 }, {"seisconvert", "tai", "m"})
@@ -74,7 +82,6 @@ m:program("kumy2raw", {
 
 m:program("sdread", {
   m:c("sdread")
-}, {"seisconvert", "tai"})
-
+}, {"seisconvert", "tai", "bcd"})
 
 m:gen("Makefile")
