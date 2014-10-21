@@ -35,9 +35,9 @@ int bcd_parse(const char *input, char *bcd)
           case 9: set_check(day, i); state = 2; break;
           default: return -1;
         }
-        if (*input == 0) break;
         state = (state + 1) % 6;
       }
+      if (*input == 0) break;
       got_digits = 0;
       i = 0;
     } else if (*input == '.' && got_digits) {
@@ -80,29 +80,29 @@ int bcd_parse(const char *input, char *bcd)
   if (second == -1) second = 0;
   /* Validate hour. */
   if (0 <= hour && hour <= 23)
-    bcd[BCD_HOUR] = ((hour / 10) << 4) | (hour % 10);
+    bcd[BCD_HOUR] = int_bcd(hour);
   else return -1;
   /* Validate minute. */
   if (0 <= minute && minute <= 59)
-    bcd[BCD_MINUTE] = ((minute / 10) << 4) | (minute % 10);
+    bcd[BCD_MINUTE] = int_bcd(minute);
   else return -1;
   /* Validate second. */
   /* XXX: Leapseconds occur only on 31.3., 30.6., 30.9. and 31.12. */
   if (0 <= second && (second <= 59 || (hour == 23 && minute == 59 && second <= 60)))
-    bcd[BCD_SECOND] = ((second / 10) << 4) | (second % 10);
+    bcd[BCD_SECOND] = int_bcd(second);
   else return -1;
   /* Validate day. */
   if (1 <= day && (day <= 28 || (leapyear(year) && day <= 29) ||
     (month != 2 && day <= 30) || (longmonth(month) && day <= 31)))
-    bcd[BCD_DAY] = ((day / 10) << 4) | (day % 10);
+    bcd[BCD_DAY] = int_bcd(day);
   else return -1;
   /* Validate month. */
   if (1 <= month && month <= 12)
-    bcd[BCD_MONTH] = ((month / 10) << 4) | (month % 10);
+    bcd[BCD_MONTH] = int_bcd(month);
   else return -1;
   /* Validate year. */
   if (2000 <= year && year <= 2099)
-    bcd[BCD_YEAR] = (((year - 2000) / 10) << 4) | (year % 10);
+    bcd[BCD_YEAR] = int_bcd(year - 2000);
   else return -1;
   return 0;
 }

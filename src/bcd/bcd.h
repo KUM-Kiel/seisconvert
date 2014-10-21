@@ -11,8 +11,11 @@
 /* Converts a two digit BCD char into an integer. */
 #define bcd_int(c) (((c) & 15) + (((c) >> 4) & 15) * 10)
 
+/* Converts an integer into a two digit BCD char. */
+#define int_bcd(i) ((((i) / 10) << 4) | ((i) % 10))
+
 /* Checks, if a char is a valid two digit BCD char. */
-#define is_bcd(c) ((c) % 16 < 10 && (c) / 16 < 10)
+#define is_bcd(c) (((c) & 15) < 10 && (((c) >> 4) & 15) < 10)
 
 /* Parses a zero terminated string into a BCD encoded time.
  * Supports the following formats:
