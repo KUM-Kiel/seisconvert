@@ -87,7 +87,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-09-10.
+\footnote{\raggedright Date of this document: 2014-10-23.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -107,28 +107,32 @@ This could be a file on a hard disc or SD card, but a TCP stream would be perfec
 Characters may be depicted by their hexadecimal representation.
 So the string represented by <48 65 6c 6c 6f 20 57 6f 72 6c 64 21> is the same as “Hello World!”.
 
-\subsection{Fixed Length Integers}
-
-All binary integers are in little endian format.
-Signed integers shall be interpreted as two’s complement.
-
-The KUM-Y format mainly utilises signed and unsigned 64 bit integers, also refered to as i64 and u64 in this document.
-Other sizes are i32 and u32 for signed and unsigned 32 bit integers as well as i16 and u16 for signed and unsigned 16 bit integers.
-Remember, as they all are in little endian format, the first byte contains the least significant bits!
-
 \subsection{Variable Length Integers}
 \label{varint}
 
-Samples are encoded using integers of variable length.
+Numbers in the KUM-Y format are encoded using a variable length encoding.
 This has the advantage of reasonable compression ratios for small, highly correlated signals, especially when used with a low order linear prediction filter.
 
-A variable length integer consists of zero or more bytes between \(128\) and \(191\) inclusive, i.\,e.\ the first two bits are “10”, and one byte between \(0\) and \(127\) inclusive, i.\,e.\ the first bit is “0”.
+A variable length integer consists of at least one byte.
+Depending on the first bits of each byte, the meaning of the byte’s content varies.
 
-The first byte includes after the “10” the six least significant bits of the number, the next byte includes the next six bits and so on.
-The last bit then contains the most significant seven bits (after the “1”).
-If the number fits into seven bits, i.\,e.\ it is between \(-64\) and \(63\) inclusive, then it is encoded in just one byte with a leading “0” bit.
+\begin{itemize}
+\item “0”: The next seven bits are less significant bits of an integer.
+The next byte continues the integer.
+\item “10”: The next six bits are the most significant bits of an integer.
+This is the last byte of an integer.
+If this byte is not preceeded by a byte starting with “0”, it is a complete integer on it’s own.
+\item “11”: A byte starting as such is not part of an integer.
+It is instead reserved as starting byte for special control frames.
+The next six bits determine the type of the control frame.
+See section \ref{controlframes} for a detailed description.
+\end{itemize}
+
+The first byte includes after the “0” the seven least significant bits of the number, the next byte includes the next seven bits and so on.
+The last bit then contains the most significant six bits (after the “10”).
+If the number fits into six bits, i.\,e.\ it is between \(-32\) and \(31\) inclusive, then it is encoded in just one byte with the leading “10” bits.
 The number is interpreted as a two’s complement integer.
-Note, that the second bit of the last byte always encodes the sign.
+Note, that the third bit of the last byte always encodes the sign.
 
 Conforming applications should always use the shortest possible representaton for a variable length integer.
 So it is highly discouraged to encode e.\,g.\ 27 as <9b 00> instead of <1b>.
@@ -136,11 +140,11 @@ So it is highly discouraged to encode e.\,g.\ 27 as <9b 00> instead of <1b>.
 The following algorithm can be used to write an arbitrary integer \(n\) in variable length encoding.
 
 \begin{verbatim}
-while (n < -64 || 63 < n) {
-  putchar(n & 0x3f | 0x80);
-  n >>= 6;
+while (n < -32 || 31 < n) {
+  putchar(n & 0x7f);
+  n >>= 7;
 }
-putchar(n & 0x7f);
+putchar(n & 0x3f | 0x80);
 \end{verbatim}
 
 \subsection{Strings}
@@ -152,19 +156,62 @@ Strings may be of arbitrary length as they are always embedded with their byte l
 
 \subsection{Times and Durations}
 
-Times and durations are encoded as 96 bit TAI64N labels.
-A TAI64N label consists of an i64 \(s\) and an u32 \(n\) encoded as fixed size integers right after another.
+Times and durations are encoded as TAIN labels.
+A TAIN label consists of two integers \(s\) and \(n\).
 \(n\) is limited to between 0 and 999,999,999 inclusive.
 
-The TAI64N label then encodes the duration
+The TAIN label then encodes the duration
 \[
   d = \left(s + n\cdot10^{-9}\right) \cdot 1\text{\,s}.
 \]
 If the label represents an absolute time rather than a duration, then it is calculated as
 \[
-  t = t_{1970} + d - 2^{62}\text{\,s}
+  t = t_{1970} + d
 \]
-where \(t_{1970}\) is the moment that began 1970\,TAI.
+where \(t_{1970}\) is the moment that began 1970\,TAI\footnote{Temps Atomique International}.
+In other words \(d\) encodes the number of seconds since \mbox{1970-01-01} \mbox{00:00:00} TAI.
+
+\clearpage
+\section{The Binary Markup Language}
+
+The Binary Markup Language or short BML is used for storing arbitrary structured data.
+It supports the following data types.
+
+\begin{itemize}
+\item \textbf{Integer}\\
+An integer is encoded as the byte <f0> followed by a variable length integer encoding the value.
+
+\item \textbf{String}\\
+A string is encoded as the byte <f1> followed by a variable length integer encoding the number of bytes of the string followed by the actual string bytes.
+
+\item \textbf{Array}\\
+An array holds arbitrary values in an ordered fashion.
+It is encoded as the byte <f2> followed by a variable length integer encoding the number of elements in the array followed by the elements itself.
+
+\item \textbf{Table}\\
+A table holds arbitrary key value pairs.
+It is encoded as the byte <f3> followed by a variable length integer encoding the number of key value pairs in the table followed by the pairs itself.
+
+\item \textbf{Time}\\
+A time value holds a TAIN label.
+It is encoded as the byte <f4> followed by a variable length integer encoding the seconds followed by a variable length integer encoding the nanoseconds.
+
+\item \textbf{Float}\\
+This value holds a floating point number.
+It is encoded as two variable legth integers \(a\) and \(b\).
+They encode the value \(a\cdot10^b\).
+Note, that this is a base ten representation, not base two.
+
+\item \textbf{3DVector}\\
+This value holds a vector in three dimensional space.
+It is encoded as the byte <f6> followed by six variable length integers \(a\), \(b\), \(c\), \(d\), \(e\) and \(f\).
+They encode the vector
+\[
+  (x, y, z) = (a\cdot10^b, c\cdot10^d, e\cdot10^f).
+\]
+\end{itemize}
+
+\clearpage
 
 \section{Structure of a KUM-Y File}
 
@@ -173,12 +220,12 @@ The general structure of a KUM-Y file is depicted in figure \ref{structure}.
 \begin{figure}[ht]
 \centerline{\begin{tikzpicture}
 \draw
-  (0, 0) rectangle +(4, -0.6) +(2, -0.3) node{Magic Number}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Textual Metadata}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Binary Header}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{\(\dotsm\)}
-  ++(0, -0.6) rectangle +(4, -0.6) +(2, -0.3) node{Data};
+  (0, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Magic\\Number}
+  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Textual\\Metadata}
+  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Binary\\Header}
+  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {Data}
+  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {\(\dotsm\)}
+  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {Data};
 \end{tikzpicture}}
 \caption{Structure of a KUM-Y File}
 \label{structure}
@@ -186,8 +233,8 @@ The general structure of a KUM-Y file is depicted in figure \ref{structure}.
 
 \subsection{Magic Number}
 
-Every KUM-Y file must start with a byte sequence, that identifies the file as KUM-Y format.
-The sequence is <4b 55 4d 2d 59 20 31 0a> (i.\,e.\ “KUM-Y 1” followed by a carriage return) for version 1 of the format.
+Every KUM-Y file must start with a sequence of exactly eight bytes, that identifies the file as KUM-Y format.
+The sequence is <4b 55 4d 2d 59 20 31 0a> (i.\,e.\ “KUM-Y 1” followed by a line feed) for version 1 of the format.
 
 The magic number may change in future revisions of the format to allow easy detection of the format version.
 
@@ -200,66 +247,109 @@ The length must be encoded in the shortest possible manner, so leading zeros are
 
 With this definition the file can be easily opened with any text editor and the textual information can be inspected.
 
+Using the Bytes <0a 04> (line feed \& end of transmission) ensures that most of the common text editors do not display the following binary data.
+
 It is highly recommended to use a multiple of 3200 bytes for the length and format the metadata according to the SEG-Y text header (see \litref{Segy02}).
 This ensures a convinient and well known data layout for geophysicists.
 
-%On the other hand, this metadata is of solely informative interest.
-%It shall not be interpreted in any way by processing applications conforming to this document.
+However, this metadata is of solely informative interest.
+It shall not be interpreted in any way by processing applications.
 
 \subsection{Binary Header}
 
 The binary header encodes all the information, that is necessary to read the time series in the file.
 
-In the binary header strings are encoded as an u64 byte length followed by the string data.
+The header is a BML table with integer keys.
+Some entries are required, while others are optional.
 
-The header fields are in particular:
-\begin{enumerate}
-  \item u64 ­­­­– The length of the header in bytes.
-  \item string – The recording ID.
+The header fields are in particular (denoted as “Key: Value type – Description”):
+\begin{itemize}
+  \item 1: String – The recording ID. (Required)\\
   This might be an arbitrary recorder identifier (e.\,g.\ the serial number) together with an increasing number or a human readable form of the start time.
   This should be customiseable by the user.
-  \item i64 – The sample rate multiplier.
-  This number scales the sample rate of every channel by a common factor.
-  If the number is positive, it acts as a multiplier, if it is negative, it acts as a divisor.
+  \item 2: String – Experiment name. (Optional)
+  \item 3: String – Station name. (Optional)
+  \item 4: String – Station comment. (Optional)
+  \item 5: String – Client. (Optional)\\
+  This field holds the name of the university or commercial company.
+  \item 6: String – The deployment operator. (Optional)\\
+  This field contains the person responsible for the starting of the recording.
+  \item 7: String – The recovery operator. (Optional)\\
+  This field contains the person responsible for the ending of the recording.
+
+  \item 10: Array – Position trace. (Optional)\\
+  This array contains a trace of the recording positions.
+  Each entry is a table with the following keys:
+  \begin{itemize}
+    \item 1: Time – The time of this measurement. (Required)\\
+    This is an absolute time.
+    \item 2: 3DVector – The position of this measurement. (Optional)\\
+    The \(x\) coordinate encodes the longitude in degrees, east is positive.
+    The \(y\) coordinate encodes the latitude in degrees, north is positive.
+    The \(z\) coordinate encodes the height above sea level in meters.
+    So if the recorder is submerged, this number is negative.
+    \item 3: 3DVector – The orientation of the recorder. (Optional)\\
+    The elments of this vector are Euler angles in \(z-x'-z''\) convention.
+    All angels are in degrees and counterclockwise rotation is positive.
+    The \(x\) coordinate encodes the rotation around the \(z\) axis.
+    The \(y\) coordinate encodes the rotation around the \(x\) axis of the once rotated system.
+    The \(z\) coordinate encodes the rotation around the \(z\) axis of the twice rotated system.
+    \item 4: Float – The water depth. (Optional)\\
+    This value holds the water depth from seafloor to the surface measured in meters.
+  \end{itemize}
+
+
+  \item 20: Integer – The sample rate divisor. (Required)\\
+  This number scales the sample rate of every channel by a common divisor.
+  The sample rate of every channel shall be divided by this value to get the actual sample rate.
   A value of zero is not allowed.
 
-  If a channel with a rate of one sample per minute is needed, you can set this value to \(-60\) and set the channel’s sample rate to 1.
-  \item u64 – The number of channels in this file.
-  \item For each channel:
-  \begin{enumerate}
-    \item string – The channel name.
-    \item u64 – The sample rate.
-    When this field is multiplied with the sample rate multiplier one gets the sample rate in Hz.
+  \emph{Example:} If a channel with a rate of one sample per minute is needed, you can set this value to \(60\) and set the channel’s sample rate to \(1\).
+  You can also, with same results, set this value to \(6000\) and set the channel’s sample rate to \(100\).
+  \item 21: Array – The channels. (Required)\\
+  Each channel is encoded as table with the following keys:
+  \begin{itemize}
+    \item 1: String – The channel name. (Required)
+    \item 2: String – The channel comment. (Optional)\\
+    This might be a long name or instrument description.
+    \item 3: Integer – The sample rate. (Required)
+    When this field is divided by the sample rate divisor one gets the sample rate in Hz.
     The sample rate can not be zero.
-    \item u64 – The channel resolution.
+    \item 4: Integer – The channel resolution. (Required)
     This field should be set to the maximum sample value, that the specific instrument can generate.
     This will be the value, to which the channel shall be normalised.
     For example, if the instrument’s ADC generates signed 16 bit samples, this value should be set to \(32,767 = 2^{15} - 1\).
-    \item u64 – Linear prediction filter used for compression.
+    \item 5: Integer – LPC filter used for compression. (Required)\\
     Possible values are:
     \begin{quote}
-      0 – No prediction is made. Samples are uncompressed apart from the variable length encoding.
+      0 – No LPC filter is used.
+      Samples are uncompressed apart from the variable length encoding.
 
-      1 – Sample repetition. The sample values of this channel are differences.
+      1 – Zero order hold.
+      The sample values of this channel are encoded as \emph{differences} instead of \emph{absolute} values.
 
-      2 – Linear continuation. Samples are predicted via linear continuation.
+      2 – Linear continuation.
+      Samples are predicted via linear continuation.
     \end{quote}
     See section \ref{compression} for more information on compression.
-  \end{enumerate}
-  \item TAI64N – The start time.
-  This TAI64N label indicates, when the recording has been started.
-  \item TAI64N – The stop time.
-  This TAI64N label indicates, when the recording has been stopped.
-  \item u64 - The number of clock skew measurements.
-  \item For each clock skew measurement:
-  \begin{enumerate}
-    \item taia – The measurement time as taken by the internal clock.
-    \item taia – The measured skew.
+  \end{itemize}
+  \item 22: Time – The start time. (Required)\\
+  This TAIN label indicates, when the recording has been started.
+  \item 23: Time – The stop time. (Required)\\
+  This TAIN label indicates, when the recording has been stopped.
+  \item 24: Array - The clock skew measurements. (Required)\\
+  Each clock skew measurement is encoded as a table with the following keys:
+  \begin{itemize}
+    \item 1: Time – The measurement time as taken by the internal clock. (Required)\\
+    This is an absolute time.
+    \item 2: Time – The measured skew. (Required)\\
+    This is a duration.
     If this value is added to the measurement time, one gets the real time of the measurement.
     For example, if the internal clock is to slow, the skew will be positive.
-  \end{enumerate}
-  \item u64 – The total number of samples in the file, i.\,e.\ of all channels added together.
-\end{enumerate}
+  \end{itemize}
+  \item 25: Integer – The number of samples. (Required)\\
+  This is the total number of samples in the file, i.\,e.\ of all channels added together.
+\end{itemize}
 
 \section{Data}
 
@@ -282,39 +372,40 @@ It is implicitly assumed, that the first sample of each channel is synchronized,
 If the greatest common divisor of the individual sample rates is kept as large as possible the interleaving periods will be kept short, which greatly improves performance.
 
 \subsection{Control Frames}
+\label{controlframes}
 
 Aside from sample data, the data stream contains control frames, that carry additional information.
 A control frame can be identified by it’s first byte which is always larger than \(191\).
 It can appear anywhere in the data stream except in the middle of a multi byte sample or another control frame.
 
 \begin{itemize}
-  \item Time stamp (0xc0) – This value is followed by an i64 and an u32, which together form a TAI64N label.
-  This TAI64N label encodes the absolute time of the next sample as measured by the internal clock.
-  \item Lost sample (0xc1) – This value is a replacement for a lost or unknown sample.
+  \item Time stamp <c0> – This value is followed by two variable length integers, which together form a TAIN label.
+  This TAIN label encodes the absolute time of the next sample as measured by the internal clock.
+  \item Lost sample <c1> – This value is a replacement for a lost or unknown sample.
   It replaces a sample value and counts towards the total number of samples in the file.
   Though, it is skipped by linear prediction, so the prediction for the next sample is made on the basis of it’s predecessors.
-  \item Padding (0xc2) – This value can be used if the writing application wishes to pad the data.
+  \item Padding <c2> – This value can be used if the writing application wishes to pad the data.
   It is silently ignored.
-  \item Annotation (0xc3) – This value is followed by a variable length integer and a string of bytes.
+  \item Annotation <c3> – This value is followed by a variable length integer and a string of bytes.
   The integer encodes the byte length of the string.
   The string is an arbitrary annotation that might be displayed in the waveform display of a viewing application.
-  \item Sample number (0xc4) – This value is followed by a variable length integer.
+  \item Sample number <c4> – This value is followed by a variable length integer.
   The integer encodes the number of the next sample.
   The number is counted over all channels, so there is no channel specific number.
   It is used to recover from lost passages of the file and to allow skipping to specific times.
-  \item Summation constant (0xc5) – This value is followed by a variable length integer.
+  \item Summation constant <c5> – This value is followed by a variable length integer.
   The integer encodes what the last sample should have been.
   This value is used to recover from errors or missing passages in the file.
   It can also be used to allow skipping to specific times without reading the entire file.
   Note that this does not replace a sample.
-  \item Estimated skew (0xc6) – This value is followed by an i64 and and u32, which together form a TAI64N label.
-  This TAI64N label encodes the estimated clock skew.
+  \item Estimated skew <c6> – This value is followed by two variable length integers, which together form a TAIN label.
+  This TAIN label is a duration and encodes the estimated clock skew.
 \end{itemize}
 
 \subsection{Compression}
 \label{compression}
 
-The sample data may be compressed on a per channel basis using linear prediction.
+The sample data may be compressed on a per channel basis using linear predictive coding.
 This is controlled by the compression field of each channel.
 
 Note, that all filters result in lossless compression.
@@ -338,12 +429,12 @@ This means, that all the samples are directly encoded in the stream.
 This predictor is suitable for signals with small magnitude.
 If the signal changes very slow but has larger magnitudes, the zero order hold predictor might generate better results.
 
-1: This is a simple zero order hold predictor with
+1: This is a simple zero order hold filter with
 \[
   y[n] = x[n - 1].
 \]
 
-2: This is a linear continuation predictor with
+2: This is a linear continuation filter with
 \[
   y[n] = 2x[n - 1] - x[n - 2].
 \]
