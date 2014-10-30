@@ -87,7 +87,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-10-23.
+\footnote{\raggedright Date of this document: 2014-10-30.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -164,7 +164,7 @@ The TAIN label then encodes the duration
 \[
   d = \left(s + n\cdot10^{-9}\right) \cdot 1\text{\,s}.
 \]
-If the label represents an absolute time rather than a duration, then it is calculated as
+If the label represents an \emph{absolute} time rather than a duration, then it is calculated as
 \[
   t = t_{1970} + d
 \]
@@ -201,14 +201,6 @@ This value holds a floating point number.
 It is encoded as two variable legth integers \(a\) and \(b\).
 They encode the value \(a\cdot10^b\).
 Note, that this is a base ten representation, not base two.
-
-\item \textbf{3DVector}\\
-This value holds a vector in three dimensional space.
-It is encoded as the byte <f6> followed by six variable length integers \(a\), \(b\), \(c\), \(d\), \(e\) and \(f\).
-They encode the vector
-\[
-  (x, y, z) = (a\cdot10^b, c\cdot10^d, e\cdot10^f).
-\]
 \end{itemize}
 
 \clearpage
@@ -249,7 +241,7 @@ With this definition the file can be easily opened with any text editor and the 
 
 Using the Bytes <0a 04> (line feed \& end of transmission) ensures that most of the common text editors do not display the following binary data.
 
-It is highly recommended to use a multiple of 3200 bytes for the length and format the metadata according to the SEG-Y text header (see \litref{Segy02}).
+It is recommended to use a multiple of 3200 bytes for the length and format the metadata according to the SEG-Y text header (see \litref{Segy02}).
 This ensures a convinient and well known data layout for geophysicists.
 
 However, this metadata is of solely informative interest.
@@ -283,21 +275,29 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
   \begin{itemize}
     \item 1: Time – The time of this measurement. (Required)\\
     This is an absolute time.
-    \item 2: 3DVector – The position of this measurement. (Optional)\\
-    The \(x\) coordinate encodes the longitude in degrees, east is positive.
-    The \(y\) coordinate encodes the latitude in degrees, north is positive.
-    The \(z\) coordinate encodes the height above sea level in meters.
-    So if the recorder is submerged, this number is negative.
-    \item 3: 3DVector – The orientation of the recorder. (Optional)\\
-    The elments of this vector are Euler angles in \(z-x'-z''\) convention.
-    All angels are in degrees and counterclockwise rotation is positive.
-    The \(x\) coordinate encodes the rotation around the \(z\) axis.
-    The \(y\) coordinate encodes the rotation around the \(x\) axis of the once rotated system.
-    The \(z\) coordinate encodes the rotation around the \(z\) axis of the twice rotated system.
-    \item 4: Float – The water depth. (Optional)\\
+    \item 2: Float – Latitude. (Optional)\\
+    This value encodes the geographical latitude in degrees.
+    North is positive, the equator is zero.
+    \item 3: Float – Longitude. (Optional)\\
+    This value encodes the geographical longitude in degrees.
+    East is positive, the meridian passing through Greenwich is zero.
+    \item 4: Float – The height above sea level. (Optional)\\
+    This value encodes the height above sea level in meters.
+    If the recorder is submerged, this number is negative.
+    \item 5: Float – \(z\) rotation. (Optional)\\
+    Starting from a coordinate system where \(x\) is east, \(y\) is north and \(z\) is up, this value encodes a counterclockwise rotation in degrees around the \(z\) axis of this coordinate system.
+    If value 6 and 7 are not given, the resulting coordinate system is the recorders local coordinate system.
+    \item 6: Float – \(x\)’ rotation. (Optional)\\
+    If this value is given, values 5 and 7 are required.
+    This value encodes a counterclockwise rotation in degrees around the \(x\) axis of the coordinate system rotated by value 5.
+    \item 7: Float – \(z\)” rotation. (Optional)\\
+    If this value is given, values 5 and 6 are required.
+    This value encodes a counterclockwise rotation in degrees around the \(z\) axis of the coordinate system rotated by value 5 and 6.
+
+    The resulting coordinate system is the recorders local coordinate system.
+    \item 8: Float – The water depth. (Optional)\\
     This value holds the water depth from seafloor to the surface measured in meters.
   \end{itemize}
-
 
   \item 20: Integer – The sample rate divisor. (Required)\\
   This number scales the sample rate of every channel by a common divisor.
@@ -318,7 +318,7 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
     \item 4: Integer – The channel resolution. (Required)
     This field should be set to the maximum sample value, that the specific instrument can generate.
     This will be the value, to which the channel shall be normalised.
-    For example, if the instrument’s ADC generates signed 16 bit samples, this value should be set to \(32,767 = 2^{15} - 1\).
+    For example, if the instrument’s ADC generates signed 16 bit samples, this value should be set to \(32\text{\,}768 = 2^{15}\).
     \item 5: Integer – LPC filter used for compression. (Required)\\
     Possible values are:
     \begin{quote}
@@ -332,6 +332,8 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
       Samples are predicted via linear continuation.
     \end{quote}
     See section \ref{compression} for more information on compression.
+    \item 6: Float – The hardware gain of the preamplifier.
+    \item 7: Float – The software gain of the preamplifier.
   \end{itemize}
   \item 22: Time – The start time. (Required)\\
   This TAIN label indicates, when the recording has been started.
@@ -361,6 +363,100 @@ These bytes are used for non sample data, which can be embedded anywhere in the 
 
 \subsection{Sample Interleaving}
 
+\begin{figure}[b]
+\centerline{\begin{tikzpicture}
+\draw[dotted, -latex] (-0.5, 0) node[left] {H} -- (7.5, 0);
+\draw[dotted, -latex] (-0.5, -0.5) node[left] {X} -- (7.5,  -0.5);
+\draw[dotted, -latex] (-0.5, -1) node[left] {Y} -- (7.5, -1);
+\draw[dotted, -latex] (-0.5, -1.5) node[left] {Z} -- (7.5, -1.5);
+\path[nodes={draw, circle, inner sep=2pt}]
+  node (h0) at (0, 0) {}
+  node (h1) at (1, 0) {}
+  node (h2) at (2, 0) {}
+  node (h3) at (3, 0) {}
+  node (h4) at (4, 0) {}
+  node (h5) at (5, 0) {}
+  node (h6) at (6, 0) {}
+  node (h7) at (7, 0) {}
+  node (x0) at (0, -0.5) {}
+  node (x1) at (3.5, -0.5) {}
+  node (x2) at (7, -0.5) {}
+  node (y0) at (0, -1) {}
+  node (y1) at (3.5, -1) {}
+  node (y2) at (7, -1) {}
+  node (z0) at (0, -1.5) {}
+  node (z1) at (3.5, -1.5) {}
+  node (z2) at (7, -1.5) {};
+\draw[-latex] (h0) -- (x0);
+\draw[-latex] (x0) -- (y0);
+\draw[-latex] (y0) -- (z0);
+\draw[-latex] (z0) -- (h1);
+\draw[-latex] (h1) -- (h2);
+\draw[-latex] (h2) -- (h3);
+\draw[-latex] (h3) -- (x1);
+\draw[-latex] (x1) -- (y1);
+\draw[-latex] (y1) -- (z1);
+\draw[-latex] (z1) -- (h4);
+\draw[-latex] (h4) -- (h5);
+\draw[-latex] (h5) -- (h6);
+\draw[-latex] (h7) -- (x2);
+\draw[-latex] (x2) -- (y2);
+\draw[-latex] (y2) -- (z2);
+\draw[dashed]
+  (-0.25, 0.25) rectangle (6.25, -1.75) node[below left] {1 Period}
+  (7.5, 0.25) -- (6.75, 0.25) -- (6.75, -1.75) -- (7.5, -1.75);
+\end{tikzpicture}}
+\caption{Sample Interleaving. H: 210\,Hz, XYZ: 60\,Hz.}
+\label{interleave-long}
+\end{figure}
+
+\begin{figure}[t]
+\centerline{\begin{tikzpicture}
+\draw[dotted, -latex] (-0.5, 0) node[left] {H} -- (7.5, 0);
+\draw[dotted, -latex] (-0.5, -0.5) node[left] {X} -- (7.5,  -0.5);
+\draw[dotted, -latex] (-0.5, -1) node[left] {Y} -- (7.5, -1);
+\draw[dotted, -latex] (-0.5, -1.5) node[left] {Z} -- (7.5, -1.5);
+\path[nodes={draw, circle, inner sep=2pt}]
+  node (h0) at (0, 0) {}
+  node (h1) at (1, 0) {}
+  node (h2) at (2, 0) {}
+  node (h3) at (3, 0) {}
+  node (h4) at (4, 0) {}
+  node (h5) at (5, 0) {}
+  node (h6) at (6, 0) {}
+  node (h7) at (7, 0) {}
+  node (x0) at (0, -0.5) {}
+  node (x1) at (3, -0.5) {}
+  node (x2) at (6, -0.5) {}
+  node (y0) at (0, -1) {}
+  node (y1) at (3, -1) {}
+  node (y2) at (6, -1) {}
+  node (z0) at (0, -1.5) {}
+  node (z1) at (3, -1.5) {}
+  node (z2) at (6, -1.5) {};
+\draw[-latex] (h0) -- (x0);
+\draw[-latex] (x0) -- (y0);
+\draw[-latex] (y0) -- (z0);
+\draw[-latex] (z0) -- (h1);
+\draw[-latex] (h1) -- (h2);
+\draw[-latex] (h3) -- (x1);
+\draw[-latex] (x1) -- (y1);
+\draw[-latex] (y1) -- (z1);
+\draw[-latex] (z1) -- (h4);
+\draw[-latex] (h4) -- (h5);
+\draw[-latex] (h6) -- (x2);
+\draw[-latex] (x2) -- (y2);
+\draw[-latex] (y2) -- (z2);
+\draw[-latex] (z2) -- (h7);
+\draw[dashed]
+  (-0.25, 0.25) rectangle (2.25, -1.75) node[below left] {1 Period}
+  (2.75, 0.25) rectangle (5.25, -1.75)
+  (7.5, 0.25) -- (5.75, 0.25) -- (5.75, -1.75) -- (7.5, -1.75);
+\end{tikzpicture}}
+\caption{Sample Interleaving. H: 210\,Hz, XYZ: 70\,Hz.}
+\label{interleave-short}
+\end{figure}
+
 To allow for different sample rates for the individual channels, the samples need to be interleaved.
 This is done in a way, that permits small buffers, because samples can be written as soon as they are produced.
 
@@ -369,7 +465,7 @@ Samples which occur at different times are written in their timely order.
 
 It is implicitly assumed, that the first sample of each channel is synchronized, i.\,e.\ they all occur at the same time.
 
-If the greatest common divisor of the individual sample rates is kept as large as possible the interleaving periods will be kept short, which greatly improves performance.
+If the least common multiple of the individual sample rates is kept as small as possible the interleaving periods will be kept short, which greatly improves performance (compare figure \ref{interleave-long} and \ref{interleave-short}).
 
 \subsection{Control Frames}
 \label{controlframes}
@@ -439,7 +535,7 @@ If the signal changes very slow but has larger magnitudes, the zero order hold p
   y[n] = 2x[n - 1] - x[n - 2].
 \]
 
-From time to time (e.\,g.\ once a second) the state of the predictor should be output in the data stream.
+From time to time (e.\,g.\ once a second) the state of the predictor should be output in the data stream with control frame <c5>.
 This allows for recovery from lost or damaged passages and enabels skipping into the stream.
 The different predictors need different amounts of samples for recovery.
 So while the zero order hold predictor only needs a single sample, for the linear continuation predictor two consecutive samples must be provided.
