@@ -87,7 +87,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-10-30.
+\footnote{\raggedright Date of this document: 2014-10-31.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -247,6 +247,8 @@ This ensures a convinient and well known data layout for geophysicists.
 However, this metadata is of solely informative interest.
 It shall not be interpreted in any way by processing applications.
 
+\clearpage
+
 \subsection{Binary Header}
 
 The binary header encodes all the information, that is necessary to read the time series in the file.
@@ -305,7 +307,7 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
   A value of zero is not allowed.
 
   \emph{Example:} If a channel with a rate of one sample per minute is needed, you can set this value to \(60\) and set the channel’s sample rate to \(1\).
-  You can also, with same results, set this value to \(6000\) and set the channel’s sample rate to \(100\).
+  You can also, with the same results, set this value to \(6000\) and set the channel’s sample rate to \(100\).
   \item 21: Array – The channels. (Required)\\
   Each channel is encoded as table with the following keys:
   \begin{itemize}
@@ -332,8 +334,8 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
       Samples are predicted via linear continuation.
     \end{quote}
     See section \ref{compression} for more information on compression.
-    \item 6: Float – The hardware gain of the preamplifier.
-    \item 7: Float – The software gain of the preamplifier.
+    \item 6: Float – The hardware gain of the preamplifier. (Optional)
+    \item 7: Float – The software gain of the preamplifier. (Optional)
   \end{itemize}
   \item 22: Time – The start time. (Required)\\
   This TAIN label indicates, when the recording has been started.
@@ -363,7 +365,7 @@ These bytes are used for non sample data, which can be embedded anywhere in the 
 
 \subsection{Sample Interleaving}
 
-\begin{figure}[b]
+\begin{figure}[t]
 \centerline{\begin{tikzpicture}
 \draw[dotted, -latex] (-0.5, 0) node[left] {H} -- (7.5, 0);
 \draw[dotted, -latex] (-0.5, -0.5) node[left] {X} -- (7.5,  -0.5);
