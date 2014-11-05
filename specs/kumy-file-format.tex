@@ -1,8 +1,8 @@
 \documentclass[DIV=10]{scrartcl}
+\usepackage{amssymb}
 \usepackage[fleqn]{amsmath}
 \usepackage{mathspec}
 \usepackage{xltxtra}
-\usepackage{amssymb}
 \usepackage{enumerate}
 \usepackage{tikz}
 \usepackage{ragged2e}
@@ -98,6 +98,8 @@ The KUM-Y file format is a format for efficiently storing, transmitting and proc
 
 There are already formats in use for this purpose, most notably SEG-Y and SEED, but these formats are subject to several disadvantages, which the format presented in this paper tries to address.
 
+A software package to transform data between different formats is provided. 
+
 \section{Conventions}
 
 A KUM-Y file can be seen as a finite sequence of 8 bit bytes.
@@ -110,7 +112,7 @@ So the string represented by <48 65 6c 6c 6f 20 57 6f 72 6c 64 21> is the same a
 \subsection{Variable Length Integers}
 \label{varint}
 
-Numbers in the KUM-Y format are encoded using a variable length encoding.
+Numbers in the KUM-Y format are encoded using a variable length encoding. The encoding is simular to little endian format.
 This has the advantage of reasonable compression ratios for small, highly correlated signals, especially when used with a low order linear prediction filter.
 
 A variable length integer consists of at least one byte.
@@ -173,6 +175,8 @@ In other words \(d\) encodes the number of seconds since \mbox{1970-01-01} \mbox
 
 \clearpage
 \section{The Binary Markup Language}
+
+The KUM-Y file contains seismic data as well as text information, timing information, position information and other helpful data. To clearly separate different types of information we use defined data types as described below.
 
 The Binary Markup Language or short BML is used for storing arbitrary structured data.
 It supports the following data types.
@@ -287,6 +291,7 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
     This value encodes the height above sea level in meters.
     If the recorder is submerged, this number is negative.
     \item 5: Float – \(z\) rotation. (Optional)\\
+    Rotation is noted in Euler \(z\) - \(x\)’ - \(z\)” convention. 
     Starting from a coordinate system where \(x\) is east, \(y\) is north and \(z\) is up, this value encodes a counterclockwise rotation in degrees around the \(z\) axis of this coordinate system.
     If value 6 and 7 are not given, the resulting coordinate system is the recorders local coordinate system.
     \item 6: Float – \(x\)’ rotation. (Optional)\\
@@ -299,6 +304,7 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
     The resulting coordinate system is the recorders local coordinate system.
     \item 8: Float – The water depth. (Optional)\\
     This value holds the water depth from seafloor to the surface measured in meters.
+    \item 9: string - Comment. (Optional)
   \end{itemize}
 
   \item 20: Integer – The sample rate divisor. (Required)\\
@@ -357,11 +363,12 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
 
 \section{Data}
 
-The data section contains the samples, as well as some additional data of interest, such as the estimated clock skew.
 
-The data is encoded as sequence of variable length integers, one for each sample.
-Note that no variable length integer uses bytes greater than \(191\) (i.\,e.\ bytes beginning with “11”, see section \ref{varint}).
-These bytes are used for non sample data, which can be embedded anywhere in the stream between the sample data.
+The data section contains both the samples and additional data of interest: the clock skew, time stamps and similar data.
+
+The data is encoded as sequence of samples in their timely order, represented by a variable length integer. As described in section \ref{varint}, any byte within a “variable length integer” must not be higher than 191. Any byte that is higher than 191 starts with “11” and is used for non-sample data. The non-sample data can be embedded anywhere in the data stream between samples.
+
+\newpage
 
 \subsection{Sample Interleaving}
 
