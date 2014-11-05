@@ -56,7 +56,7 @@ static int write_taia(const struct taia *t, char *s)
 /* Shortcut for printing a taia encoded time directly to a file. */
 static void print_taia(const struct taia *t, FILE *f)
 {
-  char s[30];
+  char s[32];
   s[write_taia(t, s)] = 0;
   fprintf(f, "%s", s);
 }
@@ -132,7 +132,8 @@ static const char
 
 int main(int argc, char **argv)
 {
-  FILE *sdcard = 0, *logfile = 0;
+  FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
+  FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
   uint64_t addr, last_addr, writ, samp, temp, humi, gain[4], i, j, n, frames = 0;
   char comment[41], safe_comment[41];
@@ -151,7 +152,7 @@ int main(int argc, char **argv)
   char message[4096] = {0};
   int message_n = 0;
   struct taia t;
-  uint32_t lost = 0, lost_total = 0;
+  uint64_t lost = 0, lost_total = 0;
   uint8_t control[6];
   int have_control_block = 0;
 
@@ -167,6 +168,8 @@ int main(int argc, char **argv)
     fprintf(stderr, "Could not open file '%s': %s.\n", argv[1], strerror(errno));
     return -1;
   }
+
+  controlframes = fopen("controlframes.debug.txt", "wb");
 
   /* Try reading the first block of the card. */
   if (!fread(block, BLOCKSIZE, 1, sdcard)) e_io(1);
@@ -187,8 +190,8 @@ int main(int argc, char **argv)
   /* Read start address and sample rate. */
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
-  temp = ld_u16_be(block + 75);
-  humi = ld_u16_be(block + 81);
+  temp = ld_u16_be(block + 75); (void)temp;
+  humi = ld_u16_be(block + 81); (void)humi;
   gain[0] = block[87];
   gain[1] = block[88];
   gain[2] = block[89];
@@ -236,9 +239,11 @@ int main(int argc, char **argv)
     "# Recording\n\n"
     "Comment: %s\n"
     "Frames: %lld\n"
+    "Samplerate: %lld Hz\n"
     "Channel Gains: H %.1f, X %.1f, Y %.1f, Z %.1f\n",
     comment,
     (long long)writ,
+    (long long)samp,
     gain[0] / 10.0, gain[1] / 10.0, gain[2] / 10.0, gain[3] / 10.0);
   if (synced) {
     tmp[write_taia(&sync_time, tmp)] = 0;
@@ -282,7 +287,7 @@ int main(int argc, char **argv)
     frame[0] = ld_i32_be(block);
     /* If the last bit is 1, it is a control frame. Otherwise it is a normal
      * data frame. */
-    if (!(frame[0] & 1) && !want_start_time) {
+    if ((!(frame[0] & 1) || frame[0] < 0) && !want_start_time) {
       ++frames;
       /* Load the other samples ... */
       frame[1] = ld_i32_be(block + 4);
@@ -314,13 +319,56 @@ int main(int argc, char **argv)
             fprintf(logfile, "%s", message);
             print_taia(&start_time, logfile);
             fprintf(logfile, ": Recording started.\n");
+            /* Open CSV files. */
+            snprintf(filename, sizeof(filename), filename_template,
+              *safe_comment ? safe_comment : default_comment, tmp, "voltage.csv");
+            voltage_csv = fopen(filename, "w");
+
+            snprintf(filename, sizeof(filename), filename_template,
+              *safe_comment ? safe_comment : default_comment, tmp, "temperature.csv");
+            temperature_csv = fopen(filename, "w");
+
+            snprintf(filename, sizeof(filename), filename_template,
+              *safe_comment ? safe_comment : default_comment, tmp, "humidity.csv");
+            humidity_csv = fopen(filename, "w");
+
+            print_taia(&start_time, controlframes);
+            putc('\n', controlframes);
           } else {
-            bcd_taia(&last_time, block + 4);
+            bcd_taia(&t, block + 4);
+            print_taia(&t, controlframes);
+            putc('\n', controlframes);
+            if (taia_less(&last_time, &t)) {
+              last_time = t;
+            }
           }
           break;
         case 3: /* VBat/Humidity */
+          fprintf(controlframes, "Battery Voltage: %.2f V.\n",
+            ld_u16_be(block + 4) * 0.01);
+          fprintf(controlframes, "Humidity: %.1f%%.\n",
+            ld_u16_be(block + 8) * 0.1);
+          if (want_start_time) break;
+          if (voltage_csv) {
+            fprintf(voltage_csv, "\"%lld\";\"%.2f\"\n",
+              (long long)(tai_gps_sec(&last_time.sec)),
+              ld_u16_be(block + 4) * 0.01);
+          }
+          if (humidity_csv) {
+            fprintf(humidity_csv, "\"%lld\";\"%.1f\"\n",
+              (long long)(tai_gps_sec(&last_time.sec)),
+              ld_u16_be(block + 8) * 0.1);
+          }
           break;
         case 5: /* Temperature */
+          fprintf(controlframes, "Temperature: %.2f °C.\n",
+            ld_u16_be(block + 4) * 0.25);
+          if (want_start_time) break;
+          if (temperature_csv) {
+            fprintf(temperature_csv, "\"%lld\";\"%.2f\"\n",
+              (long long)(tai_gps_sec(&last_time.sec)),
+              ld_u16_be(block + 4) * 0.25);
+          }
           break;
         case 7: /* Lost frames. */
           if (want_start_time) break;
@@ -349,6 +397,13 @@ int main(int argc, char **argv)
               (int)control[3], (int)control[4], (int)control[5]);
           }
           break;
+        case 11: /* Reboot */
+          break;
+        case 13: /* End */
+          goto end;
+          break;
+        case 15: /* Written Frames */
+          break;
         default: /* Other control frames. */
           break; /* Just ignore it. */
       }
@@ -364,17 +419,7 @@ int main(int argc, char **argv)
   }
 end:
   progress(100, 1);
-
-  /* Check for consistency with header. */
-  (void) writ;
-  /*if (writ != frames) {
-    fprintf(stderr,
-      "Warning: Number of frames read differs from number in header. %s\n"
-      "%lld/%lld Frames. (%s%lld)\n",
-      writ > frames ? "Some frames might be lost." : "There were extra frames.",
-      (long long)frames, (long long)writ,
-      writ > frames ? "" : "+", (long long)(frames - writ));
-  }*/
+  printf("%lld\n", (long long)frames);
 
   /* Check if there was any data. */
   if (!want_start_time) {
@@ -409,9 +454,24 @@ end:
     print_taia(&last_time, logfile);
     fprintf(logfile, ": Recording ended.\n");
 
+    /* Check for consistency with header. */
+    if (writ != frames) {
+      fprintf(logfile,
+        "\nWarning: Number of frames read differs from number in header. %s\n"
+        "%lld/%lld Frames. (%+lld)\n",
+        writ > frames ? "Some frames might be lost." : "There were extra frames.",
+        (long long)frames, (long long)writ,
+        (long long)(frames - writ));
+    }
+
     kumy_file_close(kumy);
     fclose(logfile);
+    fclose(voltage_csv);
+    fclose(temperature_csv);
+    fclose(humidity_csv);
   }
+
+  fclose(controlframes);
 
   fclose(sdcard);
   return 0;

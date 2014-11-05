@@ -21,7 +21,8 @@ m:lib("tai", {
   m:c("tai_pack"), m:c("tai_sub"), m:c("tai_unpack"), m:c("taia_add"),
   m:c("taia_approx"), m:c("taia_fmtfrac"), m:c("taia_frac"), m:c("taia_half"),
   m:c("taia_less"), m:c("taia_now"), m:c("taia_pack"), m:c("taia_sub"),
-  m:c("taia_tai"), m:c("taia_unpack")
+  m:c("taia_tai"), m:c("taia_unpack"),
+  m:c("tai_gps")
 })
 
 m:lib("bcd", {

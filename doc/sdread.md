@@ -9,7 +9,7 @@ Additionally a log file will be created, which contains some Metadata as well as
 
     $ sdread /dev/sdx
 
-Instead of `/dev/sdx` you should supply the device file for the SD card, which will probably `/dev/sdb` if you have only one hard disk installed in your system.
+Instead of `/dev/sdx` you should supply the device file for the SD card, which will probably be `/dev/sdb` if you have only one hard disk installed in your system.
 If you are running Mac OS X it will probably be `/dev/disk1`.
 An image created with `dd` will work equally well.
 
@@ -24,5 +24,8 @@ When a `.muk1` file is created, it’s name will be printed.
 
 Alongside a new log file is started every time a new `.muk1` file is created.
 It has the same name as the `.muk1` file except of it’s extension, which will be `.log.txt`.
+
+Additionally three CSV files will be created, containing the battery voltage, the temperature and the humidity.
+They will have the same name as the `.muk1` file, but they will have the extensions `.voltage.csv`, `.temperature.csv` and `.humidity.csv`.
 
 A progress bar will be displayed, which shows the estimated overall progress, as reading a large SD card might take a very long time.

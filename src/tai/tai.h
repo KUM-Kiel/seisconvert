@@ -19,4 +19,7 @@ extern void tai_sub(struct tai *t, const struct tai *u, const struct tai *v);
 extern void tai_pack(char *s, const struct tai *t);
 extern void tai_unpack(const char *s, struct tai *t);
 
+extern int64_t tai_gps_sec(const struct tai *t);
+extern void tai_from_gps(struct tai *t, int64_t sec);
+
 #endif
