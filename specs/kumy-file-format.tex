@@ -87,7 +87,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-11-03.
+\footnote{\raggedright Date of this document: 2014-11-05.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -98,7 +98,7 @@ The KUM-Y file format is a format for efficiently storing, transmitting and proc
 
 There are already formats in use for this purpose, most notably SEG-Y and SEED, but these formats are subject to several disadvantages, which the format presented in this paper tries to address.
 
-A software package to transform data between different formats is provided. 
+A software package to transform data between different formats is provided.
 
 \section{Conventions}
 
@@ -291,7 +291,7 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
     This value encodes the height above sea level in meters.
     If the recorder is submerged, this number is negative.
     \item 5: Float – \(z\) rotation. (Optional)\\
-    Rotation is noted in Euler \(z\) - \(x\)’ - \(z\)” convention. 
+    The rotations are specified in Euler \(z\)-\(x\)’-\(z\)” convention.
     Starting from a coordinate system where \(x\) is east, \(y\) is north and \(z\) is up, this value encodes a counterclockwise rotation in degrees around the \(z\) axis of this coordinate system.
     If value 6 and 7 are not given, the resulting coordinate system is the recorders local coordinate system.
     \item 6: Float – \(x\)’ rotation. (Optional)\\
@@ -378,7 +378,7 @@ The data is encoded as sequence of samples in their timely order, represented by
 \draw[dotted, -latex] (-0.5, -0.5) node[left] {X} -- (7.5,  -0.5);
 \draw[dotted, -latex] (-0.5, -1) node[left] {Y} -- (7.5, -1);
 \draw[dotted, -latex] (-0.5, -1.5) node[left] {Z} -- (7.5, -1.5);
-\path[nodes={draw, circle, inner sep=2pt}]
+\path[nodes={draw, semithick, circle, inner sep=2pt}]
   node (h0) at (0, 0) {}
   node (h1) at (1, 0) {}
   node (h2) at (2, 0) {}
@@ -396,21 +396,23 @@ The data is encoded as sequence of samples in their timely order, represented by
   node (z0) at (0, -1.5) {}
   node (z1) at (3.5, -1.5) {}
   node (z2) at (7, -1.5) {};
-\draw[-latex] (h0) -- (x0);
-\draw[-latex] (x0) -- (y0);
-\draw[-latex] (y0) -- (z0);
-\draw[-latex] (z0) -- (h1);
-\draw[-latex] (h1) -- (h2);
-\draw[-latex] (h2) -- (h3);
-\draw[-latex] (h3) -- (x1);
-\draw[-latex] (x1) -- (y1);
-\draw[-latex] (y1) -- (z1);
-\draw[-latex] (z1) -- (h4);
-\draw[-latex] (h4) -- (h5);
-\draw[-latex] (h5) -- (h6);
-\draw[-latex] (h7) -- (x2);
-\draw[-latex] (x2) -- (y2);
-\draw[-latex] (y2) -- (z2);
+\draw[-latex, semithick] (h0) -- (x0);
+\draw[-latex, semithick] (x0) -- (y0);
+\draw[-latex, semithick] (y0) -- (z0);
+\draw[-latex, semithick] (z0) -- (h1);
+\draw[-latex, semithick] (h1) -- (h2);
+\draw[-latex, semithick] (h2) -- (h3);
+\draw[-latex, semithick] (h3) -- (x1);
+\draw[-latex, semithick] (x1) -- (y1);
+\draw[-latex, semithick] (y1) -- (z1);
+\draw[-latex, semithick] (z1) -- (h4);
+\draw[-latex, semithick] (h4) -- (h5);
+\draw[-latex, semithick] (h5) -- (h6);
+\draw[-latex, semithick, dashed] (h6) -- (h7);
+\draw[-latex, semithick] (h7) -- (x2);
+\draw[-latex, semithick] (x2) -- (y2);
+\draw[-latex, semithick] (y2) -- (z2);
+\draw[-latex, semithick] (z2) -- (7.5, -0.75);
 \draw[dashed]
   (-0.25, 0.25) rectangle (6.25, -1.75) node[below left] {1 Period}
   (7.5, 0.25) -- (6.75, 0.25) -- (6.75, -1.75) -- (7.5, -1.75);
@@ -425,7 +427,7 @@ The data is encoded as sequence of samples in their timely order, represented by
 \draw[dotted, -latex] (-0.5, -0.5) node[left] {X} -- (7.5,  -0.5);
 \draw[dotted, -latex] (-0.5, -1) node[left] {Y} -- (7.5, -1);
 \draw[dotted, -latex] (-0.5, -1.5) node[left] {Z} -- (7.5, -1.5);
-\path[nodes={draw, circle, inner sep=2pt}]
+\path[nodes={draw, semithick, circle, inner sep=2pt}]
   node (h0) at (0, 0) {}
   node (h1) at (1, 0) {}
   node (h2) at (2, 0) {}
@@ -443,20 +445,22 @@ The data is encoded as sequence of samples in their timely order, represented by
   node (z0) at (0, -1.5) {}
   node (z1) at (3, -1.5) {}
   node (z2) at (6, -1.5) {};
-\draw[-latex] (h0) -- (x0);
-\draw[-latex] (x0) -- (y0);
-\draw[-latex] (y0) -- (z0);
-\draw[-latex] (z0) -- (h1);
-\draw[-latex] (h1) -- (h2);
-\draw[-latex] (h3) -- (x1);
-\draw[-latex] (x1) -- (y1);
-\draw[-latex] (y1) -- (z1);
-\draw[-latex] (z1) -- (h4);
-\draw[-latex] (h4) -- (h5);
-\draw[-latex] (h6) -- (x2);
-\draw[-latex] (x2) -- (y2);
-\draw[-latex] (y2) -- (z2);
-\draw[-latex] (z2) -- (h7);
+\draw[-latex, semithick] (h0) -- (x0);
+\draw[-latex, semithick] (x0) -- (y0);
+\draw[-latex, semithick] (y0) -- (z0);
+\draw[-latex, semithick] (z0) -- (h1);
+\draw[-latex, semithick] (h1) -- (h2);
+\draw[-latex, semithick, dashed] (h2) -- (h3);
+\draw[-latex, semithick] (h3) -- (x1);
+\draw[-latex, semithick] (x1) -- (y1);
+\draw[-latex, semithick] (y1) -- (z1);
+\draw[-latex, semithick] (z1) -- (h4);
+\draw[-latex, semithick] (h4) -- (h5);
+\draw[-latex, semithick, dashed] (h5) -- (h6);
+\draw[-latex, semithick] (h6) -- (x2);
+\draw[-latex, semithick] (x2) -- (y2);
+\draw[-latex, semithick] (y2) -- (z2);
+\draw[-latex, semithick] (z2) -- (h7);
 \draw[dashed]
   (-0.25, 0.25) rectangle (2.25, -1.75) node[below left] {1 Period}
   (2.75, 0.25) rectangle (5.25, -1.75)
@@ -496,6 +500,7 @@ It can appear anywhere in the data stream except in the middle of a multi byte s
   The string is an arbitrary annotation that might be displayed in the waveform display of a viewing application.
   \item Sample number <c4> – This value is followed by a variable length integer.
   The integer encodes the number of the next sample.
+  The first sample has number zero, so this number also encodes the number of samples written up to this frame.
   The number is counted over all channels, so there is no channel specific number.
   It is used to recover from lost passages of the file and to allow skipping to specific times.
   \item Summation constant <c5> – This value is followed by a variable length integer.
