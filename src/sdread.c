@@ -135,7 +135,7 @@ int main(int argc, char **argv)
   FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
   FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ, samp, temp, humi, gain[4], i, j, n, frames = 0;
+  uint64_t addr, last_addr, writ, samp, temp, humi, gain[4], i, j, k, m = 0, n, frames = 0;
   char comment[41], safe_comment[41];
   uint8_t block[BLOCKSIZE];
   char filename[256], tmp[64];
@@ -337,7 +337,8 @@ int main(int argc, char **argv)
           } else {
             bcd_taia(&t, block + 4);
             print_taia(&t, controlframes);
-            putc('\n', controlframes);
+            fprintf(controlframes, " (%lld)\n", frames - m);
+            m = frames;
             if (taia_less(&last_time, &t)) {
               last_time = t;
             }
@@ -403,6 +404,23 @@ int main(int argc, char **argv)
           goto end;
           break;
         case 15: /* Written Frames */
+          k = ld_u64_be(block + 4);
+          fprintf(controlframes, "Frame %lld.\n", (long long)k);
+          if (want_start_time) break;
+          if (frames < k) {
+            /* Frames lost */
+            print_taia(&last_time, logfile);
+            fprintf(logfile, ": %lld Frames lost.\n", (long long)(k - frames));
+            while (frames < k) {
+              kumy_file_write_int_frame(kumy, lost_frame);
+              ++frames;
+            }
+          } else if (frames > k) {
+            /* Too much frames */
+            print_taia(&last_time, logfile);
+            fprintf(logfile, ": %lld Frames too much.\n", (long long)(frames - k));
+            frames = k;
+          }
           break;
         default: /* Other control frames. */
           break; /* Just ignore it. */
