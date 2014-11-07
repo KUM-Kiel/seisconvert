@@ -130,12 +130,15 @@ static const char
   *log_extension = "log.txt",
   *default_comment = "Recording";
 
+#define DEBUG 1
+#define WANT_START_TIME() goto end
+
 int main(int argc, char **argv)
 {
   FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
   FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ, samp, temp, humi, gain[4], i, j, k, m = 0, n, frames = 0;
+  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, n, frames = 0;
   char comment[41], safe_comment[41];
   uint8_t block[BLOCKSIZE];
   char filename[256], tmp[64];
@@ -155,6 +158,7 @@ int main(int argc, char **argv)
   uint64_t lost = 0, lost_total = 0;
   uint8_t control[6];
   int have_control_block = 0;
+  int flag_debug = DEBUG;
 
   /* Check for SD card argument. */
   if (argc < 2) {
@@ -169,7 +173,8 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  controlframes = fopen("controlframes.debug.txt", "wb");
+  if (flag_debug)
+    controlframes = fopen("controlframes.debug.txt", "wb");
 
   /* Try reading the first block of the card. */
   if (!fread(block, BLOCKSIZE, 1, sdcard)) e_io(1);
@@ -201,7 +206,7 @@ int main(int argc, char **argv)
 
   /* Read the synchronisation time and skew, if it is present. */
   if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
-    !byte_equal(block + 19, 6, (uint8_t *)"\0\0\0\0\0\0")) {
+    bcd_valid((char *)block + 19)) {
     bcd_taia(&sync_time, block + 19);
     sync_skew = ld_i32_be(block + 25);
     synced = 1;
@@ -229,7 +234,7 @@ int main(int argc, char **argv)
 
   /* Read the skew time and skew, if it is present. */
   if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
-    !byte_equal(block + 19, 6, (uint8_t *)"\0\0\0\0\0\0")) {
+    bcd_valid((char *)block + 19)) {
     bcd_taia(&skew_time, block + 19);
     skew = ld_i32_be(block + 25);
     skewed = 1;
@@ -274,8 +279,10 @@ int main(int argc, char **argv)
     /* Read a frame. */
     if (!fread(block, FRAMESIZE, 1, sdcard)) {
       if (!want_start_time) {
-        print_taia(&last_time, logfile);
-        fprintf(logfile, ": Bad frame.\n");
+        if (logfile) {
+          print_taia(&last_time, logfile);
+          fprintf(logfile, ": Bad frame.\n");
+        }
         for (j = 0; j < 100 * BLOCKSIZE / FRAMESIZE; ++j) {
           kumy_file_write_int_frame(kumy, lost_frame);
         }
@@ -316,9 +323,11 @@ int main(int argc, char **argv)
             snprintf(filename, sizeof(filename), filename_template,
               *safe_comment ? safe_comment : default_comment, tmp, log_extension);
             logfile = fopen(filename, "w");
-            fprintf(logfile, "%s", message);
-            print_taia(&start_time, logfile);
-            fprintf(logfile, ": Recording started.\n");
+            if (logfile) {
+              fprintf(logfile, "%s", message);
+              print_taia(&start_time, logfile);
+              fprintf(logfile, ": Recording started.\n");
+            }
             /* Open CSV files. */
             snprintf(filename, sizeof(filename), filename_template,
               *safe_comment ? safe_comment : default_comment, tmp, "voltage.csv");
@@ -337,7 +346,7 @@ int main(int argc, char **argv)
           } else {
             bcd_taia(&t, block + 4);
             print_taia(&t, controlframes);
-            fprintf(controlframes, " (%lld)\n", frames - m);
+            fprintf(controlframes, " (%lld)\n", (long long)(frames - m));
             m = frames;
             if (taia_less(&last_time, &t)) {
               last_time = t;
@@ -345,11 +354,13 @@ int main(int argc, char **argv)
           }
           break;
         case 3: /* VBat/Humidity */
-          fprintf(controlframes, "Battery Voltage: %.2f V.\n",
-            ld_u16_be(block + 4) * 0.01);
-          fprintf(controlframes, "Humidity: %.1f%%.\n",
-            ld_u16_be(block + 8) * 0.1);
-          if (want_start_time) break;
+          if (controlframes) {
+            fprintf(controlframes, "Battery Voltage: %.2f V.\n",
+              ld_u16_be(block + 4) * 0.01);
+            fprintf(controlframes, "Humidity: %.1f%%.\n",
+              ld_u16_be(block + 8) * 0.1);
+          }
+          if (want_start_time) WANT_START_TIME();
           if (voltage_csv) {
             fprintf(voltage_csv, "\"%lld\";\"%.2f\"\n",
               (long long)(tai_gps_sec(&last_time.sec)),
@@ -362,9 +373,11 @@ int main(int argc, char **argv)
           }
           break;
         case 5: /* Temperature */
-          fprintf(controlframes, "Temperature: %.2f °C.\n",
-            ld_u16_be(block + 4) * 0.25);
-          if (want_start_time) break;
+          if (controlframes) {
+            fprintf(controlframes, "Temperature: %.2f °C.\n",
+              ld_u16_be(block + 4) * 0.25);
+          }
+          if (want_start_time) WANT_START_TIME();
           if (temperature_csv) {
             fprintf(temperature_csv, "\"%lld\";\"%.2f\"\n",
               (long long)(tai_gps_sec(&last_time.sec)),
@@ -372,30 +385,37 @@ int main(int argc, char **argv)
           }
           break;
         case 7: /* Lost frames. */
-          if (want_start_time) break;
+          if (want_start_time) WANT_START_TIME();
           bcd_taia(&t, block + 4);
           lost = ld_u32_be(block + 10);
           lost_total += lost;
-          print_taia(&t, logfile);
-          fprintf(logfile, ": %lld Frames lost.\n", (long long)lost);
+          if (logfile) {
+            print_taia(&t, logfile);
+            fprintf(logfile, ": %lld Frames lost.\n", (long long)lost);
+          }
           for (j = 0; j < lost; ++j) {
             kumy_file_write_int_frame(kumy, lost_frame);
           }
           break;
         case 9: /* Control frame */
+          if (want_start_time) WANT_START_TIME();
           if (have_control_block) {
             if (!byte_equal(control, 6, block + 4)) {
-              print_taia(&last_time, logfile);
-              fprintf(logfile, ": Block check failed.\n");
+              if (logfile) {
+                print_taia(&last_time, logfile);
+                fprintf(logfile, ": Block check failed.\n");
+              }
               goto end;
             }
           } else {
             byte_copy(control, 6, block + 4);
             have_control_block = 1;
-            print_taia(&last_time, logfile);
-            fprintf(logfile, ": Control block '%02x %02x %02x %02x %02x %02x'.\n",
-              (int)control[0], (int)control[1], (int)control[2],
-              (int)control[3], (int)control[4], (int)control[5]);
+            if (logfile) {
+              print_taia(&last_time, logfile);
+              fprintf(logfile, ": Control block '%02x %02x %02x %02x %02x %02x'.\n",
+                (int)control[0], (int)control[1], (int)control[2],
+                (int)control[3], (int)control[4], (int)control[5]);
+            }
           }
           break;
         case 11: /* Reboot */
@@ -405,20 +425,26 @@ int main(int argc, char **argv)
           break;
         case 15: /* Written Frames */
           k = ld_u64_be(block + 4);
-          fprintf(controlframes, "Frame %lld.\n", (long long)k);
-          if (want_start_time) break;
+          if (controlframes) {
+            fprintf(controlframes, "Frame %lld.\n", (long long)k);
+          }
+          if (want_start_time) WANT_START_TIME();
           if (frames < k) {
             /* Frames lost */
-            print_taia(&last_time, logfile);
-            fprintf(logfile, ": %lld Frames lost.\n", (long long)(k - frames));
+            if (logfile) {
+              print_taia(&last_time, logfile);
+              fprintf(logfile, ": %lld Frames lost.\n", (long long)(k - frames));
+            }
             while (frames < k) {
               kumy_file_write_int_frame(kumy, lost_frame);
               ++frames;
             }
           } else if (frames > k) {
             /* Too much frames */
-            print_taia(&last_time, logfile);
-            fprintf(logfile, ": %lld Frames too much.\n", (long long)(frames - k));
+            if (logfile) {
+              print_taia(&last_time, logfile);
+              fprintf(logfile, ": %lld Frames too much.\n", (long long)(frames - k));
+            }
             frames = k;
           }
           break;
@@ -437,7 +463,6 @@ int main(int argc, char **argv)
   }
 end:
   progress(100, 1);
-  printf("%lld\n", (long long)frames);
 
   /* Check if there was any data. */
   if (!want_start_time) {
@@ -469,17 +494,19 @@ end:
       kumy_binary_header_set_date(&kumy->binary_header[i], &start_time);
     }
 
-    print_taia(&last_time, logfile);
-    fprintf(logfile, ": Recording ended.\n");
+    if (logfile) {
+      print_taia(&last_time, logfile);
+      fprintf(logfile, ": Recording ended.\n");
 
-    /* Check for consistency with header. */
-    if (writ != frames) {
-      fprintf(logfile,
-        "\nWarning: Number of frames read differs from number in header. %s\n"
-        "%lld/%lld Frames. (%+lld)\n",
-        writ > frames ? "Some frames might be lost." : "There were extra frames.",
-        (long long)frames, (long long)writ,
-        (long long)(frames - writ));
+      /* Check for consistency with header. */
+      if (writ != frames) {
+        fprintf(logfile,
+          "\nWarning: Number of frames read differs from number in header. %s\n"
+          "%lld/%lld Frames. (%+lld)\n",
+          writ > frames ? "Some frames might be lost." : "There were extra frames.",
+          (long long)frames, (long long)writ,
+          (long long)(frames - writ));
+      }
     }
 
     kumy_file_close(kumy);
