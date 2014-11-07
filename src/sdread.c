@@ -357,8 +357,8 @@ int main(int argc, char **argv)
           if (controlframes) {
             fprintf(controlframes, "Battery Voltage: %.2f V.\n",
               ld_u16_be(block + 4) * 0.01);
-            fprintf(controlframes, "Humidity: %.1f%%.\n",
-              ld_u16_be(block + 8) * 0.1);
+            fprintf(controlframes, "Humidity: %.2f%%.\n",
+              ld_u16_be(block + 6) * 0.01);
           }
           if (want_start_time) WANT_START_TIME();
           if (voltage_csv) {
@@ -367,9 +367,9 @@ int main(int argc, char **argv)
               ld_u16_be(block + 4) * 0.01);
           }
           if (humidity_csv) {
-            fprintf(humidity_csv, "\"%lld\";\"%.1f\"\n",
+            fprintf(humidity_csv, "\"%lld\";\"%.2f\"\n",
               (long long)(tai_gps_sec(&last_time.sec)),
-              ld_u16_be(block + 8) * 0.1);
+              ld_u16_be(block + 6) * 0.01);
           }
           break;
         case 5: /* Temperature */
