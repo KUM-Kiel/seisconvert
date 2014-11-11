@@ -1,6 +1,7 @@
 /* Needed for files larger than 4GiB. */
 #define _FILE_OFFSET_BITS 64
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include "kumy_file.h"
@@ -278,6 +279,9 @@ int main(int argc, char **argv)
   for (i = 0; i < n; ++i) {
     /* Read a frame. */
     if (!fread(block, FRAMESIZE, 1, sdcard)) {
+      printf("Read Error.\n");
+      fflush(0);
+      exit(-3);
       if (!want_start_time) {
         if (logfile) {
           print_taia(&last_time, logfile);
@@ -285,6 +289,7 @@ int main(int argc, char **argv)
         }
         for (j = 0; j < 100 * BLOCKSIZE / FRAMESIZE; ++j) {
           kumy_file_write_int_frame(kumy, lost_frame);
+          ++i;
         }
         if (fseek(sdcard, 100 * BLOCKSIZE, SEEK_CUR) == -1) e_io(6);
       }
@@ -375,13 +380,13 @@ int main(int argc, char **argv)
         case 5: /* Temperature */
           if (controlframes) {
             fprintf(controlframes, "Temperature: %.2f °C.\n",
-              ld_u16_be(block + 4) * 0.25);
+              ld_u16_be(block + 4) * 0.01);
           }
           if (want_start_time) WANT_START_TIME();
           if (temperature_csv) {
             fprintf(temperature_csv, "\"%lld\";\"%.2f\"\n",
               (long long)(tai_gps_sec(&last_time.sec)),
-              ld_u16_be(block + 4) * 0.25);
+              ld_u16_be(block + 4) * 0.01);
           }
           break;
         case 7: /* Lost frames. */
@@ -393,7 +398,7 @@ int main(int argc, char **argv)
             print_taia(&t, logfile);
             fprintf(logfile, ": %lld Frames lost.\n", (long long)lost);
           }
-          for (j = 0; j < lost; ++j) {
+          for (j = 0; j < min(lost, 65536); ++j) {
             kumy_file_write_int_frame(kumy, lost_frame);
           }
           break;
@@ -459,6 +464,7 @@ int main(int argc, char **argv)
         progress(percent, 0);
         old_percent = percent;
       }
+      fflush(0);
     }
   }
 end:
