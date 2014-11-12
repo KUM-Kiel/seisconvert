@@ -10,6 +10,7 @@
 #include "caltime.h"
 #include "byte.h"
 #include "bcd.h"
+#include "options.h"
 
 /* Converts a BCD encoded date to taia. */
 static void bcd_taia(struct taia *t, const uint8_t *bcd)
@@ -131,8 +132,14 @@ static const char
   *log_extension = "log.txt",
   *default_comment = "Recording";
 
-#define DEBUG 1
 #define WANT_START_TIME() goto end
+
+char *program = "sdread";
+void usage(char *x)
+{
+  fprintf(stderr, "Usage: %s /dev/sdx\n", program);
+  exit(-1);
+}
 
 int main(int argc, char **argv)
 {
@@ -159,12 +166,17 @@ int main(int argc, char **argv)
   uint64_t lost = 0, lost_total = 0;
   uint8_t control[6];
   int have_control_block = 0;
-  int flag_debug = DEBUG;
+  int flag_debug = 0;
+
+  program = argv[0];
+  parse_options(&argc, &argv, OPTIONS(
+    FLAG('d', "debug", flag_debug, 1),
+    FLAG_CALLBACK('h', "help", usage)
+  ));
 
   /* Check for SD card argument. */
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s /dev/sdx\n", argv[0]);
-    return -1;
+    usage(0);
   }
 
   /* Open the SD card. */

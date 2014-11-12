@@ -87,6 +87,6 @@ m:program("kumy2raw", {
 
 m:program("sdread", {
   m:c("sdread")
-}, {"seisconvert", "tai", "bcd"})
+}, {"seisconvert", "tai", "bcd", "options"})
 
 m:gen("Makefile")

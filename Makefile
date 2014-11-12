@@ -54,10 +54,10 @@ build/kumy2raw: build/objects/kumy2raw.o build/libseisconvert.a build/libtai.a M
 	@echo [LD] build/kumy2raw
 	@mkdir -p build/
 	@$(LINK) -o build/kumy2raw build/objects/kumy2raw.o -lseisconvert -ltai
-build/sdread: build/objects/sdread.o build/libseisconvert.a build/libtai.a build/libbcd.a Makefile
+build/sdread: build/objects/sdread.o build/libseisconvert.a build/libtai.a build/libbcd.a build/liboptions.a Makefile
 	@echo [LD] build/sdread
 	@mkdir -p build/
-	@$(LINK) -o build/sdread build/objects/sdread.o -lseisconvert -ltai -lbcd
+	@$(LINK) -o build/sdread build/objects/sdread.o -lseisconvert -ltai -lbcd -loptions
 build/libseisconvert.a: build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o build/objects/seisconvert/byte.o Makefile
 	@echo [AR] build/libseisconvert.a
 	@mkdir -p build/
@@ -318,7 +318,7 @@ build/objects/kumy2raw.o: src/kumy2raw.c src/seisconvert/kumy_file.h src/seiscon
 	@echo [CC] build/objects/kumy2raw.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2raw.o src/kumy2raw.c
-build/objects/sdread.o: src/sdread.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/number.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/byte.h src/bcd/bcd.h Makefile
+build/objects/sdread.o: src/sdread.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/number.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/byte.h src/bcd/bcd.h src/options/options.h Makefile
 	@echo [CC] build/objects/sdread.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/sdread.o src/sdread.c
