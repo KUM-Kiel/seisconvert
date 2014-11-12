@@ -31,7 +31,7 @@ Beware, that `c` is evaluated twice, so constructs like `bcd_int(c++)` are undef
 ### int_bcd(i)
 
 A macro which converts an integer into a two digit BCD char.
-Beware, that `c` is evaluated twice, so constructs like `int_bcd(i++)` are undefined.
+Beware, that `i` is evaluated twice, so constructs like `int_bcd(i++)` are undefined.
 
 ### is_bcd(c)
 
