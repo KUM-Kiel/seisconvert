@@ -1,11 +1,11 @@
 # This file was automatically generated. Do not edit!
-COMPILE = $(CC) -c -Wall -pedantic -O3 -std=c99 -Isrc/seisconvert -Isrc/tai -Isrc/bcd
+COMPILE = $(CC) -c -Wall -O3 -std=c99 -Isrc/seisconvert -Isrc/tai -Isrc/bcd -Isrc/options
 LINK = $(CC) -Lbuild
 MAKELIB = $(AR) rcs
 
-TARGETS = build/libseisconvert.a build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o build/objects/seisconvert/byte.o build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/objects/tai/tai_gps.o build/libbcd.a build/objects/bcd/bcd_diff.o build/objects/bcd/bcd_mjd.o build/objects/bcd/bcd_parse.o build/objects/bcd/bcd_valid.o build/objects/bcd/bcd_weekday.o build/test build/objects/test.o build/wav_test build/objects/wav_test.o build/lowpass build/objects/lowpass.o build/highpass build/objects/highpass.o build/fm build/objects/fm.o build/kumy2wav build/objects/kumy2wav.o build/cos build/objects/cos.o build/wav_header build/objects/wav_header.o build/seedtest build/objects/seedtest.o build/wav2seed build/objects/wav2seed.o build/kumy2seed build/objects/kumy2seed.o build/kumy2raw build/objects/kumy2raw.o build/sdread build/objects/sdread.o
+TARGETS = build/libseisconvert.a build/objects/seisconvert/kumy.o build/objects/seisconvert/kumy_file.o build/objects/seisconvert/seed.o build/objects/seisconvert/miniseed_file.o build/objects/seisconvert/segy.o build/objects/seisconvert/wav.o build/objects/seisconvert/wav_file.o build/objects/seisconvert/filter.o build/objects/seisconvert/fm.o build/objects/seisconvert/buffer.o build/objects/seisconvert/number.o build/objects/seisconvert/byte.o build/libtai.a build/objects/tai/caldate_fmjd.o build/objects/tai/caldate_fmt.o build/objects/tai/caldate_mjd.o build/objects/tai/caldate_norm.o build/objects/tai/caldate_scan.o build/objects/tai/caldate_ster.o build/objects/tai/caltime_fmt.o build/objects/tai/caltime_scan.o build/objects/tai/caltime_tai.o build/objects/tai/caltime_utc.o build/objects/tai/leapsecs_add.o build/objects/tai/leapsecs_init.o build/objects/tai/leapsecs_read.o build/objects/tai/leapsecs_sub.o build/objects/tai/tai_add.o build/objects/tai/tai_now.o build/objects/tai/tai_pack.o build/objects/tai/tai_sub.o build/objects/tai/tai_unpack.o build/objects/tai/taia_add.o build/objects/tai/taia_approx.o build/objects/tai/taia_fmtfrac.o build/objects/tai/taia_frac.o build/objects/tai/taia_half.o build/objects/tai/taia_less.o build/objects/tai/taia_now.o build/objects/tai/taia_pack.o build/objects/tai/taia_sub.o build/objects/tai/taia_tai.o build/objects/tai/taia_unpack.o build/objects/tai/tai_gps.o build/libbcd.a build/objects/bcd/bcd_diff.o build/objects/bcd/bcd_mjd.o build/objects/bcd/bcd_parse.o build/objects/bcd/bcd_valid.o build/objects/bcd/bcd_weekday.o build/liboptions.a build/objects/options/options.o build/test build/objects/test.o build/wav_test build/objects/wav_test.o build/lowpass build/objects/lowpass.o build/highpass build/objects/highpass.o build/fm build/objects/fm.o build/kumy2wav build/objects/kumy2wav.o build/cos build/objects/cos.o build/wav_header build/objects/wav_header.o build/seedtest build/objects/seedtest.o build/wav2seed build/objects/wav2seed.o build/kumy2seed build/objects/kumy2seed.o build/kumy2raw build/objects/kumy2raw.o build/sdread build/objects/sdread.o
 
-all: build/libseisconvert.a build/libtai.a build/libbcd.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed build/kumy2seed build/kumy2raw build/sdread
+all: build/libseisconvert.a build/libtai.a build/libbcd.a build/liboptions.a build/test build/wav_test build/lowpass build/highpass build/fm build/kumy2wav build/cos build/wav_header build/seedtest build/wav2seed build/kumy2seed build/kumy2raw build/sdread
 build/test: build/objects/test.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/test
 	@mkdir -p build/
@@ -46,10 +46,10 @@ build/wav2seed: build/objects/wav2seed.o build/libseisconvert.a build/libtai.a M
 	@echo [LD] build/wav2seed
 	@mkdir -p build/
 	@$(LINK) -o build/wav2seed build/objects/wav2seed.o -lseisconvert -ltai
-build/kumy2seed: build/objects/kumy2seed.o build/libseisconvert.a build/libtai.a Makefile
+build/kumy2seed: build/objects/kumy2seed.o build/libseisconvert.a build/libtai.a build/liboptions.a Makefile
 	@echo [LD] build/kumy2seed
 	@mkdir -p build/
-	@$(LINK) -o build/kumy2seed build/objects/kumy2seed.o -lseisconvert -ltai
+	@$(LINK) -o build/kumy2seed build/objects/kumy2seed.o -lseisconvert -ltai -loptions
 build/kumy2raw: build/objects/kumy2raw.o build/libseisconvert.a build/libtai.a Makefile
 	@echo [LD] build/kumy2raw
 	@mkdir -p build/
@@ -70,6 +70,10 @@ build/libbcd.a: build/objects/bcd/bcd_diff.o build/objects/bcd/bcd_mjd.o build/o
 	@echo [AR] build/libbcd.a
 	@mkdir -p build/
 	@$(MAKELIB) build/libbcd.a build/objects/bcd/bcd_diff.o build/objects/bcd/bcd_mjd.o build/objects/bcd/bcd_parse.o build/objects/bcd/bcd_valid.o build/objects/bcd/bcd_weekday.o
+build/liboptions.a: build/objects/options/options.o Makefile
+	@echo [AR] build/liboptions.a
+	@mkdir -p build/
+	@$(MAKELIB) build/liboptions.a build/objects/options/options.o
 build/objects/seisconvert/kumy.o: src/seisconvert/kumy.c src/seisconvert/kumy.h Makefile
 	@echo [CC] build/objects/seisconvert/kumy.o
 	@mkdir -p build/objects/seisconvert/
@@ -262,6 +266,10 @@ build/objects/bcd/bcd_weekday.o: src/bcd/bcd_weekday.c src/bcd/bcd.h Makefile
 	@echo [CC] build/objects/bcd/bcd_weekday.o
 	@mkdir -p build/objects/bcd/
 	@$(COMPILE) -o build/objects/bcd/bcd_weekday.o src/bcd/bcd_weekday.c
+build/objects/options/options.o: src/options/options.c src/options/options.h Makefile
+	@echo [CC] build/objects/options/options.o
+	@mkdir -p build/objects/options/
+	@$(COMPILE) -o build/objects/options/options.o src/options/options.c
 build/objects/test.o: src/test.c src/seisconvert/kumy.h src/seisconvert/wav.h src/seisconvert/fm.h Makefile
 	@echo [CC] build/objects/test.o
 	@mkdir -p build/objects/
@@ -302,7 +310,7 @@ build/objects/wav2seed.o: src/wav2seed.c src/seisconvert/miniseed_file.h src/sei
 	@echo [CC] build/objects/wav2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/wav2seed.o src/wav2seed.c
-build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h src/seisconvert/byte.h Makefile
+build/objects/kumy2seed.o: src/kumy2seed.c src/seisconvert/kumy_file.h src/seisconvert/kumy.h src/seisconvert/miniseed_file.h src/seisconvert/seed.h src/tai/taia.h src/tai/tai.h src/tai/caltime.h src/tai/caldate.h src/seisconvert/number.h src/seisconvert/byte.h src/options/options.h Makefile
 	@echo [CC] build/objects/kumy2seed.o
 	@mkdir -p build/objects/
 	@$(COMPILE) -o build/objects/kumy2seed.o src/kumy2seed.c

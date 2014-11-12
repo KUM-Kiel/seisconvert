@@ -1,7 +1,7 @@
 local make = require("make")
 
 local m = make{
-  cflags = "-Wall -pedantic -O3 -std=c99"
+  cflags = "-Wall -O3 -std=c99"
 }
 
 m:lib("seisconvert", {
@@ -31,6 +31,10 @@ m:lib("bcd", {
   m:c("bcd_parse"),
   m:c("bcd_valid"),
   m:c("bcd_weekday")
+})
+
+m:lib("options", {
+  m:c("options")
 })
 
 m:program("test", {
@@ -75,7 +79,7 @@ m:program("wav2seed", {
 
 m:program("kumy2seed", {
   m:c("kumy2seed")
-}, {"seisconvert", "tai"})
+}, {"seisconvert", "tai", "options"})
 
 m:program("kumy2raw", {
   m:c("kumy2raw")

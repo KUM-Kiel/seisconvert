@@ -15,5 +15,7 @@ The output will be sliced into parts of 90 minutes up to one day, depending on t
 
 ### Options
 
-* `--no-compression`: Do not compress the resulting `.seed` files.
+* `-n`, `--no-compression`: Do not compress the resulting `.seed` files.
   Use this option if your software does not support compressed MiniSEED files.
+
+* `-h`, `--help`: Print a short help message.

@@ -7,6 +7,7 @@
 #include "number.h"
 #include "byte.h"
 #include <errno.h>
+#include "options.h"
 
 /* POSIX specific. */
 #include <sys/stat.h>
@@ -64,18 +65,6 @@ static void progress(int percent, int finished) {
   fflush(stdout);
 }
 
-/* Checks if two strings are equal. */
-static int str_equal(const char *a, const char *b)
-{
-  if (!a || !b) return 0;
-  while (*a && *b) {
-    if (*a != *b) return 0;
-    ++a;
-    ++b;
-  }
-  return *a == *b;
-}
-
 static const char *channel_names[] = {"H", "X", "Y", "Z"};
 
 int main(int argc, char **argv)
@@ -99,21 +88,22 @@ int main(int argc, char **argv)
   struct caltime ct;
   struct taia tt, dt;
 
+  void usage(char *x)
+  {
+    fprintf(stderr, "Usage: %s [-n|--no-compression] <infile.muk1>\n", argv[0]);
+    exit(-1);
+  }
+
+  parse_options(&argc, &argv, OPTIONS(
+    FLAG('n', "no-compression", compression, 0),
+    FLAG_CALLBACK('h', "help", usage)
+  ));
+
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s [--no-compression] <infile.muk1>\n", argv[0]);
-    return -1;
+    usage(0);
   }
 
   infile = argv[1];
-
-  if (argc > 2) {
-    /* Check for options. */
-    if (str_equal(argv[1], "--no-compression")) {
-      compression = 0;
-      infile = argv[2];
-    }
-  }
-
   if (!(kumy = kumy_file_open(infile))) {
     fprintf(stderr, "Invalid file: %s.\n", infile);
     return -1;
