@@ -67,6 +67,13 @@ static void progress(int percent, int finished) {
 
 static const char *channel_names[] = {"H", "X", "Y", "Z"};
 
+char *program = "kumy2seed";
+void usage(char *x)
+{
+  fprintf(stderr, "Usage: %s [-n|--no-compression] <infile.muk1>\n", program);
+  exit(-1);
+}
+
 int main(int argc, char **argv)
 {
   kumy_file_t *kumy;
@@ -88,12 +95,7 @@ int main(int argc, char **argv)
   struct caltime ct;
   struct taia tt, dt;
 
-  void usage(char *x)
-  {
-    fprintf(stderr, "Usage: %s [-n|--no-compression] <infile.muk1>\n", argv[0]);
-    exit(-1);
-  }
-
+  program = argv[0];
   parse_options(&argc, &argv, OPTIONS(
     FLAG('n', "no-compression", compression, 0),
     FLAG_CALLBACK('h', "help", usage)
