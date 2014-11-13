@@ -134,8 +134,8 @@ static const char
 
 #define WANT_START_TIME() goto end
 
-char *program = "sdread";
-void usage(char *x)
+static char *program = "sdread";
+static void usage(char *x)
 {
   fprintf(stderr, "Usage: %s /dev/sdx\n", program);
   exit(-1);
@@ -358,12 +358,16 @@ int main(int argc, char **argv)
               *safe_comment ? safe_comment : default_comment, tmp, "humidity.csv");
             humidity_csv = fopen(filename, "w");
 
-            print_taia(&start_time, controlframes);
-            putc('\n', controlframes);
+            if (controlframes) {
+              print_taia(&start_time, controlframes);
+              putc('\n', controlframes);
+            }
           } else {
             bcd_taia(&t, block + 4);
-            print_taia(&t, controlframes);
-            fprintf(controlframes, " (%lld)\n", (long long)(frames - m));
+            if (controlframes) {
+              print_taia(&t, controlframes);
+              fprintf(controlframes, " (%lld)\n", (long long)(frames - m));
+            }
             m = frames;
             if (taia_less(&last_time, &t)) {
               last_time = t;
@@ -379,12 +383,12 @@ int main(int argc, char **argv)
           }
           if (want_start_time) WANT_START_TIME();
           if (voltage_csv) {
-            fprintf(voltage_csv, "\"%lld\";\"%.2f\"\n",
+            fprintf(voltage_csv, "%lld;%.2f\n",
               (long long)(tai_gps_sec(&last_time.sec)),
               ld_u16_be(block + 4) * 0.01);
           }
           if (humidity_csv) {
-            fprintf(humidity_csv, "\"%lld\";\"%.2f\"\n",
+            fprintf(humidity_csv, "%lld;%.2f\n",
               (long long)(tai_gps_sec(&last_time.sec)),
               ld_u16_be(block + 6) * 0.01);
           }
@@ -396,7 +400,7 @@ int main(int argc, char **argv)
           }
           if (want_start_time) WANT_START_TIME();
           if (temperature_csv) {
-            fprintf(temperature_csv, "\"%lld\";\"%.2f\"\n",
+            fprintf(temperature_csv, "%lld;%.2f\n",
               (long long)(tai_gps_sec(&last_time.sec)),
               ld_u16_be(block + 4) * 0.01);
           }
@@ -528,13 +532,13 @@ end:
     }
 
     kumy_file_close(kumy);
-    fclose(logfile);
-    fclose(voltage_csv);
-    fclose(temperature_csv);
-    fclose(humidity_csv);
+    if (logfile) fclose(logfile);
+    if (voltage_csv) fclose(voltage_csv);
+    if (temperature_csv) fclose(temperature_csv);
+    if (humidity_csv) fclose(humidity_csv);
   }
 
-  fclose(controlframes);
+  if (controlframes) fclose(controlframes);
 
   fclose(sdcard);
   return 0;
