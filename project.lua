@@ -89,4 +89,8 @@ m:program("sdread", {
   m:c("sdread")
 }, {"seisconvert", "tai", "bcd", "options"})
 
+m:program("sdbackup", {
+  m:c("sdbackup")
+}, {"seisconvert", "options"})
+
 m:gen("Makefile")
