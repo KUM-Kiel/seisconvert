@@ -67,8 +67,8 @@ static void progress(int percent, int finished) {
 
 static const char *channel_names[] = {"H", "X", "Y", "Z"};
 
-char *program = "kumy2seed";
-void usage(char *x)
+static char *program = "kumy2seed";
+static void usage(const char *o, const char *x, int l)
 {
   fprintf(stderr, "Usage: %s [-n|--no-compression] <infile.muk1>\n", program);
   exit(-1);
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   ));
 
   if (argc < 2) {
-    usage(0);
+    usage(0, 0, 0);
   }
 
   infile = argv[1];

@@ -135,7 +135,7 @@ static const char
 #define WANT_START_TIME() goto end
 
 static char *program = "sdread";
-static void usage(char *x)
+static void usage(const char *o, const char *x, int l)
 {
   fprintf(stderr, "Usage: %s /dev/sdx\n", program);
   exit(-1);
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 
   /* Check for SD card argument. */
   if (argc < 2) {
-    usage(0);
+    usage(0, 0, 0);
   }
 
   /* Open the SD card. */
