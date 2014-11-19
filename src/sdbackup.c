@@ -26,7 +26,6 @@ static void progress(int percent, int finished) {
   fflush(stdout);
 }
 
-
 #define BLOCKSIZE 512
 
 /* Macros for signalling an error. */
@@ -79,7 +78,7 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 29) != 0x61646472ul /* addr */
     || ld_u32_be(block + 37) != 0x73616d70ul /* samp */
     || ld_u32_be(block + 43) != 0x77726974ul /* writ */
-    || ld_u32_be(block + 55) != 0x6e777269ul /* nwri */
+    || ld_u32_be(block + 55) != 0x72656364ul /* recd */
     || ld_u32_be(block + 63) != 0x6c6f7374ul /* lost */
     || ld_u32_be(block + 71) != 0x74656d70ul /* temp */
     || ld_u32_be(block + 77) != 0x68756d69ul /* humi */
@@ -95,7 +94,7 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 29) != 0x61646472ul /* addr */
     || ld_u32_be(block + 37) != 0x73616d70ul /* samp */
     || ld_u32_be(block + 43) != 0x77726974ul /* writ */
-    || ld_u32_be(block + 55) != 0x6e777269ul /* nwri */
+    || ld_u32_be(block + 55) != 0x72656364ul /* recd */
     || ld_u32_be(block + 63) != 0x6c6f7374ul /* lost */
     || ld_u32_be(block + 71) != 0x74656d70ul /* temp */
     || ld_u32_be(block + 77) != 0x68756d69ul /* humi */
