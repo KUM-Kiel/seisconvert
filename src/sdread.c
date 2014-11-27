@@ -146,7 +146,7 @@ int main(int argc, char **argv)
   FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
   FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, n, frames = 0;
+  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, m2 = 0, n, frames = 0;
   char comment[41], safe_comment[41];
   uint8_t block[BLOCKSIZE];
   char filename[256], tmp[64];
@@ -406,6 +406,9 @@ int main(int argc, char **argv)
           }
           break;
         case 7: /* Lost frames. */
+          if (controlframes) {
+            fprintf(controlframes, "%lld frames lost.\n", (long long)ld_u32_be(block + 10));
+          }
           if (want_start_time) WANT_START_TIME();
           bcd_taia(&t, block + 4);
           lost = ld_u32_be(block + 10);
@@ -419,6 +422,11 @@ int main(int argc, char **argv)
           }
           break;
         case 9: /* Control frame */
+          if (controlframes) {
+            fprintf(controlframes, "Control block '%02x %02x %02x %02x %02x %02x'.\n",
+              (int)block[4 + 0], (int)block[4 + 1], (int)block[4 + 2],
+              (int)block[4 + 3], (int)block[4 + 4], (int)block[4 + 5]);
+          }
           if (want_start_time) WANT_START_TIME();
           if (have_control_block) {
             if (!byte_equal(control, 6, block + 4)) {
@@ -440,6 +448,14 @@ int main(int argc, char **argv)
           }
           break;
         case 11: /* Reboot */
+          if (controlframes) {
+            fprintf(controlframes, "The recorder has rebooted.\n");
+          }
+          if (want_start_time) WANT_START_TIME();
+          if (logfile) {
+            print_taia(&last_time, logfile);
+            fprintf(logfile, ": The recorder has rebooted. Check the data!\n");
+          }
           break;
         case 13: /* End */
           goto end;
@@ -447,14 +463,18 @@ int main(int argc, char **argv)
         case 15: /* Written Frames */
           k = ld_u64_be(block + 4);
           if (controlframes) {
-            fprintf(controlframes, "Frame %lld.\n", (long long)k);
+            fprintf(controlframes, "Frame %lld. (%lld)\n", (long long)k, (long long)(frames - m2));
           }
+          m2 = frames;
           if (want_start_time) WANT_START_TIME();
           if (frames < k) {
             /* Frames lost */
             if (logfile) {
               print_taia(&last_time, logfile);
               fprintf(logfile, ": %lld Frames lost.\n", (long long)(k - frames));
+            }
+            if (controlframes) {
+              fprintf(controlframes, "[%lld lost frames inserted.]\n", (long long)(k - frames));
             }
             while (frames < k) {
               kumy_file_write_int_frame(kumy, lost_frame);
@@ -465,6 +485,9 @@ int main(int argc, char **argv)
             if (logfile) {
               print_taia(&last_time, logfile);
               fprintf(logfile, ": %lld Frames too much.\n", (long long)(frames - k));
+            }
+            if (controlframes) {
+              fprintf(controlframes, "[%lld frames skipped.]\n", (long long)(frames - k));
             }
             frames = k;
           }
