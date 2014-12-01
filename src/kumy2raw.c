@@ -6,6 +6,7 @@
 #include "number.h"
 #include "byte.h"
 #include <errno.h>
+#include "cli.h"
 
 /* POSIX specific. */
 #include <sys/stat.h>
@@ -51,16 +52,6 @@ static int mkdir_p(const char *path)
       return -1;
   }
   return 0;
-}
-
-static void progress(int percent, int finished) {
-  char s[29];
-  if (percent < 0) percent = 0;
-  if (percent > 100) percent = 100;
-  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
-  byte_set((uint8_t *)s + 1, percent / 5, '#');
-  if (!fwrite(s, 28, 1, stdout)) return;
-  fflush(stdout);
 }
 
 static const char *channel_names[] = {"H", "SX", "SY", "SZ"};

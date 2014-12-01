@@ -7,23 +7,13 @@
 #include <stdint.h>
 #include "number.h"
 #include "options.h"
+#include "cli.h"
 
 static const char *program = "sdbackup";
 static void usage(const char *o, const char *x, int l)
 {
   fprintf(stderr, "Usage: %s [-q|--quiet] infile outfile\n", program);
   exit(1);
-}
-
-/* Prints a progress bar. If you intend to update the bar, set finished to 0. */
-static void progress(int percent, int finished) {
-  char s[29];
-  if (percent < 0) percent = 0;
-  if (percent > 100) percent = 100;
-  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
-  memset(s + 1, '#', percent / 5);
-  if (!fwrite(s, 28, 1, stdout)) return;
-  fflush(stdout);
 }
 
 #define BLOCKSIZE 512

@@ -37,6 +37,10 @@ m:lib("options", {
   m:c("options")
 })
 
+m:lib("cli", {
+  m:c("cli")
+})
+
 m:program("test", {
   m:c("test")
 }, {"seisconvert", "tai", "m"})
@@ -59,7 +63,7 @@ m:program("fm", {
 
 m:program("kumy2wav", {
   m:c("kumy2wav")
-}, {"seisconvert", "tai"})
+}, {"seisconvert", "tai", "cli"})
 
 m:program("cos", {
   m:c("cos")
@@ -79,18 +83,18 @@ m:program("wav2seed", {
 
 m:program("kumy2seed", {
   m:c("kumy2seed")
-}, {"seisconvert", "tai", "options"})
+}, {"seisconvert", "tai", "options", "cli"})
 
 m:program("kumy2raw", {
   m:c("kumy2raw")
-}, {"seisconvert", "tai"})
+}, {"seisconvert", "tai", "cli"})
 
 m:program("sdread", {
   m:c("sdread")
-}, {"seisconvert", "tai", "bcd", "options"})
+}, {"seisconvert", "tai", "bcd", "options", "cli"})
 
 m:program("sdbackup", {
   m:c("sdbackup")
-}, {"seisconvert", "options"})
+}, {"seisconvert", "options", "cli"})
 
 m:gen("Makefile")

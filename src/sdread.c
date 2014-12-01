@@ -11,6 +11,7 @@
 #include "byte.h"
 #include "bcd.h"
 #include "options.h"
+#include "cli.h"
 
 /* Converts a BCD encoded date to taia. */
 static void bcd_taia(struct taia *t, const uint8_t *bcd)
@@ -71,17 +72,6 @@ static void kumy_binary_header_set_date(kumy_binary_header_t *bh, const struct t
   caltime_utc(&ct, &t->sec, 0, &yday);
   bh->year = ct.date.year;
   bh->julian_day = yday;
-}
-
-/* Prints a progress bar. If you intend to update the bar, set finished to 0. */
-static void progress(int percent, int finished) {
-  char s[29];
-  if (percent < 0) percent = 0;
-  if (percent > 100) percent = 100;
-  snprintf(s, 29, "[                    ] %3d%%%c", percent, finished ? '\n' : '\r');
-  byte_set((uint8_t *)s + 1, percent / 5, '#');
-  if (!fwrite(s, 28, 1, stdout)) return;
-  fflush(stdout);
 }
 
 #define isalphanum(c) (('0' <= (c) && (c) <= '9') || \
