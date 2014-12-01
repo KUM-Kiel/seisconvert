@@ -8,11 +8,27 @@
 #include "caltime.h"
 #include "number.h"
 #include "byte.h"
+#include "options.h"
 #include "cli.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+
+static const char *program = "kumy2wav";
+static void usage(const char *o, const char *x, int l)
+{
+  fprintf(stderr,
+    "Usage: %s [options] infile.muk1\n"
+    "Options:\n"
+    "  -q, --quiet\n"
+    "      Do not display a progress bar.\n"
+    "  -h, --help\n"
+    "      Show this help screen.\n"
+    "\n",
+    program);
+  exit(1);
+}
 
 int parse_text_date(struct taia *t, const uint8_t *x)
 {
@@ -66,6 +82,7 @@ int main(int argc, char **argv)
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
   int percent = 0, old_percent = -1;
+  int show_progress = 1;
 
   struct taia start_time; /* 1871 */
   struct taia stop_time;  /* 1951 */
@@ -75,10 +92,13 @@ int main(int argc, char **argv)
   struct caltime ct;
   struct taia tt, dt;
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s <infile.muk1>\n", argv[0]);
-    return -1;
-  }
+  program = argv[0];
+  parse_options(&argc, &argv, OPTIONS(
+    FLAG('q', "quiet", show_progress, 0),
+    FLAG_CALLBACK('h', "help", usage)
+  ));
+
+  if (argc < 2) usage(0, 0, 0);
 
   if (!(kumy = kumy_file_open(argv[1]))) {
     fprintf(stderr, "Invalid file: %s.\n", argv[1]);
@@ -160,7 +180,7 @@ int main(int argc, char **argv)
     for (i = 0; i < 1; ++i) {
       wav_file_write_int_frame(wav[i], frame + i);
     }
-    if (frame_count % 10000 == 0) {
+    if (show_progress && frame_count % 10000 == 0) {
       percent = 100 * frame_count / frames_total;
       if (percent != old_percent) {
         progress(percent, 0);
@@ -170,7 +190,7 @@ int main(int argc, char **argv)
     --frames;
     ++frame_count;
   }
-  progress(100, 1);
+  if (show_progress) progress(100, 1);
 
   kumy_file_close(kumy);
   for (i = 0; i < 1; ++i) {

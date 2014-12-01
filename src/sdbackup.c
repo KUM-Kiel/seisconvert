@@ -12,7 +12,15 @@
 static const char *program = "sdbackup";
 static void usage(const char *o, const char *x, int l)
 {
-  fprintf(stderr, "Usage: %s [-q|--quiet] infile outfile\n", program);
+  fprintf(stderr,
+    "Usage: %s [options] infile outfile\n"
+    "Options:\n"
+    "  -q, --quiet\n"
+    "      Do not display a progress bar.\n"
+    "  -h, --help\n"
+    "      Show this help screen.\n"
+    "\n",
+    program);
   exit(1);
 }
 
@@ -42,8 +50,8 @@ int main(int argc, char **argv)
 
   program = argv[0];
   parse_options(&argc, &argv, OPTIONS(
-    FLAG_CALLBACK('h', "help", usage),
-    FLAG('q', "quiet", show_progress, 0)
+    FLAG('q', "quiet", show_progress, 0),
+    FLAG_CALLBACK('h', "help", usage)
   ));
 
   if (argc < 3) {

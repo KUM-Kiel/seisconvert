@@ -61,10 +61,6 @@ m:program("fm", {
   m:c("fm")
 }, {"seisconvert", "m"})
 
-m:program("kumy2wav", {
-  m:c("kumy2wav")
-}, {"seisconvert", "tai", "cli"})
-
 m:program("cos", {
   m:c("cos")
 }, {"seisconvert", "m"})
@@ -81,13 +77,17 @@ m:program("wav2seed", {
   m:c("wav2seed")
 }, {"seisconvert", "tai"})
 
+m:program("kumy2wav", {
+  m:c("kumy2wav")
+}, {"seisconvert", "tai", "options", "cli"})
+
 m:program("kumy2seed", {
   m:c("kumy2seed")
 }, {"seisconvert", "tai", "options", "cli"})
 
 m:program("kumy2raw", {
   m:c("kumy2raw")
-}, {"seisconvert", "tai", "cli"})
+}, {"seisconvert", "tai", "options", "cli"})
 
 m:program("sdread", {
   m:c("sdread")

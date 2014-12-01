@@ -37,7 +37,7 @@ static int print_text_date(uint8_t *x, const struct taia *t)
   caltime_utc(&ct, &t->sec, 0, &yday);
   write_int(x     , 4, ct.date.year, 1);
   x[4] = '.';
-  write_int(x +  5, 3, yday, 1);
+  write_int(x +  5, 3, yday + 1, 1);
   x[8] = '.';
   write_int(x +  9, 2, ct.hour, 1);
   x[11] = '.';
@@ -127,7 +127,15 @@ static const char
 static char *program = "sdread";
 static void usage(const char *o, const char *x, int l)
 {
-  fprintf(stderr, "Usage: %s /dev/sdx\n", program);
+  fprintf(stderr,
+    "Usage: %s [options] /dev/sdx\n"
+    "Options:\n"
+    "  -q, --quiet\n"
+    "      Do not display a progress bar.\n"
+    "  -h, --help\n"
+    "      Show this help screen.\n"
+    "\n",
+    program);
   exit(-1);
 }
 
@@ -156,11 +164,12 @@ int main(int argc, char **argv)
   uint64_t lost = 0, lost_total = 0;
   uint8_t control[6];
   int have_control_block = 0;
-  int flag_debug = 0;
+  int flag_debug = 0, show_progress = 1;
 
   program = argv[0];
   parse_options(&argc, &argv, OPTIONS(
     FLAG('d', "debug", flag_debug, 1),
+    FLAG('q', "quiet", show_progress, 0),
     FLAG_CALLBACK('h', "help", usage)
   ));
 
@@ -487,7 +496,7 @@ int main(int argc, char **argv)
       }
     }
     /* Update the progress bar. */
-    if ((i & 0x0fff) == 0 && !want_start_time) {
+    if (show_progress && (i & 0x0fff) == 0 && !want_start_time) {
       percent = 100 * i / n;
       if (percent != old_percent) {
         progress(percent, 0);
@@ -497,7 +506,7 @@ int main(int argc, char **argv)
     }
   }
 end:
-  progress(100, 1);
+  if (show_progress) progress(100, 1);
 
   /* Check if there was any data. */
   if (!want_start_time) {

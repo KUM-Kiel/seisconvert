@@ -14,6 +14,23 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+static const char *program = "kumy2seed";
+static void usage(const char *o, const char *x, int l)
+{
+  fprintf(stderr,
+    "Usage: %s [options] infile.muk1\n"
+    "Options:\n"
+    "  -n, --no-compression\n"
+    "      Do not compress the MiniSEED files.\n"
+    "  -q, --quiet\n"
+    "      Do not display a progress bar.\n"
+    "  -h, --help\n"
+    "      Show this help screen.\n"
+    "\n",
+    program);
+  exit(1);
+}
+
 int parse_text_date(struct taia *t, const uint8_t *x)
 {
   struct caltime ct;
@@ -58,13 +75,6 @@ static int mkdir_p(const char *path)
 
 static const char *channel_names[] = {"H", "X", "Y", "Z"};
 
-static char *program = "kumy2seed";
-static void usage(const char *o, const char *x, int l)
-{
-  fprintf(stderr, "Usage: %s [-n|--no-compression] <infile.muk1>\n", program);
-  exit(-1);
-}
-
 int main(int argc, char **argv)
 {
   kumy_file_t *kumy;
@@ -75,7 +85,7 @@ int main(int argc, char **argv)
   char oname[1024], folder[1024];
   uint32_t sample_rate, seconds_per_file;
   int percent = 0, old_percent = -1;
-  int compression = 1;
+  int compression = 1, show_progress = 1;
   char *infile = 0;
 
   struct taia start_time; /* 1871 */
@@ -89,6 +99,7 @@ int main(int argc, char **argv)
   program = argv[0];
   parse_options(&argc, &argv, OPTIONS(
     FLAG('n', "no-compression", compression, 0),
+    FLAG('q', "quiet", show_progress, 0),
     FLAG_CALLBACK('h', "help", usage)
   ));
 
@@ -185,7 +196,7 @@ int main(int argc, char **argv)
     for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
       miniseed_file_write_int_frame(mseed[i], frame + i);
     }
-    if (frame_count % 10000 == 0) {
+    if (show_progress && frame_count % 10000 == 0) {
       percent = 100 * frame_count / frames_total;
       if (percent != old_percent) {
         progress(percent, 0);
@@ -195,7 +206,7 @@ int main(int argc, char **argv)
     --frames;
     ++frame_count;
   }
-  progress(100, 1);
+  if (show_progress) progress(100, 1);
 
   kumy_file_close(kumy);
   for (i = 0; i < KUMY_FILE_CHANNELS; ++i) {
