@@ -151,6 +151,7 @@ int main(int argc, char **argv)
   int32_t frame[4];
   int want_start_time = 1;
   int errorcode = 0;
+  struct taia time_base;
   struct taia start_time;
   struct taia last_time;
   struct taia sync_time;
@@ -204,6 +205,12 @@ int main(int argc, char **argv)
     || ld_u32_be(block + 91) != 0x636d6e74ul /* cmnt */
   ) e_fmt(2);
 
+  /* Read time base. */
+  if (bcd_valid((char *)block + 4)) {
+    bcd_taia(&time_base, block + 4);
+  } else {
+    e_fmt(7);
+  }
   /* Read start address and sample rate. */
   addr = ld_u32_be(block + 33);
   samp = ld_u16_be(block + 41);
@@ -292,7 +299,7 @@ int main(int argc, char **argv)
     if (!fread(block, FRAMESIZE, 1, sdcard)) {
       printf("Read Error.\n");
       fflush(0);
-      exit(-3);
+      goto end;
       if (!want_start_time) {
         if (logfile) {
           print_taia(&last_time, logfile);
@@ -322,12 +329,11 @@ int main(int argc, char **argv)
       switch (frame[0]) {
         case 1: /* Time control frame. */
           /* Process only valid frames. */
-          if (!bcd_valid((char *)block + 4)) break;
+          t = time_base;
+          t.sec.x += ld_u32_be(block + 4);
           /* If this is the first time frame, it is the start time. */
           if (want_start_time) {
-            /* Parse the time. */
-            bcd_taia(&start_time, block + 4);
-            last_time = start_time;
+            last_time = start_time = t;
             want_start_time = 0;
             /* Create the outfile with start time in file name. */
             tmp[print_text_date((uint8_t *)tmp, &start_time)] = 0;
@@ -362,7 +368,6 @@ int main(int argc, char **argv)
               putc('\n', controlframes);
             }
           } else {
-            bcd_taia(&t, block + 4);
             if (controlframes) {
               print_taia(&t, controlframes);
               fprintf(controlframes, " (%lld)\n", (long long)(frames - m));
