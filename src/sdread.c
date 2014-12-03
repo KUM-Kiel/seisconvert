@@ -220,7 +220,7 @@ int main(int argc, char **argv)
   gain[1] = block[88];
   gain[2] = block[89];
   gain[3] = block[90];
-  byte_copy_0((uint8_t *)comment, 0, block + 95);
+  byte_copy_0((uint8_t *)comment, 40, block + 95);
   string_safe(safe_comment, comment);
 
   /* Read the synchronisation time and skew, if it is present. */
