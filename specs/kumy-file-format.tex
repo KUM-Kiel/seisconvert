@@ -87,7 +87,7 @@
 \vspace{1cm}
 
 \centerline{\huge \textbf{The KUM-Y File Format%
-\footnote{\raggedright Date of this document: 2014-11-05.
+\footnote{\raggedright Date of this document: 2014-12-08.
 Permanent ID of this document: bd59ae8cc054eee9b8e2c779ba1b6ab9.}}}
 
 \vspace{1cm}
@@ -216,12 +216,13 @@ The general structure of a KUM-Y file is depicted in figure \ref{structure}.
 \begin{figure}[ht]
 \centerline{\begin{tikzpicture}
 \draw
-  (0, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Magic\\Number}
-  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Textual\\Metadata}
-  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node[align=center] {Binary\\Header}
-  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {Data}
-  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {\(\dotsm\)}
-  ++(\textwidth/6, 0) rectangle +(\textwidth/6, -1.2) +(\textwidth/12, -0.6) node {Data};
+  (0, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node[align=center] {Magic\\Number}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node[align=center] {Textual\\Metadata}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node[align=center] {Binary\\Header}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node {Data}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node {\(\dotsm\)}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node {Data}
+  ++(\textwidth/7, 0) rectangle +(\textwidth/7, -1.2) +(\textwidth/14, -0.6) node {Index};
 \end{tikzpicture}}
 \caption{Structure of a KUM-Y File}
 \label{structure}
@@ -361,14 +362,27 @@ The header fields are in particular (denoted as “Key: Value type – Descripti
   This is the total number of samples in the file, i.\,e.\ of all channels added together.
 \end{itemize}
 
-\section{Data}
+\subsection{Index}
 
+The index is a data structure which contains stream positions.
+It is located at the end of a KUM-Y file.
+
+The index consists of a BML table holding
+\begin{itemize}
+  \item a BML integer encoding a byte offset from the beginning of the file,
+  \item a BML integer encoding the number of the sample at this byte offset,
+  \item a BML time encoding the time of the sample at this byte offset
+\end{itemize}
+for an arbitrary number of samples in the file.
+
+The last value of the index is a BML integer encoding the byte offset of the index, i.\,e.\ of it’s leading <f2> byte.
+Only this last value is required, so the index length is always \(3k + 1\) for some non-negative integer \(k\).
+
+\section{Data}
 
 The data section contains both the samples and additional data of interest: the clock skew, time stamps and similar data.
 
 The data is encoded as sequence of samples in their timely order, represented by a variable length integer. As described in section \ref{varint}, any byte within a “variable length integer” must not be higher than 191. Any byte that is higher than 191 starts with “11” and is used for non-sample data. The non-sample data can be embedded anywhere in the data stream between samples.
-
-\newpage
 
 \subsection{Sample Interleaving}
 
@@ -490,9 +504,10 @@ It can appear anywhere in the data stream except in the middle of a multi byte s
 \begin{itemize}
   \item Time stamp <c0> – This value is followed by two variable length integers, which together form a TAIN label.
   This TAIN label encodes the absolute time of the next sample as measured by the internal clock.
-  \item Lost sample <c1> – This value is a replacement for a lost or unknown sample.
-  It replaces a sample value and counts towards the total number of samples in the file.
-  Though, it is skipped by linear prediction, so the prediction for the next sample is made on the basis of it’s predecessors.
+  \item Lost samples <c1> – This value is followed by a variable length integer and acts as a replacement for a lost or unknown samples.
+  The integer encodes the number of samples lost in a row.
+  It replaces sample values and counts towards the total number of samples in the file.
+  Though, it is skipped by linear prediction, so the prediction for the next samples is made on the basis of it’s predecessors.
   \item Padding <c2> – This value can be used if the writing application wishes to pad the data.
   It is silently ignored.
   \item Annotation <c3> – This value is followed by a variable length integer and a string of bytes.
@@ -511,6 +526,20 @@ It can appear anywhere in the data stream except in the middle of a multi byte s
   Note that this does not replace a sample.
   \item Estimated skew <c6> – This value is followed by two variable length integers, which together form a TAIN label.
   This TAIN label is a duration and encodes the estimated clock skew.
+  \item Engineering data <c7> – This value is followed by three variable length integers \(t\), \(m\) and \(e\).
+  The first integer \(t\) encodes the data type, the second and third one encode data value.
+  The data value is \(m \cdot 10^e\).
+  Possible types are:
+  \begin{itemize}
+    \item 1 – Battery voltage in volt.
+    \item 2 – Temperature in degrees Celsius.
+    \item 3 – Relative humidity in percent.
+    \item 4 – Pressure in pascal.
+  \end{itemize}
+  More types may be added in the future without incrementing the version.
+
+  Applications may also choose to use their own engineering frames.
+  This custom data must use negative values for the type.
 \end{itemize}
 
 \subsection{Compression}
