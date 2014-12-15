@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
   FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, m2 = 0, n, frames = 0;
+  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, m2 = 0, bil = 0, n, frames = 0;
   char comment[41], safe_comment[41];
   uint8_t block[BLOCKSIZE];
   char filename[256], tmp[64];
@@ -368,9 +368,10 @@ int main(int argc, char **argv)
               putc('\n', controlframes);
             }
           } else {
+            bil += frames - m - samp;
             if (controlframes) {
               print_taia(&t, controlframes);
-              fprintf(controlframes, " (%lld)\n", (long long)(frames - m));
+              fprintf(controlframes, " (%lld %+lld)\n", (long long)(frames - m), (long long)bil);
             }
             m = frames;
             if (taia_less(&last_time, &t)) {
