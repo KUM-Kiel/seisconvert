@@ -1,0 +1,2 @@
+noinst_LTLIBRARIES = libtai.la
+libtai_la_SOURCES = caldate_fmjd.c caldate_fmt.c caldate.h caldate_mjd.c caldate_norm.c caldate_scan.c caldate_ster.c caltime_fmt.c caltime.h caltime_scan.c caltime_tai.c caltime_utc.c leapsecs_add.c leapsecs.dat leapsecs.h leapsecs_init.c leapsecs_read.c leapsecs_sub.c taia_add.c taia_approx.c tai_add.c taia_fmtfrac.c taia_frac.c taia.h taia_half.c taia_less.c taia_now.c taia_pack.c taia_sub.c taia_tai.c taia_unpack.c tai_gps.c tai.h tai_now.c tai_pack.c tai_sub.c tai_unpack.c

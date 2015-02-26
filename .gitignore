@@ -1,2 +1,39 @@
+# Programs
+sdread
+sdbackup
+kumy2seed
+kumy2wav
+kumy2raw
+
+# Build and test folders
 /build/
 /tests/
+
+# Build files
+Makefile
+*.in
+*.o
+*.so
+*.lo
+*.a
+*.la
+*.Po
+*.tar.gz
+.deps/
+.libs/
+
+# Autotools files
+aclocal.m4
+autom4te.cache/
+compile
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+stamp-h1
