@@ -144,8 +144,8 @@ int main(int argc, char **argv)
   FILE *sdcard = 0, *logfile = 0, *controlframes = 0;
   FILE *voltage_csv = 0, *temperature_csv = 0, *humidity_csv = 0;
   kumy_file_t *kumy = 0;
-  uint64_t addr, last_addr, writ = 0, samp = 1, temp, humi, gain[4], i, j, k, m = 0, m2 = 0, bil = 0, n, frames = 0;
-  char comment[41], safe_comment[41];
+  uint64_t addr, last_addr, writ = 0, rate = 1, gain[4], i, j, k, m = 0, m2 = 0, bil = 0, n, frames = 0;
+  char comment[41] = {0}, safe_comment[41] = {0};
   uint8_t block[BLOCKSIZE];
   char filename[256], tmp[64];
   int32_t frame[4];
@@ -194,15 +194,13 @@ int main(int argc, char **argv)
 
   /* Check for constant fields in the first block. */
   if  (ld_u32_be(block)      != 0x74696d65ul /* time */
-    || ld_u32_be(block + 29) != 0x61646472ul /* addr */
-    || ld_u32_be(block + 37) != 0x73616d70ul /* samp */
-    || ld_u32_be(block + 43) != 0x77726974ul /* writ */
-    || ld_u32_be(block + 55) != 0x72656364ul /* recd */
-    || ld_u32_be(block + 63) != 0x6c6f7374ul /* lost */
-    || ld_u32_be(block + 71) != 0x74656d70ul /* temp */
-    || ld_u32_be(block + 77) != 0x68756d69ul /* humi */
-    || ld_u32_be(block + 83) != 0x6761696eul /* gain */
-    || ld_u32_be(block + 91) != 0x636d6e74ul /* cmnt */
+    || ld_u32_be(block + 53) != 0x61646472ul /* addr */
+    || ld_u32_be(block + 61) != 0x72617465ul /* rate */
+    || ld_u32_be(block + 67) != 0x77726974ul /* writ */
+    || ld_u32_be(block + 79) != 0x6c6f7374ul /* lost */
+    || ld_u32_be(block + 87) != 0x6368616eul /* chan */
+    || ld_u32_be(block + 92) != 0x6761696eul /* gain */
+  //|| ld_u32_be(block + 142) != 0x636d6e74ul /* cmnt */
   ) e_fmt(2);
 
   /* Read time base. */
@@ -212,22 +210,20 @@ int main(int argc, char **argv)
     e_fmt(7);
   }
   /* Read start address and sample rate. */
-  addr = ld_u32_be(block + 33);
-  samp = ld_u16_be(block + 41);
-  temp = ld_u16_be(block + 75); (void)temp;
-  humi = ld_u16_be(block + 81); (void)humi;
-  gain[0] = block[87];
-  gain[1] = block[88];
-  gain[2] = block[89];
-  gain[3] = block[90];
-  byte_copy_0((uint8_t *)comment, 40, block + 95);
+  addr = ld_u32_be(block + 57);
+  rate = ld_u16_be(block + 65);
+  gain[0] = block[96];
+  gain[1] = block[97];
+  gain[2] = block[98];
+  gain[3] = block[99];
+  //byte_copy_0((uint8_t *)comment, 40, block + 95);
   string_safe(safe_comment, comment);
 
   /* Read the synchronisation time and skew, if it is present. */
-  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
-    bcd_valid((char *)block + 19)) {
-    bcd_taia(&sync_time, block + 19);
-    sync_skew = ld_i32_be(block + 25);
+  if (byte_equal(block + 10, 4, (uint8_t *)"sync") &&
+    bcd_valid((char *)block + 14)) {
+    bcd_taia(&sync_time, block + 14);
+    sync_skew = ld_i32_be(block + 20);
     synced = 1;
   }
 
@@ -236,26 +232,24 @@ int main(int argc, char **argv)
 
   /* Check for constant fields in the second block. */
   if  (ld_u32_be(block)      != 0x74696d65ul /* time */
-    || ld_u32_be(block + 29) != 0x61646472ul /* addr */
-    || ld_u32_be(block + 37) != 0x73616d70ul /* samp */
-    || ld_u32_be(block + 43) != 0x77726974ul /* writ */
-    || ld_u32_be(block + 55) != 0x72656364ul /* recd */
-    || ld_u32_be(block + 63) != 0x6c6f7374ul /* lost */
-    || ld_u32_be(block + 71) != 0x74656d70ul /* temp */
-    || ld_u32_be(block + 77) != 0x68756d69ul /* humi */
-    || ld_u32_be(block + 83) != 0x6761696eul /* gain */
-    || ld_u32_be(block + 91) != 0x636d6e74ul /* cmnt */
+    || ld_u32_be(block + 53) != 0x61646472ul /* addr */
+    || ld_u32_be(block + 61) != 0x72617465ul /* rate */
+    || ld_u32_be(block + 67) != 0x77726974ul /* writ */
+    || ld_u32_be(block + 79) != 0x6c6f7374ul /* lost */
+    || ld_u32_be(block + 87) != 0x6368616eul /* chan */
+    || ld_u32_be(block + 92) != 0x6761696eul /* gain */
+  //|| ld_u32_be(block + 142) != 0x636d6e74ul /* cmnt */
   ) e_fmt(4);
 
   /* Read end address and number of frames. */
-  last_addr = ld_u32_be(block + 33);
-  writ = ld_u64_be(block + 47);
+  last_addr = ld_u32_be(block + 57);
+  writ = ld_u64_be(block + 71);
 
   /* Read the skew time and skew, if it is present. */
-  if (byte_equal(block + 10, 9, (uint8_t *)"sync/skew") &&
-    bcd_valid((char *)block + 19)) {
-    bcd_taia(&skew_time, block + 19);
-    skew = ld_i32_be(block + 25);
+  if (byte_equal(block + 10, 4, (uint8_t *)"skew") &&
+    bcd_valid((char *)block + 14)) {
+    bcd_taia(&skew_time, block + 14);
+    skew = ld_i32_be(block + 20);
     skewed = 1;
   }
 
@@ -267,7 +261,7 @@ int main(int argc, char **argv)
     "Channel Gains: H %.1f, X %.1f, Y %.1f, Z %.1f\n",
     comment,
     (long long)writ,
-    (long long)samp,
+    (long long)rate,
     gain[0] / 10.0, gain[1] / 10.0, gain[2] / 10.0, gain[3] / 10.0);
   if (synced) {
     tmp[write_taia(&sync_time, tmp)] = 0;
@@ -339,7 +333,7 @@ int main(int argc, char **argv)
             tmp[print_text_date((uint8_t *)tmp, &start_time)] = 0;
             snprintf(filename, sizeof(filename), filename_template,
               *safe_comment ? safe_comment : default_comment, tmp, muk_extension);
-            kumy = kumy_file_create(filename, samp);
+            kumy = kumy_file_create(filename, rate);
             printf("%s\n", filename);
             /* Start logfile. */
             snprintf(filename, sizeof(filename), filename_template,
@@ -368,7 +362,7 @@ int main(int argc, char **argv)
               putc('\n', controlframes);
             }
           } else {
-            bil += frames - m - samp;
+            bil += frames - m - rate;
             if (controlframes) {
               print_taia(&t, controlframes);
               fprintf(controlframes, " (%lld %+lld)\n", (long long)(frames - m), (long long)bil);
@@ -537,7 +531,7 @@ end:
       write_int(kumy->text_header[i].content + 2129, 9, skew, 1);
       kumy->text_header[i].content[2129] = skew < 0 ? '-' : '+';
       write_int(kumy->text_header[i].content + 2191, 8, skew - sync_skew, 1);
-      write_int(kumy->text_header[i].content + 2271, 8, 1000000 / samp, 1);
+      write_int(kumy->text_header[i].content + 2271, 8, 1000000 / rate, 1);
       write_int(kumy->text_header[i].content + 2351, 3, i + 1, 1);
       write_int(kumy->text_header[i].content + 2381, 3, KUMY_FILE_CHANNELS, 1);
       write_int(kumy->text_header[i].content + 2431, 3, 1, 1);
